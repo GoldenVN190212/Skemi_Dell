@@ -1,0 +1,109 @@
+/* ========== RESET CSS ========== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+/* ========== BODY ========== */
+body {
+  background: radial-gradient(circle at top left, #0a0a25, #050510 80%);
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ========== AUTH CONTAINER ========== */
+.auth-container {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+  width: 370px;
+  backdrop-filter: blur(10px);
+  animation: fadeIn 0.6s ease;
+}
+
+/* ========== TITLE ========== */
+.auth-container h2 {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 25px;
+  color: #5ecfff;
+}
+
+/* ========== INPUT FIELDS ========== */
+.auth-container input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0 18px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  outline: none;
+  transition: 0.3s;
+}
+
+.auth-container input::placeholder {
+  color: #aaa;
+}
+
+.auth-container input:focus {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 6px #00bfff;
+}
+
+/* ========== BUTTON ========== */
+.auth-container button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  background: linear-gradient(90deg, #a020f0, #00bfff);
+  color: #fff;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 17px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.auth-container button:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+/* ========== LINK (chuyển trang login/register) ========== */
+.auth-link {
+  text-align: center;
+  margin-top: 22px;
+  font-size: 15px;
+  color: #ccc;
+}
+
+.auth-link a {
+  color: #5ecfff;
+  font-weight: 500;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.auth-link a:hover {
+  color: #a020f0;
+  text-decoration: underline;
+}
+
+/* ========== ANIMATION ========== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

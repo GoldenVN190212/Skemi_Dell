@@ -1,0 +1,37 @@
+body {
+  background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+  color: white;
+  font-family: "Poppins", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.upload-container {
+  text-align: center;
+  background: #222;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 0 20px #000;
+  width: 400px;
+}
+
+input[type="file"] {
+  margin: 15px 0;
+  color: #ccc;
+}
+
+button {
+  background: #4caf50;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #45a049;
+}

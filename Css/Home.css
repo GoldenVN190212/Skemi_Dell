@@ -1,0 +1,159 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+/* BODY */
+body {
+  background: linear-gradient(145deg, #080819, #101033, #1a1a3d);
+  color: #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* HEADER */
+header {
+  text-align: center;
+  margin-top: 30px;
+  color: #eaeaea;
+}
+
+h1 {
+  font-size: 2.6rem;
+  background: linear-gradient(90deg, #9b4dff, #00d9ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+p {
+  color: #bbb;
+}
+
+/* MAIN CONTENT */
+main {
+  width: 90%;
+  max-width: 950px;
+  margin-top: 40px;
+}
+
+/* CARD SECTIONS */
+.upload,
+.mindmap,
+.actions {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 25px;
+  border-radius: 18px;
+  margin-bottom: 25px;
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.15);
+  transition: 0.3s;
+}
+
+.upload:hover,
+.mindmap:hover,
+.actions:hover {
+  box-shadow: 0 0 35px rgba(0, 217, 255, 0.25);
+  transform: translateY(-3px);
+}
+
+/* BUTTONS */
+button {
+  background: linear-gradient(90deg, #9b4dff, #00d9ff);
+  color: #fff;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: linear-gradient(90deg, #b87cff, #00b3e6);
+  box-shadow: 0 0 12px #00d9ff;
+}
+
+/* CANVAS (Mindmap) */
+canvas {
+  background: #0b0b1a;
+  border-radius: 12px;
+  margin-top: 10px;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* SCROLLBAR (thêm tí hiệu ứng) */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #9b4dff, #00d9ff);
+  border-radius: 6px;
+}
+
+
+/* ========== NAVBAR ========== */
+.navbar {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 40px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(90deg, #9b4dff, #00d9ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 20px;
+}
+
+.nav-links a {
+  color: #e0e0e0;
+  text-decoration: none;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.nav-links a:hover,
+.nav-links .active {
+  color: #00d9ff;
+  text-shadow: 0 0 8px #00d9ff;
+}
+
+/* Nút logout */
+#logoutBtn {
+  background: linear-gradient(90deg, #ff4d79, #ff7b4d);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+#logoutBtn:hover {
+  background: linear-gradient(90deg, #ff3366, #ff9955);
+  box-shadow: 0 0 10px #ff7b4d;
+}

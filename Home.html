@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skemi - AI Mindmap Learning</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./Css/Home.css" />
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">Skemi</div>
+    <ul class="nav-links">
+      <li><a href="Home.html" class="active">🏠 Home</a></li>
+      <li><a href="Chart.html">📚 Chart</a></li>
+    </ul>
+    <button id="logoutBtn" type="button">🚪 Logout</button>
+  </nav>
+
+  <header>
+    <h1>Skemi</h1>
+    <p>Học thông minh cùng AI tạo Mindmap</p>
+  </header>
+
+  <main>
+    <section class="upload">
+      <h2>📚 Nhập tài liệu học tập</h2>
+      <input type="file" id="fileInput" accept=".txt,.pdf,.png,.jpg,.jpeg,.docx,.pptx" />
+      <button id="importBtn" type="button">📥 Import tài liệu</button>
+      <button id="summaryBtn" type="button">📝 Tóm tắt nội dung</button>
+      <button id="detailBtn" type="button">🔍 Chi tiết nội dung</button>
+    </section>
+
+    <section class="mindmap">
+      <h2>🧠 Mindmap bài học</h2>
+      <canvas id="mindmapCanvas" width="800" height="500"></canvas>
+    </section>
+
+    <section class="dataset">
+      <h2>📊 Dữ liệu đã thu thập</h2>
+      <table id="datasetTable" border="1" style="width:100%; margin-top:10px;">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Label</th>
+            <th>Text</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="actions">
+      <button id="completeBtn" type="button">✅ Hoàn thành bài học</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 Skemi AI Learning</p>
+  </footer>
+
+  <script type="module" src="./Js/Home.js"></script>
+</body>
+</html>

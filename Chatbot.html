@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skemi</title>
+  <link rel="stylesheet" href="./Css/Chatbot.css">
+</head>
+<body>
+
+  <header>
+    <h1>Skemi</h1>
+    <p>Nhập câu hỏi và nhấn Gửi để trò chuyện với AI</p>
+  </header>
+
+  <main>
+    <div class="upload">
+      <h2>Upload File (tùy chọn)</h2>
+      <input type="file" id="fileInput">
+      <button id="uploadBtn">Upload</button>
+    </div>
+
+    <div class="mindmap">
+      <h2>Cuộc trò chuyện</h2>
+      <div id="chatContainer" style="max-height:400px; overflow-y:auto;"></div>
+      <textarea id="userInput" placeholder="Nhập câu hỏi của bạn..."></textarea>
+      <button id="sendBtn">Gửi</button>
+    </div>
+  </main>
+
+  <script src="./Js/Chatbot.js"></script>
+</body>
+</html>
