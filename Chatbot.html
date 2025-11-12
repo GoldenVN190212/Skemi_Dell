@@ -6,26 +6,32 @@
   <title>Skemi Chatbot</title>
   <link rel="stylesheet" href="./Css/Chatbot.css">
 </head>
+
 <body>
+  <nav id="navbar" class="navbar">
+    <div class="logo">Skemi</div>
+    <ul class="nav-links">
+      <li><a href="Home.html">🏠 Home</a></li>
+      <li><a href="Chart.html">📚 Chart</a></li>
+      <li><a href="Chatbot.html" class="active">🤖 Chatbot</a></li>
+    </ul>
+    <button id="logoutBtn" type="button">🚪 Logout</button>
+  </nav>
+
   <header>
     <h1>Skemi Chatbot</h1>
   </header>
 
   <main>
-    <div class="upload">
-      <h2>Upload File</h2>
-      <input type="file" id="fileInput">
-      <button id="uploadBtn">Upload</button>
-    </div>
-
     <div class="chat">
-      <h2>Cuộc trò chuyện</h2>
+      <h2 id="chatTitle"></h2>
       <div id="chatContainer" style="max-height:400px; overflow-y:auto;"></div>
       <textarea id="userInput" placeholder="Nhập câu hỏi..."></textarea>
       <button id="sendBtn">Gửi</button>
     </div>
   </main>
 
-  <script src="./Js/Chatbot.js"></script>
+  <script type="module" src="./Js/Chatbot.js"></script>
+  <script type="module" src="./Js/User_navbar.js"></script>
 </body>
 </html>
