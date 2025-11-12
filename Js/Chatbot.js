@@ -1,8 +1,9 @@
 const sendBtn = document.getElementById("sendBtn");
 const userInput = document.getElementById("userInput");
 const chatContainer = document.getElementById("chatContainer");
+const uploadBtn = document.getElementById("uploadBtn");
+const fileInput = document.getElementById("fileInput");
 
-// append tin nhắn
 function appendMessage(sender, text, loading=false) {
   const msg = document.createElement("div");
   if (loading) {
@@ -16,15 +17,14 @@ function appendMessage(sender, text, loading=false) {
   chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-// Gửi tin nhắn
-sendBtn.addEventListener("click", async () => {
+// Gửi câu hỏi tới server
+async function sendQuestion() {
   const question = userInput.value.trim();
   if (!question) return;
 
   appendMessage("Bạn", question);
   userInput.value = "";
 
-  // hiệu ứng chờ AI
   const loadingMsg = document.createElement("div");
   loadingMsg.className = "ai-msg loading";
   loadingMsg.textContent = "AI đang trả lời...";
@@ -32,7 +32,7 @@ sendBtn.addEventListener("click", async () => {
   chatContainer.scrollTop = chatContainer.scrollHeight;
 
   try {
-    const res = await fetch("/ask", {
+    const res = await fetch("http://127.0.0.1:8000/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question })
@@ -46,18 +46,28 @@ sendBtn.addEventListener("click", async () => {
     appendMessage("AI", "Lỗi kết nối server.");
     console.error(err);
   }
+}
+
+sendBtn.addEventListener("click", sendQuestion);
+
+// Nhấn Enter để gửi
+userInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendQuestion();
+  }
 });
 
-// File upload tạm thời
-document.getElementById("uploadBtn").addEventListener("click", async () => {
-  const file = document.getElementById("fileInput").files[0];
+// Upload file
+uploadBtn.addEventListener("click", async () => {
+  const file = fileInput.files[0];
   if (!file) return alert("Chọn file để upload");
 
   const formData = new FormData();
   formData.append("file", file);
 
   try {
-    const res = await fetch("/upload", { method: "POST", body: formData });
+    const res = await fetch("http://127.0.0.1:8000/upload", { method: "POST", body: formData });
     const data = await res.json();
     alert(data.message || "Upload xong");
   } catch (err) {
