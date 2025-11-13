@@ -16,14 +16,15 @@ body {
   min-height: 100vh;
 }
 
-/* NAVBAR */
+/* NAVBAR - Cập nhật */
 .navbar {
-  height: 65px; /* giống Home.css */
+  height: 65px; 
   width: 100%;
   background: rgba(255, 255, 255, 0.05);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
-  justify-content: space-between;
+  /* Căn đều logo, nav-links-center và auth-buttons */
+  justify-content: space-between; 
   align-items: center;
   padding: 12px 40px;
   position: sticky;
@@ -41,10 +42,17 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
+/* Căn giữa các liên kết Home, Chart, Chatbot */
+.nav-links-center {
+  flex-grow: 1; /* Cho phép chiếm không gian trống để đẩy logo và auth-buttons ra xa */
+  display: flex;
+  justify-content: center; /* Căn giữa nội dung bên trong (ul.nav-links) */
+}
+
 .nav-links {
   list-style: none;
   display: flex;
-  gap: 20px;
+  gap: 25px; /* Khoảng cách giữa các mục Home, Chart, Chatbot */
 }
 
 .nav-links a {
@@ -60,7 +68,31 @@ body {
   text-shadow: 0 0 8px #00d9ff;
 }
 
-/* Nút logout */
+/* Container cho nút Log in / Sign up / UserBtn */
+.auth-buttons {
+  display: flex;
+  gap: 8px; /* Khoảng cách giữa Log in và Sign up */
+  align-items: center;
+}
+
+/* Điều chỉnh các nút chung trong navbar (Log in/Sign up/UserBtn) */
+.navbar .tab {
+  padding: 8px 16px; 
+  font-weight: 500;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #9b4dff, #00d9ff);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.navbar .tab:hover {
+  background: linear-gradient(90deg, #b87cff, #00b3e6);
+  box-shadow: 0 0 8px #00d9ff;
+}
+
+/* Nút logout (Giữ nguyên vị trí cố định) */
 #logoutBtn {
   background: linear-gradient(90deg, #ff4d79, #ff7b4d);
   color: #fff;
@@ -224,8 +256,8 @@ button:hover {
 
 /* Tiêu đề chat (Xin chào ...) */
 #chatTitle {
-  text-align: center;      /* chữ ở giữa */
-  font-size: 30px;         /* giảm kích thước chữ */
-  margin-bottom: 15px;     /* khoảng cách với khung chat */
-  color: #e0e0e0;          /* màu chữ nhẹ nhàng */
+  text-align: center; 
+  font-size: 30px; 
+  margin-bottom: 15px; 
+  color: #e0e0e0; 
 }

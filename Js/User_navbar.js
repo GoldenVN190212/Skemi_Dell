@@ -11,52 +11,43 @@ import {
 document.addEventListener("DOMContentLoaded", () => {
   const navbar = document.getElementById("navbar");
   const logout = document.getElementById("logoutBtn");
-
+  const authButtons = document.getElementById("auth-buttons"); // 👈 THÊM DÒNG NÀY
+  
   onAuthStateChanged(auth, async (user) => {
-    if (!navbar) return;
+    // if (!navbar) return; // Không cần thiết nếu authButtons được thêm vào
 
-    // Xóa nút cũ tránh trùng
-    navbar.querySelectorAll("#signupBtn,#loginBtn,#userBtn").forEach(b => b.remove());
+    // Xóa nút cũ tránh trùng. Cập nhật selector
+    authButtons.querySelectorAll("#signupBtn,#loginBtn,#userBtn").forEach(b => b.remove()); // 👈 CẬP NHẬT DÒNG NÀY
 
-    if (!user) {
-      // 🔹 Nếu chưa đăng nhập
-      navbar.innerHTML += `
-        <button class="tab" id="signupBtn">Sign up</button>
-        <button class="tab" id="loginBtn">Log in</button>
-      `;
-      if (logout) logout.style.display = "none";
+    // ... (Tiếp tục từ User_navbar.js)
 
-      document.getElementById("signupBtn").onclick = () =>
-        (window.location.href = "Register.html");
-      document.getElementById("loginBtn").onclick = () =>
-        (window.location.href = "Login.html");
-    } else {
-      // 🔹 Nếu đã đăng nhập
-      let username = "Người dùng";
-      const email = user.email; // 🔹 Lấy email để hiển thị trong console
+    if (!user) {
+      // 🔹 Nếu chưa đăng nhập
+      authButtons.innerHTML += `
+        <button class="tab" id="signupBtn">Sign up</button>
+        <button class="tab" id="loginBtn">Log in</button>
+      `; // 👈 CHÈN VÀO authButtons
 
-      // Nếu user đăng ký bằng email/password → lấy username trong Firestore
-      try {
-        const docRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(docRef);
-        if (userDoc.exists()) {
-          username = userDoc.data().username || user.displayName || email.split("@")[0];
-        } else {
-          // Nếu là Google / Facebook → lấy tên từ displayName
-          username = user.displayName || email.split("@")[0];
-        }
-      } catch (e) {
-        console.error("Lỗi khi lấy username:", e);
-        username = user.displayName || email.split("@")[0];
-      }
+      if (logout) logout.style.display = "none";
+      
+      // 👇 BỔ SUNG LẠI ĐOẠN CODE GÁN SỰ KIỆN CLICK CHO NÚT
+      document.getElementById("signupBtn").onclick = () =>
+        (window.location.href = "Register.html");
+      document.getElementById("loginBtn").onclick = () =>
+        (window.location.href = "Login.html");
+      // 👆 KẾT THÚC PHẦN BỔ SUNG
 
+    } else {
+
+      
       // 🔹 Tạo nút hiển thị user (hiển thị username)
       const userBtn = document.createElement("button");
       userBtn.className = "tab user-btn";
       userBtn.id = "userBtn";
       userBtn.innerHTML = `🔒 ${username}`;
 
-      navbar.appendChild(userBtn);
+      authButtons.appendChild(userBtn); // 👈 CHÈN VÀO authButtons
+      
 
       // 🔹 Console log email
       console.log(`🔒 Đã đăng nhập với email: ${email}`);
