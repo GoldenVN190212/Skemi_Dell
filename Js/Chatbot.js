@@ -76,7 +76,7 @@ async function sendQuestion() {
     const data = await res.json();
     await typeText(loadingMsg, data.answer);
 
-    loadingMsg.className = "ai-msg"; // bỏ loading
+    loadingMsg.className = "ai-msg";
   } catch (err) {
     loadingMsg.className = "ai-msg";
     loadingMsg.textContent = "Server đang tạm dừng để bảo trì.";
