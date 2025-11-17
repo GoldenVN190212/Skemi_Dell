@@ -13,6 +13,8 @@ import {
   getDoc,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+export { auth, db, signOut };
+
 // =================== HÀM KIỂM TRA ===================
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);

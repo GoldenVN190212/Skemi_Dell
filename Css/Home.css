@@ -164,3 +164,20 @@ canvas {
   background: linear-gradient(90deg, #ff3366, #ff9955);
   box-shadow: 0 0 10px #ff7b4d;
 }
+
+/* Nút Import đứng riêng */
+.import-button {
+    margin-top: 10px;
+    width: 100%;
+}
+
+/* Group tóm tắt và chi tiết nằm cùng hàng */
+.summary-detail-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.summary-detail-buttons button {
+    flex: 1;
+}
