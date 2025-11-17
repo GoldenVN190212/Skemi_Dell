@@ -6,7 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from ollama import chat  # bạn phải có package ollama
+
+# ----------------- IMPORT MODEL FILES -----------------
+from Train.model_gemma import call_gemma_block
+from Train.model_llama import call_llama_block
 
 app = FastAPI()
 
@@ -32,90 +35,134 @@ async def index():
         return FileResponse(html_path)
     return JSONResponse({"message": "Chatbot.html không tồn tại"}, status_code=404)
 
+
 # ----------------- Session -----------------
 sessions = {}
 SESSION_TIMEOUT = timedelta(minutes=120)
 MAX_MESSAGES = 50
 RECENT_MESSAGES = 10
 
+
 class Question(BaseModel):
     session_id: str
     question: str
 
-# ----------------- Queue -----------------
+
+# ----------------- QUEUE -----------------
 queue = asyncio.Queue()
 
-# ----------------- Model -----------------
-GEMMA_MODEL = "gemma3:1b"
-GEMMA_TIMEOUT = 5.0  # giây
 
-# ----------------- Helper -----------------
-async def call_gemma(messages):
+# ----------------- ROUTER -----------------
+def choose_model(question: str):
+    q = question.lower()
+
+    complex_keywords = [
+        "fix", "error", "bug", "code",
+        "tối ưu", "phân tích", "so sánh",
+        "tại sao", "vì sao", "giải thích",
+        "firebase", "database", "server"
+    ]
+
+    # Dài quá = phức tạp
+    if len(question) > 120:
+        return "llama"
+
+    # Có keyword = phức tạp
+    if any(k in q for k in complex_keywords):
+        return "llama"
+
+    # Mặc định dùng Gemma
+    return "gemma"
+
+
+# ----------------- CALL MODEL (ASYNC WRAPPER) -----------------
+async def call_model(messages, model_name):
     def blocking_call():
-        return chat(model=GEMMA_MODEL, messages=messages)
+        if model_name == "gemma":
+            return call_gemma_block(messages)
+        else:
+            return call_llama_block(messages)
+
     resp = await asyncio.to_thread(blocking_call)
+
     if isinstance(resp, dict):
-        return resp.get("message", {}).get("content", "") or str(resp)
+        return resp.get("message", {}).get("content", "")
     elif hasattr(resp, "message"):
-        return getattr(resp.message, "content", "")
+        return resp.message.content
     else:
         return str(resp)
 
-# ----------------- Worker -----------------
+
+# ----------------- WORKER -----------------
 async def worker():
     while True:
-        session_id, message, fut = await queue.get()
+        session_id, new_message, fut = await queue.get()
+
         try:
             session = sessions.get(session_id, {"messages": [], "last_active": datetime.utcnow()})
             messages = session["messages"]
 
-            messages.append({"role": "user", "content": message})
-            if len(messages) > MAX_MESSAGES:
-                messages = messages[-MAX_MESSAGES:]
+            # Append user message
+            messages.append({"role": "user", "content": new_message})
+            messages = messages[-MAX_MESSAGES:]
 
-            recent_messages = messages[-RECENT_MESSAGES:]
-            system_base = {"role": "system", "content": "Bạn là chatbot thân thiện, trả lời bằng tiếng Việt."}
-            gemma_messages = [system_base] + recent_messages
+            # Build context
+            system_base = {"role": "system", "content": "Bạn là chatbot trả lời bằng tiếng Việt."}
+            context_msgs = [system_base] + messages[-RECENT_MESSAGES:]
 
+            # CHỌN MODEL
+            selected = choose_model(new_message)
+
+            # GỌI MODEL
             try:
-                collected = await asyncio.wait_for(call_gemma(gemma_messages), timeout=GEMMA_TIMEOUT)
+                reply = await call_model(context_msgs, selected)
             except:
-                collected = "[Lỗi: không thể kết nối tới Gemma hoặc timeout]"
+                reply = "[Lỗi gọi model]"
 
-            messages.append({"role": "assistant", "content": collected})
-            if len(messages) > MAX_MESSAGES:
-                messages = messages[-MAX_MESSAGES:]
+            # Append answer
+            messages.append({"role": "assistant", "content": reply})
+            messages = messages[-MAX_MESSAGES:]
+
+            # Save session
             sessions[session_id] = {"messages": messages, "last_active": datetime.utcnow()}
 
-            fut.set_result(collected)
+            fut.set_result({"model": selected, "answer": reply})
+
         except Exception as e:
-            fut.set_result(f"Lỗi worker: {e}")
+            fut.set_result({"model": "error", "answer": str(e)})
+
         finally:
             queue.task_done()
 
-# ----------------- Session cleaner -----------------
+
+# ----------------- SESSION CLEANER -----------------
 async def session_cleaner():
     while True:
         now = datetime.utcnow()
-        to_delete = [sid for sid, data in sessions.items() if now - data["last_active"] > SESSION_TIMEOUT]
-        for sid in to_delete:
+        expired = [sid for sid, data in sessions.items()
+                   if now - data["last_active"] > SESSION_TIMEOUT]
+
+        for sid in expired:
             del sessions[sid]
+
         await asyncio.sleep(60)
 
-# ----------------- Startup -----------------
+
+# ----------------- STARTUP -----------------
 @app.on_event("startup")
 async def startup_event():
     asyncio.create_task(worker())
     asyncio.create_task(session_cleaner())
 
+
 # ----------------- API -----------------
 @app.post("/ask")
 async def ask_ai(data: Question):
-    loop = asyncio.get_running_loop()
-    fut = loop.create_future()
+    fut = asyncio.get_running_loop().create_future()
     await queue.put((data.session_id, data.question, fut))
-    collected = await fut
-    return JSONResponse({"answer": collected})
+    result = await fut
+    return JSONResponse(result)
+
 
 @app.post("/end_session")
 async def end_session(data: dict):

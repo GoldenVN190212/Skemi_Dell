@@ -74,7 +74,7 @@ async function sendQuestion() {
     }
 
     const data = await res.json();
-    await typeText(loadingMsg, data.answer);
+    await typeText(loadingMsg, `(${data.model}) ${data.answer}`);
 
     loadingMsg.className = "ai-msg";
   } catch (err) {
