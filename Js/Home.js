@@ -1,8 +1,4 @@
-// ----------------------------
-// HOME.JS (FULL FIXED v2)
-// Hiện topic + vẽ mindmap
-// ----------------------------
-
+// Home.js
 const fileInput = document.getElementById("fileInput");
 const importBtn = document.getElementById("importBtn");
 const summaryBtn = document.getElementById("summaryBtn");
@@ -12,13 +8,12 @@ const ctx = canvas.getContext("2d");
 
 let lastMindmapData = null;
 
-// ----------------------------
-// Typing text effect on canvas
-// ----------------------------
+// -------------------------
+// EFFECT: TYPE TEXT
+// -------------------------
 async function typeCanvasText(x, y, text, speed = 20) {
     ctx.font = "20px Arial";
     ctx.fillStyle = "#000";
-
     let current = "";
     for (let char of text) {
         current += char;
@@ -28,16 +23,12 @@ async function typeCanvasText(x, y, text, speed = 20) {
     }
 }
 
-// ----------------------------
-// Draw mindmap
-// ----------------------------
+// -------------------------
+// VẼ SƠ ĐỒ
+// -------------------------
 async function drawMindmap(topic, subtopics) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Main topic typing
     await typeCanvasText(300, 60, topic);
-
-    // Subtopics
     ctx.font = "18px Arial";
     let y = 120;
     for (let s of subtopics) {
@@ -46,17 +37,39 @@ async function drawMindmap(topic, subtopics) {
     }
 }
 
-// ----------------------------
-// IMPORT FILE → SERVER
-// ----------------------------
+// -------------------------
+// IMPORT FILE
+// -------------------------
 importBtn.addEventListener("click", async () => {
-    if (!fileInput.files.length) {
-        alert("⚠️ Vui lòng chọn file trước!");
-        return;
+    if (!fileInput.files.length) return alert("⚠️ Vui lòng chọn file trước!");
+
+    const file = fileInput.files[0];
+    const fileName = file.name.toLowerCase();
+
+    // -----------------------------
+    // KIỂM TRA ĐÚNG FILE POWERPOINT
+    // -----------------------------
+    let fileType = "Tài liệu";
+
+    if (fileName.endsWith(".ppt") || fileName.endsWith(".pptx")) {
+        fileType = "PowerPoint";
+    } else if (fileName.endsWith(".pdf")) {
+        fileType = "PDF";
+    } else if (fileName.endsWith(".doc") || fileName.endsWith(".docx")) {
+        fileType = "Word";
     }
 
+    // -----------------------------
+    // Hiển thị thông báo đang xử lý
+    // -----------------------------
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = "26px Arial";
+    ctx.fillStyle = "#444";
+    ctx.fillText("⏳ AI đang phân tích " + fileType + "...", 100, 200);
+    ctx.fillText("Vui lòng chờ trong giây lát...", 100, 250);
+
     const formData = new FormData();
-    formData.append("file", fileInput.files[0]);
+    formData.append("file", file);
 
     try {
         importBtn.innerText = "⏳ Đang xử lý...";
@@ -68,21 +81,28 @@ importBtn.addEventListener("click", async () => {
         });
 
         const data = await res.json();
-        console.log("Server trả về:", data);
+        if (data.error) return alert("❌ Lỗi server: " + data.error);
 
-        if (data.error) {
-            alert("❌ Lỗi server: " + data.error);
-            return;
-        }
-
-        // Save returned data
         lastMindmapData = data;
 
-        // ✔️ Thông báo chủ đề
-        alert(`📌 Chủ đề chính của tài liệu là:\n\n👉 ${data.topic}`);
+        // -----------------------------
+        // ALERT CHỦ ĐỀ + LOẠI FILE
+        // -----------------------------
+        alert(
+            `📌 Bạn vừa import file ${fileType}\n\n` +
+            `👉 Chủ đề chính: ${data.topic}\n\n` +
+            `👉 Có mô tả không? ${data.detail.length > 0 ? "Có" : "Không"}`
+        );
 
-        // ✔️ Vẽ mindmap
-        drawMindmap(data.topic, data.detail);
+        // -----------------------------
+        // VẼ MINDMAP SAU KHI CÓ DỮ LIỆU
+        // -----------------------------
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillText("✨ Đang vẽ sơ đồ nội dung...", 100, 200);
+
+        setTimeout(() => {
+            drawMindmap(data.topic, data.detail);
+        }, 800);
 
     } catch (e) {
         console.error(e);
@@ -93,20 +113,18 @@ importBtn.addEventListener("click", async () => {
     }
 });
 
-// ----------------------------
-// NÚT TÓM TẮT
-// ----------------------------
+// -----------------------------
+// NÚT XEM TÓM TẮT
+// -----------------------------
 summaryBtn.addEventListener("click", () => {
     if (!lastMindmapData) return alert("Bạn chưa import file!");
-
     alert("📘 TÓM TẮT:\n\n" + lastMindmapData.summary.join("\n"));
 });
 
-// ----------------------------
-// NÚT CHI TIẾT
-// ----------------------------
+// -----------------------------
+// NÚT XEM CHI TIẾT
+// -----------------------------
 detailBtn.addEventListener("click", () => {
     if (!lastMindmapData) return alert("Bạn chưa import file!");
-
     alert("📙 CHI TIẾT:\n\n" + lastMindmapData.detail.join("\n"));
 });

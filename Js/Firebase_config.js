@@ -7,12 +7,13 @@ import { getStorage } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-s
 
 // 🔥 Thêm cấu hình Firebase của cậu chủ tại đây:
 const firebaseConfig = {
-  apiKey: "AIzaSyBYAgeL5xl2yfKMcmgiln5etyy-I-fvot0",
-  authDomain: "skemivn.firebaseapp.com",
-  projectId: "skemivn",
-  storageBucket: "skemivn.firebasestorage.app",
-  messagingSenderId: "430145480951",
-  appId: "1:430145480951:web:dd640a426315a19aadcbf2"
+  apiKey: "AIzaSyC_X2pMyDU_3YIVMGBDMddIPll_vQRf5Gw",
+  authDomain: "skemma-efe9b.firebaseapp.com",
+  databaseURL: "https://skemma-efe9b-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "skemma-efe9b",
+  storageBucket: "skemma-efe9b.firebasestorage.app",
+  messagingSenderId: "783277922550",
+  appId: "1:783277922550:web:63051241ddc7d185e3f4d7"
 };
 
 // Khởi tạo Firebase
