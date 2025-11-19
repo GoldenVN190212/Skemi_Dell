@@ -1,4 +1,4 @@
-# Server.py
+# Server.py (phiên bản đơn giản /ask, đã fix loại bỏ tag model)
 import os
 import asyncio
 import tempfile
@@ -15,9 +15,10 @@ from pydantic import BaseModel
 
 # ----------------- MODEL WRAPPERS -----------------
 from Train.model_gemma_small_chat import call_gemma__small_chat
-from Train.model_gemma_pro_chat import call_gemma_pro_chat  
+from Train.model_gemma_pro_chat import call_gemma_pro_chat
 from Train.model_gemma_image import call_gemma_image
 from Train.model_granite import call_granite_block
+from Train.extract_universal import extract_text
 
 # ----------------- APP INIT -----------------
 app = FastAPI()
@@ -43,19 +44,18 @@ async def index():
         return FileResponse(html_path)
     return JSONResponse({"message": "Home.html không tồn tại"}, status_code=404)
 
-# ----------------- CHATBOT / SESSION -----------------
+# ----------------- CHATBOT -----------------
+class Question(BaseModel):
+    session_id: str
+    question: str
+
 sessions = {}
 SESSION_TIMEOUT = timedelta(minutes=120)
 MAX_MESSAGES = 50
 RECENT_MESSAGES = 10
 
-class Question(BaseModel):
-    session_id: str
-    question: str
-
-queue = asyncio.Queue()
-
 def choose_chat_model(question: str):
+    """Chọn model chatbot dựa trên câu hỏi"""
     q = question.lower()
     complex_keywords = [
         "fix", "error", "bug", "code",
@@ -64,101 +64,57 @@ def choose_chat_model(question: str):
         "firebase", "database", "server"
     ]
     if len(question) > 120 or any(k in q for k in complex_keywords):
-        return "gemma3:4bPro"
-    return "gemma1b"
-
+        return "gemmaPro"
+    return "gemmaSmall"
 
 async def call_chatbot(messages, model_name):
-    """
-    Gọi model và trả về kết quả CHỈ TEXT (không gắn tag model)
-    """
+    """Gọi model chatbot, trả về text sạch (loại bỏ mọi tag)"""
     system_msg = {"role": "system", "content": "Bạn là chatbot. Trả lời cùng ngôn ngữ với câu hỏi người dùng."}
     full_messages = [system_msg] + messages
 
     def blocking_call():
         try:
-            if model_name == "gemma1b":
-                return call_gemma__small_chat(full_messages)
+            if model_name == "gemmaSmall":
+                resp = call_gemma__small_chat(full_messages)
             else:
-                return call_gemma_pro_chat(full_messages)
+                resp = call_gemma_pro_chat(full_messages)
+            return resp
         except Exception as e:
-            logging.exception("Error inside blocking_call")
+            logging.exception("Lỗi gọi model")
             return f"[Lỗi model: {e}]"
 
     resp = await asyncio.to_thread(blocking_call)
 
-    # Chuẩn hóa text
+    # Chuẩn hóa content
+    import re
     if isinstance(resp, dict):
-        content = resp.get("message", {}).get("content") or resp.get("content") or str(resp)
+        content = resp.get("message", {}).get("content") or resp.get("content") or ""
     elif hasattr(resp, "message"):
         content = resp.message.content
     else:
         content = str(resp)
 
-    # XÓA model tag nếu model tự chèn
-    content = content.replace(f"({model_name})", "").strip()
+    # Loại bỏ mọi tag dạng (xxx)
+    content = re.sub(r"\([^)]+\)", "", content).strip()
 
-    # Không thêm tag model nữa
     return content
-
-
-async def worker():
-    while True:
-        session_id, new_message, fut = await queue.get()
-        try:
-            session = sessions.get(session_id, {"messages": [], "last_active": datetime.utcnow()})
-            messages = session["messages"]
-
-            messages.append({"role": "user", "content": new_message})
-            messages = messages[-MAX_MESSAGES:]
-
-            selected_model = choose_chat_model(new_message)
-
-            try:
-                reply_text = await call_chatbot(messages[-RECENT_MESSAGES:], selected_model)
-            except Exception as e:
-                logging.exception("Error calling chatbot model:")
-                reply_text = "[Lỗi gọi model]"
-
-            # Append lại vào session
-            messages.append({"role": "assistant", "content": reply_text})
-            messages = messages[-MAX_MESSAGES:]
-
-            sessions[session_id] = {
-                "messages": messages,
-                "last_active": datetime.utcnow()
-            }
-
-            fut.set_result({"model": selected_model, "answer": reply_text})
-
-        except Exception as e:
-            fut.set_result({"model": "error", "answer": str(e)})
-        finally:
-            queue.task_done()
-
-
-async def session_cleaner():
-    while True:
-        now = datetime.utcnow()
-        expired = [sid for sid, data in sessions.items() if now - data["last_active"] > SESSION_TIMEOUT]
-        for sid in expired:
-            del sessions[sid]
-        await asyncio.sleep(60)
-
-
-@app.on_event("startup")
-async def startup_event():
-    asyncio.create_task(worker())
-    asyncio.create_task(session_cleaner())
-
 
 @app.post("/ask")
 async def ask_ai(data: Question):
-    fut = asyncio.get_running_loop().create_future()
-    await queue.put((data.session_id, data.question, fut))
-    result = await fut
-    return JSONResponse(result)
+    session = sessions.get(data.session_id, {"messages": [], "last_active": datetime.utcnow()})
+    messages = session["messages"]
 
+    messages.append({"role": "user", "content": data.question})
+    messages = messages[-MAX_MESSAGES:]
+
+    selected_model = choose_chat_model(data.question)
+    reply_text = await call_chatbot(messages[-RECENT_MESSAGES:], selected_model)
+
+    messages.append({"role": "assistant", "content": reply_text})
+    messages = messages[-MAX_MESSAGES:]
+    sessions[data.session_id] = {"messages": messages, "last_active": datetime.utcnow()}
+
+    return JSONResponse({"model": selected_model, "answer": reply_text})
 
 @app.post("/end_session")
 async def end_session(data: dict):
@@ -167,8 +123,7 @@ async def end_session(data: dict):
         del sessions[sid]
     return {"message": "Session đã xóa"}
 
-
-# ----------------- HELPERS MINDMAP -----------------
+# ----------------- MINDMAP ENDPOINT -----------------
 def _parse_gemma3_response(resp: Any) -> Tuple[str, List[str], List[str]]:
     topic = "Chưa xác định"
     detail = []
@@ -203,12 +158,9 @@ def _parse_gemma3_response(resp: Any) -> Tuple[str, List[str], List[str]]:
                     summary = subs[:max(1, len(subs)//3)]
                     return topic, detail, summary
     except Exception:
-        logging.exception("Error parsing gemma3 response")
-
+        logging.exception("Lỗi parse gemma3 response")
     return topic, detail, summary
 
-
-# ----------------- MINDMAP ENDPOINT -----------------
 @app.post("/generate_mindmap")
 async def generate_mindmap(file: UploadFile = File(...)):
     tmp_path = None
@@ -220,20 +172,32 @@ async def generate_mindmap(file: UploadFile = File(...)):
         tmp.write(contents)
         tmp.close()
 
+        # Trích xuất text từ file/ảnh
         gemma_resp = await asyncio.to_thread(call_gemma_image, tmp_path)
         topic, subtopics_detail, subtopics_summary = _parse_gemma3_response(gemma_resp)
 
+        # Nếu không có chữ, vẫn dùng granite để phân tích hình ảnh
+        if (not subtopics_detail or all(not d.strip() for d in subtopics_detail)) and \
+           (not subtopics_summary or all(not s.strip() for s in subtopics_summary)):
+            granite_res = await asyncio.to_thread(call_granite_block, [tmp_path])
+            resp = {
+                "topic": "Granite phân tích trực tiếp ảnh",
+                "detail": [],
+                "summary": [],
+                "granite_detail": granite_res
+            }
+            return JSONResponse(resp)
+
+        # Chuẩn hóa list nếu cần
         if not isinstance(subtopics_detail, list):
             subtopics_detail = list(subtopics_detail) if subtopics_detail else []
         if not isinstance(subtopics_summary, list):
             subtopics_summary = list(subtopics_summary) if subtopics_summary else []
 
+        # Granite vẽ mindmap dựa trên text/subtopics
         granite_detail_task = asyncio.to_thread(call_granite_block, subtopics_detail)
         granite_summary_task = asyncio.to_thread(call_granite_block, subtopics_summary)
-
-        granite_detail_res, granite_summary_res = await asyncio.gather(
-            granite_detail_task, granite_summary_task
-        )
+        granite_detail_res, granite_summary_res = await asyncio.gather(granite_detail_task, granite_summary_task)
 
         resp = {
             "topic": topic,
@@ -245,14 +209,13 @@ async def generate_mindmap(file: UploadFile = File(...)):
         return JSONResponse(resp)
 
     except Exception as e:
-        logging.exception("Error in /generate_mindmap")
+        logging.exception("Lỗi /generate_mindmap")
         return JSONResponse({"error": str(e)}, status_code=500)
     finally:
         if tmp_path and os.path.exists(tmp_path):
             os.remove(tmp_path)
 
-
 # ----------------- RUN -----------------
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("Server:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("Server:app", host="127.0.0.1", port=8000, reload=True)
