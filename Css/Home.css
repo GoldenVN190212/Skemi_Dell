@@ -1,8 +1,6 @@
-<<<<<<< HEAD
+
 /* Css/Home.css */
 
-=======
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
 /* RESET */
 * {
   margin: 0;
@@ -83,7 +81,6 @@ button:hover {
   box-shadow: 0 0 12px #00d9ff;
 }
 
-<<<<<<< HEAD
 /* --- PHẦN MỚI: GIAO DIỆN KÉO THẢ (UPLOAD BOX) --- */
 .upload-box {
   border: 2px dashed #00d9ff; /* Đổi màu cho hợp theme tối */
@@ -182,8 +179,7 @@ button:hover {
   border-color: #00d9ff;
 }
 
-=======
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
+
 /* CANVAS (Mindmap) */
 canvas {
   background: #0b0b1a;
@@ -193,8 +189,6 @@ canvas {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-<<<<<<< HEAD
-=======
 /* SCROLLBAR (thêm tí hiệu ứng) */
 ::-webkit-scrollbar {
   width: 10px;
@@ -206,7 +200,6 @@ canvas {
 }
 
 
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
 /* ========== NAVBAR ========== */
 .navbar {
   width: 100%;
@@ -215,7 +208,6 @@ canvas {
   display: flex;
   justify-content: space-between;
   align-items: center;
-<<<<<<< HEAD
   padding: 15px 40px;
   position: sticky;
   top: 0;
@@ -225,7 +217,6 @@ canvas {
 
 .logo {
   font-size: 1.8rem;
-=======
   padding: 12px 40px;
   position: sticky;
   top: 0;
@@ -237,7 +228,6 @@ canvas {
 
 .logo {
   font-size: 1.5rem;
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
   font-weight: 700;
   background: linear-gradient(90deg, #9b4dff, #00d9ff);
   -webkit-background-clip: text;
@@ -247,7 +237,6 @@ canvas {
 .nav-links {
   list-style: none;
   display: flex;
-<<<<<<< HEAD
   gap: 30px;
 }
 
@@ -256,7 +245,6 @@ canvas {
   text-decoration: none;
   font-weight: 500;
   font-size: 1.1rem;
-=======
   gap: 20px;
 }
 
@@ -264,18 +252,18 @@ canvas {
   color: #e0e0e0;
   text-decoration: none;
   font-weight: 500;
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
+
   transition: 0.3s;
 }
 
 .nav-links a:hover,
 .nav-links .active {
   color: #00d9ff;
-<<<<<<< HEAD
+
   text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
-=======
+
   text-shadow: 0 0 8px #00d9ff;
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
+
 }
 
 /* Nút logout */
@@ -289,16 +277,15 @@ canvas {
   font-weight: 600;
   transition: 0.3s;
   position: fixed;
-<<<<<<< HEAD
-=======
+
   padding-bottom: 15px;
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
+
   top: 850px;
   right: 50px;
   z-index: 100; 
 }
 
-<<<<<<< HEAD
+
 #logoutBtn:hover {
   box-shadow: 0 0 15px #ff4d79;
 }
@@ -359,7 +346,7 @@ canvas {
     color: #888;
     cursor: not-allowed;
 }
-=======
+
 
 #logoutBtn:hover {
   background: linear-gradient(90deg, #ff3366, #ff9955);
@@ -382,4 +369,4 @@ canvas {
 .summary-detail-buttons button {
     flex: 1;
 }
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
+

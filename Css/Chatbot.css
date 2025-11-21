@@ -16,25 +16,14 @@ body {
   min-height: 100vh;
 }
 
-<<<<<<< HEAD
 /* NAVBAR */
 .navbar {
   height: 65px;
-=======
-/* NAVBAR - Cập nhật */
-.navbar {
-  height: 65px; 
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
   width: 100%;
   background: rgba(255, 255, 255, 0.05);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
-<<<<<<< HEAD
   justify-content: space-between;
-=======
-  /* Căn đều logo, nav-links-center và auth-buttons */
-  justify-content: space-between; 
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
   align-items: center;
   padding: 12px 40px;
   position: sticky;
@@ -52,28 +41,16 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-<<<<<<< HEAD
 .nav-links-center {
   flex-grow: 1;
   display: flex;
   justify-content: center;
-=======
-/* Căn giữa các liên kết Home, Chart, Chatbot */
-.nav-links-center {
-  flex-grow: 1; /* Cho phép chiếm không gian trống để đẩy logo và auth-buttons ra xa */
-  display: flex;
-  justify-content: center; /* Căn giữa nội dung bên trong (ul.nav-links) */
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
 }
 
 .nav-links {
   list-style: none;
   display: flex;
-<<<<<<< HEAD
   gap: 25px;
-=======
-  gap: 25px; /* Khoảng cách giữa các mục Home, Chart, Chatbot */
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
 }
 
 .nav-links a {
@@ -89,7 +66,6 @@ body {
   text-shadow: 0 0 8px #00d9ff;
 }
 
-<<<<<<< HEAD
 .auth-buttons {
   display: flex;
   gap: 8px;
@@ -98,18 +74,6 @@ body {
 
 .navbar .tab {
   padding: 8px 16px;
-=======
-/* Container cho nút Log in / Sign up / UserBtn */
-.auth-buttons {
-  display: flex;
-  gap: 8px; /* Khoảng cách giữa Log in và Sign up */
-  align-items: center;
-}
-
-/* Điều chỉnh các nút chung trong navbar (Log in/Sign up/UserBtn) */
-.navbar .tab {
-  padding: 8px 16px; 
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
   font-weight: 500;
   border-radius: 8px;
   background: linear-gradient(90deg, #9b4dff, #00d9ff);
@@ -124,10 +88,7 @@ body {
   box-shadow: 0 0 8px #00d9ff;
 }
 
-<<<<<<< HEAD
-=======
-/* Nút logout (Giữ nguyên vị trí cố định) */
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
+/* Nút logout */
 #logoutBtn {
   background: linear-gradient(90deg, #ff4d79, #ff7b4d);
   color: #fff;
@@ -138,16 +99,10 @@ body {
   font-weight: 600;
   transition: 0.3s;
   position: fixed;
-<<<<<<< HEAD
-  top: 850px;
-  right: 50px;
-  z-index: 100;
-=======
   padding-bottom: 15px;
   top: 850px;
   right: 50px;
-  z-index: 100; 
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
+  z-index: 100;
 }
 
 #logoutBtn:hover {
@@ -173,24 +128,16 @@ p {
   color: #bbb;
 }
 
-<<<<<<< HEAD
-/* MAIN */
-=======
 /* MAIN CONTENT */
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
 main {
   width: 90%;
   max-width: 950px;
   margin-top: 40px;
 }
 
-<<<<<<< HEAD
-/* CHAT CARD */
-=======
 /* CARD SECTIONS */
 .upload,
 .mindmap,
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
 .chat {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -201,38 +148,14 @@ main {
   transition: 0.3s;
 }
 
-<<<<<<< HEAD
-=======
 .upload:hover,
 .mindmap:hover,
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
 .chat:hover {
   box-shadow: 0 0 35px rgba(0, 217, 255, 0.25);
   transform: translateY(-3px);
 }
 
-<<<<<<< HEAD
-/* CHAT CONTAINER */
-=======
-/* BUTTONS */
-button {
-  background: linear-gradient(90deg, #9b4dff, #00d9ff);
-  color: #fff;
-  border: none;
-  padding: 12px 25px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.3s;
-}
-
-button:hover {
-  background: linear-gradient(90deg, #b87cff, #00b3e6);
-  box-shadow: 0 0 12px #00d9ff;
-}
-
-/* CHAT AREA - Cải tiến */
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
+/* CHAT AREA */
 #chatContainer {
   background: linear-gradient(135deg, #0f0f2a, #1c1c3c);
   height: 450px;
@@ -242,23 +165,10 @@ button:hover {
   margin-bottom: 20px;
   font-size: 16px;
   overflow-y: auto;
-<<<<<<< HEAD
   display: flex;
   flex-direction: column;
-  gap: 10px; /* Khoảng cách giữa các tin nhắn */
+  gap: 10px;
   box-shadow: 0 0 20px rgba(0, 217, 255, 0.1);
-}
-
-/* TIN NHẮN */
-.user-msg {
-  background: linear-gradient(90deg, #9b4dff, #00d9ff);
-  color: #fff;
-  align-self: flex-end;
-  padding: 12px 18px;
-  border-radius: 16px 16px 0 16px;
-=======
-  box-shadow: 0 0 20px rgba(0, 217, 255, 0.1);
-  transition: 0.3s ease;
 }
 
 /* Tin nhắn người dùng */
@@ -270,20 +180,11 @@ button:hover {
   padding: 12px 18px;
   border-radius: 16px 16px 0 16px;
   text-align: right;
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
   max-width: 70%;
   word-wrap: break-word;
   box-shadow: 0 0 10px rgba(155, 77, 255, 0.3);
 }
 
-<<<<<<< HEAD
-.ai-msg {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f0f0f0;
-  align-self: flex-start;
-  padding: 12px 18px;
-  border-radius: 16px 16px 16px 0;
-=======
 /* Tin nhắn AI */
 .ai-msg {
   background: rgba(255, 255, 255, 0.08);
@@ -293,16 +194,12 @@ button:hover {
   padding: 12px 18px;
   border-radius: 16px 16px 16px 0;
   text-align: left;
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
   max-width: 70%;
   word-wrap: break-word;
   box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
 }
 
-<<<<<<< HEAD
-=======
-/* Hiệu ứng đợi AI */
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
+/* Loading effect */
 .loading {
   font-style: italic;
   color: #aaa;
@@ -315,10 +212,7 @@ button:hover {
   100% { opacity: 0.4; }
 }
 
-<<<<<<< HEAD
-=======
 /* TEXTAREA */
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
 #userInput {
   width: 100%;
   padding: 12px;
@@ -331,7 +225,7 @@ button:hover {
   font-size: 16px;
 }
 
-<<<<<<< HEAD
+/* BUTTONS */
 button {
   background: linear-gradient(90deg, #9b4dff, #00d9ff);
   color: #fff;
@@ -349,13 +243,6 @@ button:hover {
   box-shadow: 0 0 12px #00d9ff;
 }
 
-#chatTitle {
-  text-align: center;
-  font-size: 30px;
-  margin-bottom: 15px;
-  color: #e0e0e0;
-}
-=======
 /* SCROLLBAR */
 ::-webkit-scrollbar {
   width: 10px;
@@ -366,11 +253,10 @@ button:hover {
   border-radius: 6px;
 }
 
-/* Tiêu đề chat (Xin chào ...) */
+/* Chat title */
 #chatTitle {
   text-align: center; 
   font-size: 30px; 
   margin-bottom: 15px; 
   color: #e0e0e0; 
 }
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5

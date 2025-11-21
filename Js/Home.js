@@ -1,33 +1,25 @@
-<<<<<<< HEAD
-// Js/Home.js (Full Code)
-
-=======
 // Home.js
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
+
 const fileInput = document.getElementById("fileInput");
 const importBtn = document.getElementById("importBtn");
 const summaryBtn = document.getElementById("summaryBtn");
 const detailBtn = document.getElementById("detailBtn");
 const canvas = document.getElementById("mindmapCanvas");
 const ctx = canvas.getContext("2d");
-<<<<<<< HEAD
 const dropArea = document.getElementById("dropArea"); 
 const browseBtn = document.getElementById("browseBtn");
 const clearBtn = document.getElementById("clearBtn"); 
 
 let lastMindmapData = null;
 let selectedFile = null; 
-// --- BIẾN MỚI LƯU DỮ LIỆU ĐỂ CHUYỂN ĐỔI GIỮA 2 CHẾ ĐỘ ---
 let mindmapDetailNodes = null; 
 let mindmapSummaryNodes = null; 
-// --------------------------------------------------------
 let isProcessing = false; 
 
 // -------------------------
 // XỬ LÝ KÉO THẢ & PASTE
 // -------------------------
 
-// 1. Bấm nút chọn file
 browseBtn.addEventListener("click", () => fileInput.click());
 
 fileInput.addEventListener("change", function() {
@@ -36,7 +28,6 @@ fileInput.addEventListener("change", function() {
     }
 });
 
-// 2. Hiệu ứng khi kéo file vào
 dropArea.addEventListener("dragover", (e) => {
     e.preventDefault();
     dropArea.classList.add("drag-active");
@@ -48,23 +39,25 @@ dropArea.addEventListener("dragleave", () => {
     dropArea.querySelector("p").innerText = "Kéo thả hình ảnh/tài liệu vào đây";
 });
 
-// 3. Xử lý khi THẢ file (DROP)
 dropArea.addEventListener("drop", (e) => {
     e.preventDefault();
     dropArea.classList.remove("drag-active");
     
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-        fileInput.files = files; 
+        const dataTransfer = new DataTransfer();
+        for (let i = 0; i < files.length; i++) {
+             dataTransfer.items.add(files[i]);
+        }
+        fileInput.files = dataTransfer.files;
         handleFile(files[0]);
     } else {
         alert("⚠️ Để lấy ảnh từ web khác, vui lòng chuột phải vào ảnh chọn 'Sao chép hình ảnh' (Copy Image) rồi nhấn Ctrl+V tại đây.");
     }
 });
 
-// 4. Xử lý dán ảnh (PASTE - Ctrl+V) 
 document.addEventListener("paste", (e) => {
-    if (isProcessing) return; // Không dán khi đang xử lý
+    if (isProcessing) return; 
     
     const items = e.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
@@ -82,16 +75,15 @@ document.addEventListener("paste", (e) => {
     }
 });
 
-// Hàm hiển thị thông tin file sau khi chọn/thả/paste
 function handleFile(file) {
     selectedFile = file;
     dropArea.innerHTML = `
         <div class="icon">✅</div>
         <p class="file-info">Đã chọn: ${file.name}</p>
         <p class="small-text">Nhấn nút "Phân tích" bên dưới để bắt đầu</p>
+        <button id="browseBtn" class="browse-btn">📂 Chọn file khác</button>
     `;
-    clearBtn.disabled = false; // Kích hoạt nút xóa
-    // Đảm bảo nút browseBtn mới được gán lại sự kiện
+    clearBtn.disabled = false; 
     const newBrowseBtn = document.getElementById("browseBtn");
     if (newBrowseBtn) {
         newBrowseBtn.addEventListener("click", () => fileInput.click());
@@ -107,15 +99,15 @@ clearBtn.addEventListener("click", () => {
         return;
     }
     
-    // Đặt lại trạng thái file và dữ liệu
     fileInput.value = ""; 
     selectedFile = null;
     lastMindmapData = null;
     mindmapDetailNodes = null;
     mindmapSummaryNodes = null;
     clearBtn.disabled = true;
+    summaryBtn.disabled = true;
+    detailBtn.disabled = true;
 
-    // Đặt lại giao diện Drop Area
     dropArea.innerHTML = `
         <div class="icon">☁️</div>
         <p>Kéo thả hình ảnh/tài liệu vào đây</p>
@@ -124,7 +116,6 @@ clearBtn.addEventListener("click", () => {
         <button id="browseBtn" class="browse-btn">📂 Chọn file từ máy</button>
     `;
     
-    // Phải gán lại event listener cho nút browseBtn và fileInput
     const newFileInput = document.getElementById("fileInput");
     newFileInput.addEventListener("change", function() {
         if (this.files.length > 0) {
@@ -133,7 +124,6 @@ clearBtn.addEventListener("click", () => {
     });
     document.getElementById("browseBtn").addEventListener("click", () => newFileInput.click());
     
-    // Xóa Mindmap cũ trên canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.font = "26px Arial";
     ctx.fillStyle = "#444";
@@ -144,14 +134,34 @@ clearBtn.addEventListener("click", () => {
 // -------------------------
 // DRAW MINDMAP UTILS (RECURSIVE)
 // -------------------------
-async function drawRecursiveNode(node, parentX, parentY, isTextList = false) {
+async function typeCanvasText(x, y, text, speed = 20) {
+    ctx.font = ctx.font; 
+    ctx.fillStyle = ctx.fillStyle; 
+    
+    let current = "";
+    const textMeasure = ctx.measureText(text);
+    const textWidth = textMeasure.width;
+    const clearWidth = textWidth + 50; 
+    
+    for (let char of text) {
+        current += char;
+        if (speed > 0) {
+            ctx.clearRect(x, y - 20, clearWidth, 30);
+        }
+        ctx.fillText(current, x, y);
+        await new Promise(r => setTimeout(r, speed));
+    }
+}
+
+
+async function drawRecursiveNode(node, parentX, parentY, isSummaryMode = false) {
     const x = node.x;
     const y = node.y;
     const text = node.text;
-    const speed = isTextList ? 0 : 5; 
+    const speed = isSummaryMode ? 0 : 5; 
     
     // --- 1. VẼ ĐƯỜNG NỐI ---
-    if (parentX !== null && parentY !== null && !isTextList) {
+    if (parentX !== null && parentY !== null) {
         ctx.strokeStyle = "#4070f4";
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -162,7 +172,7 @@ async function drawRecursiveNode(node, parentX, parentY, isTextList = false) {
     }
     
     // --- 2. TÍNH KÍCH THƯỚC VÀ VẼ KHUNG ---
-    const fontSize = isTextList ? "18px" : (node.children && node.children.length > 0 ? "20px" : "18px");
+    const fontSize = isSummaryMode ? "20px" : (node.children && node.children.length > 0 ? "20px" : "18px");
     ctx.font = `${fontSize} Arial`;
     
     const padding = 15; 
@@ -174,54 +184,56 @@ async function drawRecursiveNode(node, parentX, parentY, isTextList = false) {
     const boxY = y - (boxHeight / 2) - 5; 
     const boxW = textWidth + padding + 10;
 
-    if (!isTextList) {
-        ctx.fillStyle = "#e0e0e0"; 
-        ctx.beginPath();
-        // Giả định ctx.roundRect được hỗ trợ hoặc đã có polyfill
-        if (typeof ctx.roundRect === 'function') {
-             ctx.roundRect(boxX, boxY, boxW, boxHeight, radius);
-        } else {
-             ctx.rect(boxX, boxY, boxW, boxHeight); // Fallback
-        }
-        ctx.fill();
+    ctx.fillStyle = isSummaryMode ? "#e0e0e0" : "#fff9c4"; 
+    ctx.strokeStyle = isSummaryMode ? "#4070f4" : "#ff6f61";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
+    if (typeof ctx.roundRect === 'function') {
+         ctx.roundRect(boxX, boxY, boxW, boxHeight, radius);
+    } else {
+         ctx.rect(boxX, boxY, boxW, boxHeight); 
     }
+    ctx.fill();
+    ctx.stroke(); 
+
     
     // --- 3. VẼ TEXT ---
     const textDrawX = x + padding/2 - 5; 
     const textDrawY = y + 5; 
 
-    ctx.fillStyle = isTextList ? "#fff" : "#000"; 
+    ctx.fillStyle = "#000"; 
     await typeCanvasText(textDrawX, textDrawY, text, speed); 
 
     // --- 4. ĐỆ QUY VẼ CON ---
-    if (node.children && node.children.length > 0) {
+    if (node.children && node.children.length > 0 && !isSummaryMode) {
         for (let child of node.children) {
-            await drawRecursiveNode(child, x, y + 5, isTextList); 
+            await drawRecursiveNode(child, x + 5, y + 5, isSummaryMode); 
         }
     }
 
-    if (isTextList) {
+    if (speed > 0) {
         await new Promise(r => setTimeout(r, 50));
     }
 }
 
 
-async function drawMindmap(topic, nodes, isTextList = false) {
+async function drawMindmap(topic, nodes, isSummaryMode = false) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     const topicX = 400; 
     const topicY = 60;
     
+    // --- VẼ NODE GỐC (TOPIC) ---
     ctx.font = "bold 30px Arial";
     const topicWidth = ctx.measureText(topic).width;
     ctx.fillStyle = "#ff6f61"; 
     
     ctx.beginPath();
-    // Giả định ctx.roundRect được hỗ trợ
     if (typeof ctx.roundRect === 'function') {
         ctx.roundRect(topicX - topicWidth / 2 - 20, topicY - 35, topicWidth + 40, 50, 10);
     } else {
-        ctx.rect(topicX - topicWidth / 2 - 20, topicY - 35, topicWidth + 40, 50); // Fallback
+        ctx.rect(topicX - topicWidth / 2 - 20, topicY - 35, topicWidth + 40, 50); 
     }
     ctx.fill();
 
@@ -229,41 +241,12 @@ async function drawMindmap(topic, nodes, isTextList = false) {
     await typeCanvasText(topicX - topicWidth / 2, topicY, topic, 0); 
     ctx.fillStyle = "#000"; 
 
+    // --- VẼ CÁC NODE CON CẤP 1 (TRUYỀN VÀO) ---
     for (let node of nodes) {
-        await drawRecursiveNode(node, topicX, topicY, isTextList); 
+        await drawRecursiveNode(node, topicX, topicY, isSummaryMode); 
     }
 }
 
-async function typeCanvasText(x, y, text, speed = 20) {
-    ctx.font = ctx.font; // Giữ nguyên font đã set từ hàm gọi
-    ctx.fillStyle = ctx.fillStyle; // Giữ nguyên màu đã set từ hàm gọi
-    let current = "";
-    for (let char of text) {
-        current += char;
-        if (speed > 0) {
-              ctx.clearRect(x, y - 20, 800, 30);
-        }
-=======
-
-let lastMindmapData = null;
-
-// -------------------------
-// EFFECT: TYPE TEXT
-// -------------------------
-async function typeCanvasText(x, y, text, speed = 20) {
-    ctx.font = "20px Arial";
-    ctx.fillStyle = "#000";
-    let current = "";
-    for (let char of text) {
-        current += char;
-        ctx.clearRect(x, y - 20, 800, 30);
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
-        ctx.fillText(current, x, y);
-        await new Promise(r => setTimeout(r, speed));
-    }
-}
-
-<<<<<<< HEAD
 
 // -------------------------
 // IMPORT FILE (LOGIC CHÍNH)
@@ -276,37 +259,8 @@ importBtn.addEventListener("click", async () => {
     if (isProcessing) return alert("🛑 Hệ thống đang bận!");
 
     const file = files[0];
-    let fileType = "Tài liệu";
-
-    // ... (Phần xác định fileType giữ nguyên) ...
-
-=======
-// -------------------------
-// VẼ SƠ ĐỒ
-// -------------------------
-async function drawMindmap(topic, subtopics) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    await typeCanvasText(300, 60, topic);
-    ctx.font = "18px Arial";
-    let y = 120;
-    for (let s of subtopics) {
-        await typeCanvasText(50, y, "- " + s, 10);
-        y += 30;
-    }
-}
-
-// -------------------------
-// IMPORT FILE
-// -------------------------
-importBtn.addEventListener("click", async () => {
-    if (!fileInput.files.length) return alert("⚠️ Vui lòng chọn file trước!");
-
-    const file = fileInput.files[0];
     const fileName = file.name.toLowerCase();
 
-    // -----------------------------
-    // KIỂM TRA ĐÚNG FILE POWERPOINT
-    // -----------------------------
     let fileType = "Tài liệu";
 
     if (fileName.endsWith(".ppt") || fileName.endsWith(".pptx")) {
@@ -315,12 +269,13 @@ importBtn.addEventListener("click", async () => {
         fileType = "PDF";
     } else if (fileName.endsWith(".doc") || fileName.endsWith(".docx")) {
         fileType = "Word";
+    } else if (fileName.endsWith(".png") || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+        fileType = "Hình ảnh";
     }
 
     // -----------------------------
     // Hiển thị thông báo đang xử lý
     // -----------------------------
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.font = "26px Arial";
     ctx.fillStyle = "#444";
@@ -331,16 +286,11 @@ importBtn.addEventListener("click", async () => {
     formData.append("file", file);
 
     try {
-<<<<<<< HEAD
         isProcessing = true;
         importBtn.innerText = "⏳ Đang xử lý...";
         importBtn.disabled = true;
         summaryBtn.disabled = true;
         detailBtn.disabled = true;
-=======
-        importBtn.innerText = "⏳ Đang xử lý...";
-        importBtn.disabled = true;
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
 
         const res = await fetch("http://localhost:8000/generate_mindmap", {
             method: "POST",
@@ -352,115 +302,71 @@ importBtn.addEventListener("click", async () => {
 
         lastMindmapData = data;
 
-<<<<<<< HEAD
-        // --- LƯU TRỮ VÀ XỬ LÝ DỮ LIỆU VẼ ---
-        let nodesToDraw = [];
-        if (data.mindmap_nodes && data.mindmap_nodes.length > 0) { 
-            mindmapDetailNodes = data.mindmap_nodes;
-            
-            // TẠO DỮ LIỆU TÓM TẮT (4 nhánh chính đầu tiên, bỏ nodes con)
-            mindmapSummaryNodes = mindmapDetailNodes.slice(0, 4).map(node => ({
-                ...node, 
-                children: [] 
-            }));
-            
-            nodesToDraw = mindmapDetailNodes; 
-        } else {
-             // Xử lý trường hợp không có mindmap_nodes (chỉ có detail/summary list)
-            alert("Không có cấu trúc Mindmap, chỉ có Tóm tắt/Chi tiết dạng liệt kê.");
-            return;
-        }
+        mindmapDetailNodes = data.mindmap_nodes;
+        
+        mindmapSummaryNodes = data.mindmap_nodes.slice(0, 4).map(node => ({
+            ...node, 
+            children: [] 
+        })); 
+        
+        summaryBtn.disabled = false;
+        detailBtn.disabled = false;
 
-        alert(
-            `📌 Phân tích xong!\n` +
-            `👉 Chủ đề: ${data.topic}\n`
-        );
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillText("✨ Đang vẽ sơ đồ chi tiết...", 100, 200);
-
-        setTimeout(() => {
-            // VẼ LẦN ĐẦU (CHẾ ĐỘ CHI TIẾT)
-            drawMindmap(data.topic, nodesToDraw, false); 
-=======
         // -----------------------------
-        // ALERT CHỦ ĐỀ + LOẠI FILE
+        // ALERT CHỦ ĐỀ
         // -----------------------------
         alert(
             `📌 Bạn vừa import file ${fileType}\n\n` +
             `👉 Chủ đề chính: ${data.topic}\n\n` +
-            `👉 Có mô tả không? ${data.detail.length > 0 ? "Có" : "Không"}`
+            `👉 Tổng số ý chính (Cấp 1): ${data.mindmap_nodes.length}`
         );
 
         // -----------------------------
-        // VẼ MINDMAP SAU KHI CÓ DỮ LIỆU
+        // VẼ MINDMAP CHI TIẾT LẦN ĐẦU
         // -----------------------------
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillText("✨ Đang vẽ sơ đồ nội dung...", 100, 200);
+        ctx.fillText("✨ Đang vẽ sơ đồ chi tiết...", 100, 200);
 
-        setTimeout(() => {
-            drawMindmap(data.topic, data.detail);
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5
+        setTimeout(async () => {
+            await drawMindmap(data.topic, mindmapDetailNodes, false);
+            detailBtn.classList.add('active');
+            summaryBtn.classList.remove('active');
         }, 800);
 
     } catch (e) {
         console.error(e);
-<<<<<<< HEAD
-        alert("❌ Lỗi kết nối server!");
+        alert("❌ Lỗi kết nối server hoặc gửi file thất bại!");
     } finally {
         isProcessing = false; 
         importBtn.innerText = "🚀 Phân tích & Tạo Mindmap";
         importBtn.disabled = false;
-        summaryBtn.disabled = false;
-        detailBtn.disabled = false;
     }
 });
 
 // -------------------------
 // XEM TÓM TẮT & CHI TIẾT
 // -------------------------
-summaryBtn.addEventListener("click", () => {
+summaryBtn.addEventListener("click", async () => {
     if (!lastMindmapData || !mindmapSummaryNodes) return alert("Bạn chưa phân tích file!");
     
-    // 1. Hiển thị Tóm tắt dạng Alert
     alert("📘 TÓM TẮT:\n\n" + lastMindmapData.summary.join("\n")); 
     
-    // 2. VẼ MINDMAP TÓM TẮT (4 nhánh)
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawMindmap(lastMindmapData.topic, mindmapSummaryNodes, false);
+    await drawMindmap(lastMindmapData.topic, mindmapSummaryNodes, true); 
+    
+    summaryBtn.classList.add('active');
+    detailBtn.classList.remove('active');
 });
 
-detailBtn.addEventListener("click", () => {
+detailBtn.addEventListener("click", async () => {
     if (!lastMindmapData || !mindmapDetailNodes) return alert("Bạn chưa phân tích file!");
     
-    // 1. Hiển thị Chi tiết dạng Alert
     alert("📙 CHI TIẾT:\n\n" + lastMindmapData.detail.join("\n"));
     
-    // 2. VẼ MINDMAP CHI TIẾT (7+ nhánh)
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawMindmap(lastMindmapData.topic, mindmapDetailNodes, false);
+    await drawMindmap(lastMindmapData.topic, mindmapDetailNodes, false); 
+    
+    detailBtn.classList.add('active');
+    summaryBtn.classList.remove('active');
 });
-=======
-        alert("❌ Lỗi không gửi được file!");
-    } finally {
-        importBtn.innerText = "📥 Import tài liệu";
-        importBtn.disabled = false;
-    }
-});
-
-// -----------------------------
-// NÚT XEM TÓM TẮT
-// -----------------------------
-summaryBtn.addEventListener("click", () => {
-    if (!lastMindmapData) return alert("Bạn chưa import file!");
-    alert("📘 TÓM TẮT:\n\n" + lastMindmapData.summary.join("\n"));
-});
-
-// -----------------------------
-// NÚT XEM CHI TIẾT
-// -----------------------------
-detailBtn.addEventListener("click", () => {
-    if (!lastMindmapData) return alert("Bạn chưa import file!");
-    alert("📙 CHI TIẾT:\n\n" + lastMindmapData.detail.join("\n"));
-});
->>>>>>> cc859f84b44ff48963711375d0fe56a1761b9eb5

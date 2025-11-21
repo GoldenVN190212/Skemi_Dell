@@ -16,8 +16,8 @@ from pydantic import BaseModel
 # ----------------- MODULES -----------------
 from Train.model_gemma_pro_chat import call_gemma_pro_chat
 from Train.model_gemma_small_chat import call_gemma__small_chat
-from Train.model_granite import call_granite_block
-from Train.ocr_module import extract_text_from_image  # Nếu có OCR module
+from Train.model_granite import call_granite_block 
+from Train.ocr_module import extract_text_from_image 
 
 # ----------------- APP INIT -----------------
 app = FastAPI()
@@ -152,7 +152,7 @@ async def generate_mindmap(file: UploadFile = File(...)):
 
         logging.info(f"--- BẮT ĐẦU XỬ LÝ FILE: {file.filename} ---")
 
-        # Giai đoạn 1: OCR / HWR
+        # Giai đoạn 1: OCR / HWR (call_granite_block với file path trả về list text)
         extracted_lines = await asyncio.to_thread(call_granite_block, tmp_path)
         logging.info(f"Extracted Lines (GĐ1): {extracted_lines[:5]}...")
 
@@ -160,28 +160,35 @@ async def generate_mindmap(file: UploadFile = File(...)):
             return JSONResponse({
                 "topic": "Không thể đọc nội dung",
                 "detail": ["Hình ảnh quá mờ hoặc không có chữ viết rõ ràng."],
-                "summary": []
+                "summary": [],
+                "mindmap_nodes": [] 
             })
 
         topic = extracted_lines[0] if extracted_lines else "Nội dung Mindmap"
 
-        # Giai đoạn 2: Structuring nodes
+        # Giai đoạn 2: Structuring nodes (call_granite_block với list text trả về List[Node] có tọa độ)
         mindmap_nodes_structured = await asyncio.to_thread(call_granite_block, extracted_lines)
-
-        # Parsing & gán tọa độ
+        
+        # Nếu mô hình trả về cấu trúc phân cấp thành công
         if isinstance(mindmap_nodes_structured, list) and mindmap_nodes_structured and isinstance(mindmap_nodes_structured[0], dict):
-            if 'text' in mindmap_nodes_structured[0]:
-                topic = mindmap_nodes_structured[0]['text']
+            
+            topic = extracted_lines[0] if extracted_lines else "Nội dung Mindmap"
+            
             final_nodes = mindmap_nodes_structured
+            
+            detail_list = [n['text'] for n in final_nodes if 'text' in n]
+            summary_list = [n['text'] for n in final_nodes[:4] if 'text' in n] 
         else:
-            final_nodes = [{"text": s, "x": 400, "y": 150 + i * 80, "children": []} for i, s in enumerate(extracted_lines)]
+            final_nodes = mindmap_nodes_structured 
+            detail_list = extracted_lines
+            summary_list = extracted_lines[:4]
 
         # Trả về kết quả
         return JSONResponse({
             "topic": topic,
-            "mindmap_nodes": final_nodes,
-            "detail": [n['text'] for n in final_nodes if 'text' in n],
-            "summary": [n['text'] for n in final_nodes[:3] if 'text' in n]
+            "mindmap_nodes": final_nodes, 
+            "detail": detail_list,       
+            "summary": summary_list      
         })
 
     except Exception as e:

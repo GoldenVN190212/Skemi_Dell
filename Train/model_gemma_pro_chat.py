@@ -1,48 +1,26 @@
 import ollama
-from typing import List, Dict, Any, Union
-
-# System Prompt được sửa lại cho đúng yêu cầu
-SYSTEM_PROMPT = (
-    "Bạn là một trợ lý AI cao cấp và chuyên nghiệp, có khả năng phân tích phức tạp. "
-    "Luôn luôn trả lời bằng đúng ngôn ngữ mà người dùng sử dụng trong tin nhắn gần nhất. "
-    "Nếu người dùng dùng tiếng Anh, bạn trả lời tiếng Anh. Nếu dùng tiếng Việt, trả lời tiếng Việt. "
-    "Tuyệt đối không sử dụng bất kỳ định dạng Markdown nào (như *, **, #, [], v.v.). "
-    "Chỉ sử dụng văn bản thuần túy."
-)
+from typing import List, Dict
+import re
 
 MODEL_NAME = "gemma3:4b-it-q8_0"
 
-def call_gemma_pro_chat(messages: List[Dict[str, str]]) -> Union[str, Any]:
-    """
-    Thực hiện cuộc gọi chat với mô hình gemma (phiên bản Pro) thông qua Ollama.
-    """
+SYSTEM_PROMPT = (
+    "Bạn là trợ lý AI chuyên nghiệp, luôn trả lời bằng đúng ngôn ngữ của người dùng. "
+    "Không sử dụng bất kỳ định dạng Markdown nào (như *, **, #, [], v.v.). "
+    "Chỉ trả về văn bản thuần."
+)
 
-    # 1. Thêm System Prompt vào đầu messages
-    contextual_messages = [{"role": "system", "content": SYSTEM_PROMPT}] + messages
+def call_gemma_pro_chat(messages: List[Dict[str, str]]):
+    """
+    Gọi model Pro, trả về văn bản thuần, không Markdown.
+    """
+    full_messages = [{"role": "system", "content": SYSTEM_PROMPT}] + messages
 
     try:
-        response = ollama.chat(
-            model=MODEL_NAME,
-            messages=contextual_messages,
-            options={
-                "temperature": 0.3,  # giữ nguyên logic ban đầu
-            }
-        )
-
-        # Trả về output thuần túy (Server.py sẽ trích content)
-        return response.get('message', {}).get('content', "Lỗi: Không nhận được phản hồi từ model Pro.")
-        
+        response = ollama.chat(model=MODEL_NAME, messages=full_messages, options={"temperature":0.3})
+        text = response.get("message", {}).get("content", "")
+        # Loại bỏ Markdown còn sót
+        text = re.sub(r'[*_~`#]', '', text)
+        return text.strip()
     except Exception as e:
-        return f"Lỗi khi gọi model {MODEL_NAME}: {str(e)}"
-# model_qwen3.py
-from ollama import chat
-
-# Chatbot xịn Qwen3-VL:4B
-def call_gemma_pro_chat(messages):
-    """
-    messages: list of dict {"role": "user"/"system", "content": "..."}
-    Trả về text chatbot
-    """
-    resp = chat(model="gemma3:4b-it-q4_K_M", messages=messages)
-    return resp.message.content  # chỉ lấy text
-
+        return f"Lỗi gọi model Pro: {str(e)}"
