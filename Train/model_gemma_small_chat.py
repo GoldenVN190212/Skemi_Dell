@@ -1,3 +1,4 @@
+
 # Train/model_gemma_small_chat.py
 import ollama
 from datetime import datetime
@@ -79,3 +80,9 @@ def call_gemma__small_chat(messages):
     except Exception as e:
         print(f"Lỗi gọi model SMALL ({MODEL_NAME}): {e}")
         return "Chào bạn! Tôi là trợ lý AI."
+
+from ollama import chat
+
+def call_gemma__small_chat(messages):
+    return chat(model="gemma3:1b", messages=messages)
+

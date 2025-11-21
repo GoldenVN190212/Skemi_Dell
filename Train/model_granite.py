@@ -1,3 +1,4 @@
+
 # Train/model_llama3_8b.py (Cập nhật)
 
 from ollama import chat 
@@ -118,3 +119,11 @@ BẠN LÀ CHUYÊN GIA OCR/HWR. Bạn là AI phân tích hình ảnh.
         except Exception as e:
             logging.error("Lỗi Llama3 8B (File path):", e)
             return []
+
+def call_granite_block(subtopics):
+    """
+    Nhận subtopics → vẽ mindmap hoặc trả về subtopics
+    Hiện tại giả lập trả nguyên mảng subtopics
+    """
+    # TODO: thực hiện gọi Granite3.2-Vision:2b-q8_0 nếu cần image
+    return subtopics
