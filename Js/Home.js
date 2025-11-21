@@ -19,7 +19,6 @@ let isProcessing = false;
 // -------------------------
 // XỬ LÝ KÉO THẢ & PASTE
 // -------------------------
-
 browseBtn.addEventListener("click", () => fileInput.click());
 
 fileInput.addEventListener("change", function() {

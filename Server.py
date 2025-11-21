@@ -4,8 +4,8 @@ import asyncio
 import tempfile
 import logging
 import math
-from datetime import datetime, timedelta
-from typing import List, Any
+from datetime import timedelta
+from typing import Any
 
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 # ----------------- MODULES -----------------
+# Giả định các model chat đã được định nghĩa
 from Train.model_gemma_pro_chat import call_gemma_pro_chat
 from Train.model_gemma_small_chat import call_gemma__small_chat
 from Train.model_granite import call_granite_block 
@@ -152,43 +153,56 @@ async def generate_mindmap(file: UploadFile = File(...)):
 
         logging.info(f"--- BẮT ĐẦU XỬ LÝ FILE: {file.filename} ---")
 
-        # Giai đoạn 1: OCR / HWR (call_granite_block với file path trả về list text)
-        extracted_lines = await asyncio.to_thread(call_granite_block, tmp_path)
-        logging.info(f"Extracted Lines (GĐ1): {extracted_lines[:5]}...")
-
-        if not extracted_lines or len("".join(extracted_lines).strip()) < 5:
-            return JSONResponse({
-                "topic": "Không thể đọc nội dung",
-                "detail": ["Hình ảnh quá mờ hoặc không có chữ viết rõ ràng."],
+        # Giai đoạn 1: OCR / Structuring. Kết quả: [topic_str, mindmap_nodes_structured]
+        result = await asyncio.to_thread(call_granite_block, tmp_path)
+        
+        if not isinstance(result, list) or len(result) != 2:
+             # Đây là lỗi nghiêm trọng nếu không phải list[topic, nodes]
+             raise Exception(f"Vision Model trả về định dạng không hợp lệ: {result}")
+        
+        topic = result[0]
+        final_nodes = result[1] 
+        
+        if topic.startswith("Lỗi"):
+             # Xử lý trường hợp Vision Model báo lỗi rõ ràng
+             return JSONResponse({
+                "topic": topic,
+                "detail": ["Không thể phân tích nội dung hình ảnh. Vui lòng thử lại với hình ảnh rõ ràng hơn."],
                 "summary": [],
                 "mindmap_nodes": [] 
             })
 
-        topic = extracted_lines[0] if extracted_lines else "Nội dung Mindmap"
-
-        # Giai đoạn 2: Structuring nodes (call_granite_block với list text trả về List[Node] có tọa độ)
-        mindmap_nodes_structured = await asyncio.to_thread(call_granite_block, extracted_lines)
+        if not final_nodes:
+            # Nếu model không tạo ra node nào
+            return JSONResponse({
+                "topic": topic,
+                "detail": ["Nội dung quá ít, không thể tạo Mindmap. Vui lòng tải lên tài liệu chi tiết hơn."],
+                "summary": [],
+                "mindmap_nodes": [] 
+            })
+            
+        # Giai đoạn 2: Trích xuất Detail và Summary từ cấu trúc nodes
+        detail_list = []
+        summary_list = []
         
-        # Nếu mô hình trả về cấu trúc phân cấp thành công
-        if isinstance(mindmap_nodes_structured, list) and mindmap_nodes_structured and isinstance(mindmap_nodes_structured[0], dict):
+        # Hàm đệ quy để lấy tất cả nội dung text
+        def extract_all_text(node):
+            texts = [node['text']]
+            if node.get('children'):
+                for child in node['children']:
+                    texts.extend(extract_all_text(child))
+            return texts
             
-            topic = extracted_lines[0] if extracted_lines else "Nội dung Mindmap"
-            
-            final_nodes = mindmap_nodes_structured
-            
-            detail_list = [n['text'] for n in final_nodes if 'text' in n]
-            summary_list = [n['text'] for n in final_nodes[:4] if 'text' in n] 
-        else:
-            final_nodes = mindmap_nodes_structured 
-            detail_list = extracted_lines
-            summary_list = extracted_lines[:4]
+        for node in final_nodes:
+            detail_list.extend(extract_all_text(node))
+            summary_list.append(node['text']) # Summary là các ý chính cấp 1
 
         # Trả về kết quả
         return JSONResponse({
             "topic": topic,
             "mindmap_nodes": final_nodes, 
             "detail": detail_list,       
-            "summary": summary_list      
+            "summary": summary_list[:4]  
         })
 
     except Exception as e:
