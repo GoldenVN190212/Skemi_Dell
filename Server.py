@@ -1,10 +1,9 @@
 # Server.py
 import os
 import asyncio
-import tempfile
 import logging
 import math
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from fastapi import FastAPI, UploadFile, File
@@ -12,13 +11,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from langdetect import detect
 
 # ----------------- MODULES -----------------
-# Giả định các model chat đã được định nghĩa
 from Train.model_gemma_pro_chat import call_gemma_pro_chat
 from Train.model_gemma_small_chat import call_gemma__small_chat
-from Train.model_granite import call_granite_block 
-from Train.ocr_module import extract_text_from_image 
+from Train.model_llava import call_mindmap_generation 
 
 # ----------------- APP INIT -----------------
 app = FastAPI()
@@ -36,42 +34,20 @@ if os.path.exists("Css"):
 if os.path.exists("Js"):
     app.mount("/Js", StaticFiles(directory="Js"), name="Js")
 
-# ----------------- HELPER: TỌA ĐỘ MINDMAP -----------------
-def assign_coords_recursive(node, x, y, level=0):
-    if level == 1:
-        x_pos = 400 + (1 if node.get('x_side', 1) == 1 else -1) * (180 + (node.get('index', 0) // 2) * 60)
-        y_pos = 120 + node.get('index', 0) * 100
-        node['x'] = x_pos
-        node['y'] = y_pos
-    elif level > 1:
-        distance = 150 / (level - 0.5)
-        angle = (node.get('index', 0) * 45) + (180 if level % 2 == 0 else 0)
-        node['x'] = x + distance * math.cos(math.radians(angle))
-        node['y'] = y + distance * math.sin(math.radians(angle))
+# Ensure tmp_files exists (some endpoints might still use it)
+os.makedirs("tmp_files", exist_ok=True)
 
-    if node.get('children'):
-        for i, child in enumerate(node['children']):
-            child['index'] = i
-            child['x_side'] = node.get('x_side', 1)
-            assign_coords_recursive(child, node['x'], node['y'], level + 1)
-    return node
-
-# ----------------- HELPER: TRÍCH XUẤT NỘI DUNG -----------------
+# ----------------- HELPERS -----------------
 def extract_reply_content(response: Any) -> str:
     if isinstance(response, str):
         return response
+    return getattr(response, "message", {}).get("content") or getattr(response, "content", None) or str(response)
+
+def detect_language(text: str) -> str:
     try:
-        return response.message.content
-    except AttributeError:
-        pass
-    try:
-        return response.content
-    except AttributeError:
-        pass
-    try:
-        return str(response)
+        return detect(text)
     except:
-        return "Lỗi trích xuất nội dung từ model."
+        return "vi"
 
 # ----------------- HOMEPAGE -----------------
 @app.get("/")
@@ -90,9 +66,7 @@ sessions = {}
 SESSION_TIMEOUT = timedelta(minutes=120)
 
 def assess_complexity(question: str) -> str:
-    """Quyết định sử dụng model Small hay Pro"""
     q_lower = question.lower().strip()
-    
     low_complexity_keywords = [
         "chào", "hello", "bạn là ai", "ai tạo ra bạn", "tên bạn",
         "hôm nay là ngày mấy", "ngày hôm nay", "ngày mấy"
@@ -105,17 +79,27 @@ def assess_complexity(question: str) -> str:
 
 @app.post("/ask")
 async def ask_ai(data: Question):
-    session = sessions.get(data.session_id, {"messages": []})
-    messages = session["messages"]
-    
-    new_user_question = data.question
-    messages.append({"role": "user", "content": new_user_question})
-    
-    # Đánh giá độ phức tạp
-    model_tier = assess_complexity(new_user_question)
-    logging.info(f"Question: '{new_user_question}' -> Using Model: {model_tier}")
+    now = datetime.utcnow()
+    session = sessions.get(data.session_id)
 
-    # Chọn model phù hợp
+    if not session or now - session["created_at"] > SESSION_TIMEOUT:
+        session = {"messages": [], "created_at": now}
+
+    messages = session["messages"]
+    messages.append({"role": "user", "content": data.question})
+
+    model_tier = assess_complexity(data.question)
+    language = detect_language(data.question)
+
+    system_prompt = {
+        "vi": "Bạn là trợ lý AI trả lời bằng tiếng Việt.",
+        "en": "You are an AI assistant that replies in English."
+    }.get(language, "You are an AI assistant.")
+
+    messages = [{"role": "system", "content": system_prompt}] + messages
+
+    logging.info(f"[{data.session_id}] Ngôn ngữ: {language} | Model: {model_tier}")
+
     if model_tier == "small":
         model_response = await asyncio.to_thread(call_gemma__small_chat, messages)
         model_used = "gemmaSmall"
@@ -123,13 +107,10 @@ async def ask_ai(data: Question):
         model_response = await asyncio.to_thread(call_gemma_pro_chat, messages)
         model_used = "gemmaPro"
 
-    # Trích xuất content thuần
     reply_text = extract_reply_content(model_response)
-    
-    # Lưu session
     messages.append({"role": "assistant", "content": reply_text})
-    sessions[data.session_id] = {"messages": messages}
-    
+    sessions[data.session_id] = {"messages": messages, "created_at": now}
+
     return JSONResponse({"model": model_used, "answer": reply_text})
 
 @app.post("/end_session")
@@ -137,80 +118,64 @@ async def end_session(data: dict):
     sid = data.get("session_id")
     if sid in sessions:
         del sessions[sid]
-    return {"message": "Session xóa"}
+    return {"message": "Session đã được xóa"}
 
 # ----------------- MINDMAP -----------------
 @app.post("/generate_mindmap")
 async def generate_mindmap(file: UploadFile = File(...)):
-    tmp_path = None
     try:
-        suffix = "." + file.filename.split(".")[-1] if "." in file.filename else ""
-        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-        tmp_path = tmp.name
-        contents = await file.read()
-        tmp.write(contents)
-        tmp.close()
+        # Read bytes directly from UploadFile (no temp file)
+        file_bytes = await file.read()
 
-        logging.info(f"--- BẮT ĐẦU XỬ LÝ FILE: {file.filename} ---")
+        # Call LLaVA model - we expect [topic, nodes]
+        result = await asyncio.to_thread(call_mindmap_generation, file_bytes)
 
-        # Giai đoạn 1: OCR / Structuring. Kết quả: [topic_str, mindmap_nodes_structured]
-        result = await asyncio.to_thread(call_granite_block, tmp_path)
-        
         if not isinstance(result, list) or len(result) != 2:
-             # Đây là lỗi nghiêm trọng nếu không phải list[topic, nodes]
-             raise Exception(f"Vision Model trả về định dạng không hợp lệ: {result}")
-        
-        topic = result[0]
-        final_nodes = result[1] 
-        
-        if topic.startswith("Lỗi"):
-             # Xử lý trường hợp Vision Model báo lỗi rõ ràng
-             return JSONResponse({
-                "topic": topic,
-                "detail": ["Không thể phân tích nội dung hình ảnh. Vui lòng thử lại với hình ảnh rõ ràng hơn."],
-                "summary": [],
-                "mindmap_nodes": [] 
-            })
+            raise Exception(f"Vision Model trả về định dạng không hợp lệ: {result}")
 
-        if not final_nodes:
-            # Nếu model không tạo ra node nào
+        topic, final_nodes = result
+
+        # If model returned an error-like topic
+        if isinstance(topic, str) and topic.startswith("Lỗi"):
             return JSONResponse({
                 "topic": topic,
-                "detail": ["Nội dung quá ít, không thể tạo Mindmap. Vui lòng tải lên tài liệu chi tiết hơn."],
+                "detail": ["Không thể phân tích hình ảnh. Vui lòng thử ảnh rõ hơn."],
                 "summary": [],
-                "mindmap_nodes": [] 
+                "mindmap_nodes": []
             })
-            
-        # Giai đoạn 2: Trích xuất Detail và Summary từ cấu trúc nodes
+
+        # If no nodes returned
+        if not final_nodes:
+            return JSONResponse({
+                "topic": topic if topic else "Không xác định",
+                "detail": ["Không đủ nội dung để tạo mindmap."],
+                "summary": [],
+                "mindmap_nodes": []
+            })
+
+        # Extract text for detail/summary
+        def extract_all_text(node):
+            items = [node.get("text", "")]
+            for child in node.get("children", []):
+                items.extend(extract_all_text(child))
+            return items
+
         detail_list = []
         summary_list = []
-        
-        # Hàm đệ quy để lấy tất cả nội dung text
-        def extract_all_text(node):
-            texts = [node['text']]
-            if node.get('children'):
-                for child in node['children']:
-                    texts.extend(extract_all_text(child))
-            return texts
-            
         for node in final_nodes:
             detail_list.extend(extract_all_text(node))
-            summary_list.append(node['text']) # Summary là các ý chính cấp 1
+            summary_list.append(node.get("text", ""))
 
-        # Trả về kết quả
         return JSONResponse({
             "topic": topic,
-            "mindmap_nodes": final_nodes, 
-            "detail": detail_list,       
-            "summary": summary_list[:4]  
+            "mindmap_nodes": final_nodes,
+            "detail": detail_list,
+            "summary": summary_list[:4]
         })
 
     except Exception as e:
-        logging.exception("Lỗi Server:")
+        logging.exception("Lỗi Server Mindmap:")
         return JSONResponse({"error": f"Lỗi xử lý Mindmap: {str(e)}"}, status_code=500)
-    finally:
-        if tmp_path and os.path.exists(tmp_path):
-            os.remove(tmp_path)
 
 # ----------------- RUN -----------------
 if __name__ == "__main__":

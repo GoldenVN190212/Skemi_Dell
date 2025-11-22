@@ -317,8 +317,7 @@ importBtn.addEventListener("click", async () => {
         // -----------------------------
         alert(
             `📌 Bạn vừa import file ${fileType}\n\n` +
-            `👉 Chủ đề chính: ${data.topic}\n\n` +
-            `👉 Tổng số ý chính (Cấp 1): ${data.mindmap_nodes.length}`
+            `👉 Chủ đề chính: ${data.topic}\n\n` 
         );
 
         // -----------------------------
