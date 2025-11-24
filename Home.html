@@ -2,76 +2,144 @@
 <html lang="vi">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Skemi - AI Mindmap Learning</title>
-  <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="./Css/Home.css" />
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skemi - AI Mindmap Learning</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./Css/Home.css" />
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 </head>
 
 <body>
-  <nav id="navbar" class="navbar">
-    <div class="logo">Skemi</div>
-    <ul class="nav-links">
-      <li><a href="Home.html" class="active">🏠 Home</a></li>
-      <li><a href="Chart.html">📚 Chart</a></li>
-      <li><a href="Chatbot.html">🤖 Chatbot</a></li>
-    </ul>
-    <div id="auth-buttons"></div>
-    <button id="logoutBtn" type="button">🚪 Logout</button>
-  </nav>
+    <nav id="navbar" class="navbar">
+        <div class="logo">Skemi</div>
+        <ul class="nav-links">
+            <li><a href="Home.html" class="active">🏠 Home</a></li>
+            <li><a href="Chart.html">📚 Chart</a></li>
+            <li><a href="Chatbot.html">🤖 Chatbot</a></li>
+        </ul>
+        <div id="auth-buttons"></div>
+        <button id="logoutBtn" type="button">🚪 Logout</button>
+    </nav>
 
-  <header>
-    <h1>Skemi</h1>
-    <p>Học thông minh cùng AI tạo Mindmap</p>
-  </header>
+    <header>
+        <h1>Skemi - AI Mindmap</h1>
+        <p>Học thông minh cùng AI tạo Mindmap và công cụ thủ công</p>
+    </header>
 
-  <main>
-    <section class="upload">
-    <h2>📚 Nhập tài liệu học tập</h2>
+    <div class="container-wrapper">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <h2>📁 Quản lý Mindmap</h2>
+                
+                <section class="templates">
+                    <h3>💡 Mẫu (Templates)</h3>
+                    <ul id="template-list" class="list-unstyled">
+                        <li data-template-id="1">Sơ đồ Tư duy Cổ điển</li>
+                        <li data-template-id="2">Sơ đồ Hình cây</li>
+                        <li data-template-id="3">Sơ đồ Dòng thời gian</li>
+                    </ul>
+                    <button class="btn-full">Xem tất cả mẫu</button>
+                </section>
+
+                <hr>
+
+                <section class="projects">
+                    <h3>💾 Dự án của bạn</h3>
+                    <ul id="project-list" class="list-unstyled">
+                        <li id="loading-project-msg">Đang tải dữ liệu...</li>
+                    </ul>
+                    <button class="btn-full">Quản lý Dự án</button>
+                </section>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            
+            <section class="mode-selector">
+                <h2>Chọn Chế độ</h2>
+                <div class="mode-buttons">
+                    <button id="mode-ai" class="mode-btn active">🧠 AI Tạo Mindmap</button>
+                    <button id="mode-manual" class="mode-btn">✍️ Vẽ Thủ công</button>
+                </div>
+            </section>
+            
+            <div id="mindmap-workspace">
+                <section id="ai-mode" class="mindmap-tool active">
+                    <h2>📚 AI Phân tích & Tạo Mindmap</h2>
+                    
+                    <div class="input-mode-selector">
+                        <button id="input-mode-text" class="input-mode-btn active">✍️ Text-to-Mindmap</button>
+                        <button id="input-mode-file" class="input-mode-btn">📂 File/Image-to-Mindmap</button>
+                    </div>
+                    <div id="text-input-area" class="input-area">
+                        <textarea id="textPrompt" placeholder="Nhập yêu cầu (vd: Phác thảo Mindmap về 'Các giai đoạn của Phát triển Web Frontend', dùng cho bài thuyết trình...)" rows="6"></textarea>
+                        <button id="generateTextBtn" class="import-button">🚀 Tạo Mindmap từ Văn bản</button>
+                    </div>
+                    <div id="file-upload-area" class="input-area hidden">
+                        <input type="file" id="fileInput" accept=".txt,.pdf,.png,.jpg,.jpeg,.docx,.pptx" hidden /> 
+
+                        <div id="dropArea" class="upload-box">
+                            <div class="icon">☁️</div>
+                            <p>Kéo thả hình ảnh/tài liệu (.pdf, .docx, .png, .jpg...)</p>
+                            <p class="small-text">hoặc nhấn <strong>Ctrl+V</strong> để dán ảnh</p>
+                            
+                            <button id="browseBtn" class="browse-btn">📂 Chọn file từ máy</button>
+                        </div>
+
+                        <div class="main-buttons">
+                            <button id="importBtn" class="import-button" disabled>🚀 Phân tích & Tạo Mindmap</button>
+                            <button id="clearBtn" class="clear-button" disabled>🗑️ Xóa File đang chọn</button> 
+                        </div>
+                    </div>
+                    <div class="summary-detail-buttons ai-control-btns">
+                        <button id="summaryBtn" disabled>📝 Tóm tắt</button>
+                        <button id="detailBtn" disabled>🔍 Chi tiết</button>
+                    </div>
+                    
+                    <div class="info-panel">
+                        <div id="summaryContainer" class="info-content">
+                            <h3>📝 Tóm tắt ý chính</h3>
+                        </div>
+                        <div id="detailContainer" class="info-content hidden">
+                            <h3>🔍 Chi tiết nội dung trích xuất</h3>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="manual-mode" class="mindmap-tool hidden">
+                    <h2>✍️ Công cụ Vẽ Mindmap Thủ công</h2>
+                    <div class="manual-tools">
+                        <button id="addNodeBtn">➕ Thêm Node</button>
+                        <button id="connectNodesBtn">🔗 Nối Nodes</button>
+                        <button id="editNodeBtn">✏️ Sửa Node</button>
+                        <button id="saveManualBtn">💾 Lưu Dự án</button>
+                    </div>
+                    <p class="instruction-text">Sử dụng các công cụ trên để vẽ Mindmap theo ý muốn.</p>
+                </section>
+
+                <section class="mindmap-display">
+                    <h2>🧠 Sơ đồ Tư duy</h2>
+                    
+                    <canvas id="mindmapCanvas" width="800" height="600"></canvas>
+                </section>
+            </div>
+            
+            <section class="actions">
+                <button id="completeBtn">✅ Hoàn thành bài học</button>
+            </section>
+        </main>
+    </div> 
     
-    <div id="dropArea" class="upload-box">
-        <div class="icon">☁️</div>
-        <p>Kéo thả hình ảnh/tài liệu vào đây</p>
-        <p class="small-text">hoặc nhấn <strong>Ctrl+V</strong> để dán ảnh copy từ web</p>
-        
-        <input type="file" id="fileInput" accept=".txt,.pdf,.png,.jpg,.jpeg,.docx,.pptx" hidden />
-        <button id="browseBtn" class="browse-btn">📂 Chọn file từ máy</button>
-    </div>
+    <footer>
+        <p>© 2025 Skemi AI Learning</p>
+    </footer>
 
-    <div class="main-buttons">
-        <button id="importBtn" class="import-button">🚀 Phân tích & Tạo Mindmap</button>
-        <button id="clearBtn" class="clear-button" disabled>🗑️ Xóa File đang chọn</button> 
-    </div>
-    
-    <div class="summary-detail-buttons">
-        <button id="summaryBtn">📝 Tóm tắt</button>
-        <button id="detailBtn">🔍 Chi tiết</button>
-    </div>
-
-    <section class="mindmap">
-      <h2>🧠 Mindmap bài học</h2>
-      <canvas id="mindmapCanvas" width="800" height="500"></canvas>
-    </section>
-
-    <section class="actions">
-      <button id="completeBtn">✅ Hoàn thành bài học</button>
-    </section>
-  </main>
-
-  <footer>
-    <p>© 2025 Skemi AI Learning</p>
-  </footer>
-
-  <script type="module" src="./Js/Home.js"></script>
-  <script type="module" src="./Js/User_navbar.js"></script>
+    <script type="module" src="./Js/Home.js"></script>
+    <script type="module" src="./Js/User_navbar.js"></script>
 </body>
 
-
 </html>
-</html>
-

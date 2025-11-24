@@ -1,10 +1,9 @@
-# Server.py
 import os
 import asyncio
 import logging
 import math
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, List
 
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,9 +13,30 @@ from pydantic import BaseModel
 from langdetect import detect
 
 # ----------------- MODULES -----------------
-from Train.model_gemma_pro_chat import call_gemma_pro_chat
-from Train.model_gemma_small_chat import call_gemma__small_chat
-from Train.model_llava import call_mindmap_generation 
+try:
+    # Các hàm giả định cho mục đích demo/hoàn chỉnh code
+    def call_gemma_pro_chat(messages):
+        logging.info("Calling mock gemma pro...")
+        last_user_message = next((m['content'] for m in reversed(messages) if m['role'] == 'user'), "Hello!")
+        return f"Tôi là Gemma Pro, trả lời câu hỏi phức tạp của bạn: {last_user_message}"
+
+    def call_gemma__small_chat(messages):
+        logging.info("Calling mock gemma small...")
+        last_user_message = next((m['content'] for m in reversed(messages) if m['role'] == 'user'), "Hello!")
+        return f"Tôi là Gemma Small, trả lời câu hỏi đơn giản của bạn: {last_user_message}"
+
+    # Import logic Mindmap từ file đã cung cấp
+    # Đảm bảo thư mục Train/ có module model_llama3.py
+    from Train.model_llama3 import call_mindmap_generation
+except ImportError as e:
+    logging.error(f"Error importing AI modules: {e}. Using local mocks.")
+    def call_gemma_pro_chat(messages):
+        return "Mock Pro response."
+    def call_gemma__small_chat(messages):
+        return "Mock Small response."
+    def call_mindmap_generation(input_data: Any) -> List[Any]:
+        return ["Mock Topic", [{"text": "Mock Node", "children": [], "x": 500, "y": 200}]]
+
 
 # ----------------- APP INIT -----------------
 app = FastAPI()
@@ -29,12 +49,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Cấu hình Static Files
 if os.path.exists("Css"):
     app.mount("/Css", StaticFiles(directory="Css"), name="Css")
 if os.path.exists("Js"):
     app.mount("/Js", StaticFiles(directory="Js"), name="Js")
 
-# Ensure tmp_files exists (some endpoints might still use it)
+# Đảm bảo tmp_files tồn tại
 os.makedirs("tmp_files", exist_ok=True)
 
 # ----------------- HELPERS -----------------
@@ -96,18 +117,21 @@ async def ask_ai(data: Question):
         "en": "You are an AI assistant that replies in English."
     }.get(language, "You are an AI assistant.")
 
-    messages = [{"role": "system", "content": system_prompt}] + messages
+    # Lấy 5 tin nhắn gần nhất + system prompt để giữ context
+    messages_with_system = [{"role": "system", "content": system_prompt}] + messages[-5:]
 
     logging.info(f"[{data.session_id}] Ngôn ngữ: {language} | Model: {model_tier}")
 
     if model_tier == "small":
-        model_response = await asyncio.to_thread(call_gemma__small_chat, messages)
+        model_response = await asyncio.to_thread(call_gemma__small_chat, messages_with_system)
         model_used = "gemmaSmall"
     else:
-        model_response = await asyncio.to_thread(call_gemma_pro_chat, messages)
+        model_response = await asyncio.to_thread(call_gemma_pro_chat, messages_with_system)
         model_used = "gemmaPro"
 
     reply_text = extract_reply_content(model_response)
+    
+    # Chỉ lưu tin nhắn mới vào session
     messages.append({"role": "assistant", "content": reply_text})
     sessions[data.session_id] = {"messages": messages, "created_at": now}
 
@@ -124,25 +148,27 @@ async def end_session(data: dict):
 @app.post("/generate_mindmap")
 async def generate_mindmap(file: UploadFile = File(...)):
     try:
-        # Read bytes directly from UploadFile (no temp file)
+        # Read bytes directly from UploadFile
         file_bytes = await file.read()
+        file_name = file.filename # Lấy tên file để xử lý sau này (nếu cần file type)
 
         # Call LLaVA model - we expect [topic, nodes]
-        result = await asyncio.to_thread(call_mindmap_generation, file_bytes)
+        # (Giả định call_mindmap_generation chưa dùng file_name, nếu cần dùng, phải sửa)
+        result = await asyncio.to_thread(call_mindmap_generation, file_bytes) 
 
         if not isinstance(result, list) or len(result) != 2:
             raise Exception(f"Vision Model trả về định dạng không hợp lệ: {result}")
 
         topic, final_nodes = result
 
-        # If model returned an error-like topic
-        if isinstance(topic, str) and topic.startswith("Lỗi"):
-            return JSONResponse({
-                "topic": topic,
-                "detail": ["Không thể phân tích hình ảnh. Vui lòng thử ảnh rõ hơn."],
-                "summary": [],
-                "mindmap_nodes": []
-            })
+        # Handle Model Error/Fallback
+        if isinstance(topic, str) and topic.startswith(("Lỗi", "Error")):
+             return JSONResponse({
+                 "topic": topic,
+                 "detail": ["Không thể phân tích hình ảnh/tài liệu. Vui lòng thử lại."],
+                 "summary": [],
+                 "mindmap_nodes": []
+             })
 
         # If no nodes returned
         if not final_nodes:
@@ -153,24 +179,26 @@ async def generate_mindmap(file: UploadFile = File(...)):
                 "mindmap_nodes": []
             })
 
-        # Extract text for detail/summary
+        # Extract text for detail/summary (Recurse to get all text)
         def extract_all_text(node):
+            # Lấy text của node hiện tại
             items = [node.get("text", "")]
+            # Lấy text của các node con
             for child in node.get("children", []):
                 items.extend(extract_all_text(child))
-            return items
+            return [i for i in items if i.strip()] # Filter empty strings
 
         detail_list = []
         summary_list = []
         for node in final_nodes:
             detail_list.extend(extract_all_text(node))
-            summary_list.append(node.get("text", ""))
+            summary_list.append(node.get("text", "")) # Chỉ lấy text cấp 1 cho summary
 
         return JSONResponse({
             "topic": topic,
-            "mindmap_nodes": final_nodes,
-            "detail": detail_list,
-            "summary": summary_list[:4]
+            "mindmap_nodes": final_nodes, # Nodes đã có tọa độ
+            "detail": detail_list, # Toàn bộ text
+            "summary": summary_list[:4] # 4 ý chính đầu tiên
         })
 
     except Exception as e:

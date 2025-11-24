@@ -1,329 +1,332 @@
-
-/* Css/Home.css */
-
 /* RESET */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Poppins", sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
 }
 
 /* BODY */
 body {
-  background: linear-gradient(145deg, #080819, #101033, #1a1a3d);
-  color: #f0f0f0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
+    background: linear-gradient(145deg, #080819, #101033, #1a1a3d);
+    color: #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
 }
 
 /* HEADER */
 header {
-  text-align: center;
-  margin-top: 30px;
-  color: #eaeaea;
+    text-align: center;
+    margin-top: 30px;
+    color: #eaeaea;
 }
 
 h1 {
-  font-size: 2.6rem;
-  background: linear-gradient(90deg, #9b4dff, #00d9ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+    font-size: 2.6rem;
+    background: linear-gradient(90deg, #9b4dff, #00d9ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 p {
-  color: #bbb;
+    color: #bbb;
 }
 
-/* MAIN CONTENT */
-main {
-  width: 90%;
-  max-width: 950px;
-  margin-top: 40px;
+/* CONTAINER CHO SIDEBAR VÀ MAIN */
+.container-wrapper {
+    display: flex;
+    width: 90%;
+    max-width: 1400px; /* Tăng max-width để chứa sidebar */
+    margin: 40px auto;
+    gap: 30px; 
+    flex-grow: 1; /* Cho phép nó mở rộng */
 }
 
-/* CARD SECTIONS */
-.upload,
-.mindmap,
-.actions {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 25px;
-  border-radius: 18px;
-  margin-bottom: 25px;
-  box-shadow: 0 0 25px rgba(139, 92, 246, 0.15);
-  transition: 0.3s;
+/* --------------------------------- */
+/* SIDEBAR STYLES         */
+/* --------------------------------- */
+.sidebar {
+    width: 280px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    box-shadow: 0 0 25px rgba(139, 92, 246, 0.15);
+    align-self: flex-start; /* Giữ sidebar ở trên cùng */
 }
 
-.upload:hover,
-.mindmap:hover,
-.actions:hover {
-  box-shadow: 0 0 35px rgba(0, 217, 255, 0.25);
-  transform: translateY(-3px);
+.sidebar h2, .sidebar h3 {
+    color: #00d9ff;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px;
 }
 
-/* BUTTONS */
-button {
-  background: linear-gradient(90deg, #9b4dff, #00d9ff);
-  color: #fff;
-  border: none;
-  padding: 12px 25px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.3s;
+.list-unstyled {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 20px;
 }
 
-button:hover {
-  background: linear-gradient(90deg, #b87cff, #00b3e6);
-  box-shadow: 0 0 12px #00d9ff;
+.list-unstyled li {
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.08);
+    transition: background-color 0.2s;
 }
 
-/* --- PHẦN MỚI: GIAO DIỆN KÉO THẢ (UPLOAD BOX) --- */
+.list-unstyled li:hover {
+    background-color: rgba(0, 217, 255, 0.2);
+}
+
+.btn-full {
+    width: 100%;
+    padding: 10px;
+    background: linear-gradient(90deg, #9b4dff, #00d9ff);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 5px;
+    font-weight: 600;
+}
+
+/* --------------------------------- */
+/* MAIN CONTENT STYLES      */
+/* --------------------------------- */
+.main-content {
+    flex-grow: 1;
+    min-width: 0; /* Cho phép co lại */
+}
+
+/* CARD SECTIONS (Giống như .upload trong code cũ) */
+.mindmap-tool,
+.mindmap-display,
+.actions,
+.info-panel {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 25px;
+    border-radius: 18px;
+    margin-bottom: 25px;
+    box-shadow: 0 0 25px rgba(139, 92, 246, 0.15);
+    transition: 0.3s;
+}
+
+.mindmap-tool:hover,
+.mindmap-display:hover,
+.actions:hover,
+.info-panel:hover {
+    box-shadow: 0 0 35px rgba(0, 217, 255, 0.25);
+    transform: translateY(-3px);
+}
+
+/* Chế độ chuyển đổi */
+.mode-selector {
+    margin-bottom: 20px;
+    padding: 20px 0;
+}
+
+.mode-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.mode-buttons .mode-btn {
+    flex: 1;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 1.1rem;
+}
+
+.mode-buttons .mode-btn.active {
+    background: linear-gradient(90deg, #9b4dff, #00d9ff);
+    border-color: #00d9ff;
+    box-shadow: 0 0 10px #00d9ff;
+}
+
+/* Ẩn/Hiện các khu vực chế độ */
+#manual-mode.hidden, 
+#ai-mode.hidden {
+    display: none;
+}
+
+/* --- PHẦN MỚI: AI INPUT MODE SELECTOR STYLES --- */
+.input-mode-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 15px;
+}
+
+.input-mode-selector .input-mode-btn {
+    flex: 1;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: 600;
+}
+
+.input-mode-selector .input-mode-btn:hover {
+    background: rgba(0, 217, 255, 0.2);
+}
+
+.input-mode-selector .input-mode-btn.active {
+    background: linear-gradient(90deg, #9b4dff, #00d9ff);
+    box-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+    color: #fff;
+}
+
+/* Khu vực nhập liệu (Textarea/Upload) */
+.input-area {
+    margin-bottom: 20px;
+}
+
+#textPrompt {
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #00d9ff;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #e0e0e0;
+    font-size: 1rem;
+    resize: vertical;
+    min-height: 120px;
+    margin-bottom: 15px; /* Tách biệt với nút Generate */
+}
+
+#textPrompt:focus {
+    outline: none;
+    box-shadow: 0 0 10px #9b4dff;
+}
+
+/* Cần thêm class hidden để ẩn/hiện các khu vực input */
+.hidden {
+    display: none !important;
+}
+
+/* Tools thủ công */
+.manual-tools {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.manual-tools button {
+    padding: 10px 15px;
+    border-radius: 10px;
+    flex-grow: 1;
+}
+
+.instruction-text {
+    font-style: italic;
+    color: #aaa;
+    text-align: center;
+}
+
+/* --- GIAO DIỆN KÉO THẢ (UPLOAD BOX) --- */
 .upload-box {
-  border: 2px dashed #00d9ff; /* Đổi màu cho hợp theme tối */
-  border-radius: 12px;
-  background-color: rgba(255, 255, 255, 0.03);
-  padding: 40px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-bottom: 20px;
+    border: 2px dashed #00d9ff;
+    border-radius: 12px;
+    background-color: rgba(255, 255, 255, 0.03);
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
 }
 
 .upload-box:hover, .upload-box.drag-active {
-  background-color: rgba(0, 217, 255, 0.1);
-  border-color: #9b4dff;
-  transform: scale(1.01);
+    background-color: rgba(0, 217, 255, 0.1);
+    border-color: #9b4dff;
+    transform: scale(1.01);
 }
 
 .upload-box .icon {
-  font-size: 40px;
-  margin-bottom: 10px;
+    font-size: 40px;
+    margin-bottom: 10px;
 }
 
 .upload-box p {
-  color: #e0e0e0;
-  margin: 5px 0;
+    color: #e0e0e0;
+    margin: 5px 0;
 }
 
 .upload-box .small-text {
-  font-size: 0.9rem;
-  color: #888;
+    font-size: 0.9rem;
+    color: #888;
 }
 
 .browse-btn {
-  margin-top: 15px;
-  padding: 8px 20px;
-  background: transparent;
-  border: 1px solid #00d9ff;
-  color: #00d9ff;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.3s;
+    margin-top: 15px;
+    padding: 8px 20px;
+    background: transparent;
+    border: 1px solid #00d9ff;
+    color: #00d9ff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
 }
 
 .browse-btn:hover {
-  background: #00d9ff;
-  color: #000;
-  box-shadow: 0 0 10px #00d9ff;
+    background: #00d9ff;
+    color: #000;
+    box-shadow: 0 0 10px #00d9ff;
 }
 
 .file-info {
-  color: #00ff88 !important; /* Màu xanh lá neon cho tên file */
-  font-weight: bold;
-  margin-top: 10px;
+    color: #00ff88 !important;
+    font-weight: bold;
+    margin-top: 10px;
 }
 
 /* --- CÁC BUTTON CHỨC NĂNG --- */
-.import-button {
-  width: 100%;
-  background: linear-gradient(90deg, #9b4dff, #00d9ff);
-  color: #fff;
-  border: none;
-  padding: 15px;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 10px;
-  transition: 0.3s;
-}
-
-.import-button:hover {
-  box-shadow: 0 0 15px #9b4dff;
-}
-
-.import-button:disabled {
-  background: #555;
-  cursor: not-allowed;
-}
-
-/* Group tóm tắt và chi tiết */
-.summary-detail-buttons {
-  display: flex;
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.summary-detail-buttons button {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.summary-detail-buttons button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: #00d9ff;
-}
-
-
-/* CANVAS (Mindmap) */
-canvas {
-  background: #0b0b1a;
-  border-radius: 12px;
-  margin-top: 10px;
-  width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* SCROLLBAR (thêm tí hiệu ứng) */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #9b4dff, #00d9ff);
-  border-radius: 6px;
-}
-
-
-/* ========== NAVBAR ========== */
-.navbar {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 40px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  backdrop-filter: blur(10px);
-}
-
-.logo {
-  font-size: 1.8rem;
-  padding: 12px 40px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
-}
-
-
-.logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  background: linear-gradient(90deg, #9b4dff, #00d9ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.nav-links {
-  list-style: none;
-  display: flex;
-  gap: 30px;
-}
-
-.nav-links a {
-  color: #ccc;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 1.1rem;
-  gap: 20px;
-}
-
-.nav-links a {
-  color: #e0e0e0;
-  text-decoration: none;
-  font-weight: 500;
-
-  transition: 0.3s;
-}
-
-.nav-links a:hover,
-.nav-links .active {
-  color: #00d9ff;
-
-  text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
-
-  text-shadow: 0 0 8px #00d9ff;
-
-}
-
-/* Nút logout */
-#logoutBtn {
-  background: linear-gradient(90deg, #ff4d79, #ff7b4d);
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  transition: 0.3s;
-  position: fixed;
-
-  padding-bottom: 15px;
-
-  top: 850px;
-  right: 50px;
-  z-index: 100; 
-}
-
-
-#logoutBtn:hover {
-  box-shadow: 0 0 15px #ff4d79;
-}
-
-/* SCROLLBAR */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #080819;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #404060;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #00d9ff;
-}
-
-
-/* Css/Home.css: Thêm vào cuối file */
-
-/* Sắp xếp nút Import và Xóa File */
 .main-buttons {
     display: flex;
-    gap: 10px; /* Khoảng cách giữa 2 nút */
+    gap: 10px;
     width: 100%;
-    margin-top: 15px; /* Giảm khoảng cách cho đẹp hơn */
+    margin-top: 15px;
 }
 
 .main-buttons button {
-    flex: 1; /* Chia đều không gian cho cả hai nút */
+    flex: 1;
 }
 
-/* Style cho nút Xóa File */
+.import-button {
+    background: linear-gradient(90deg, #9b4dff, #00d9ff);
+    color: #fff;
+    border: none;
+    padding: 15px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.import-button:hover {
+    box-shadow: 0 0 15px #9b4dff;
+}
+
+.import-button:disabled {
+    background: #555;
+    cursor: not-allowed;
+}
+
 .clear-button {
     background: linear-gradient(90deg, #333, #555);
     color: #fff;
@@ -342,31 +345,174 @@ canvas {
 }
 
 .clear-button:disabled {
-    background: #2a2a44; /* Màu nền khi bị vô hiệu hóa */
+    background: #2a2a44;
     color: #888;
     cursor: not-allowed;
 }
 
-
-#logoutBtn:hover {
-  background: linear-gradient(90deg, #ff3366, #ff9955);
-  box-shadow: 0 0 10px #ff7b4d;
-}
-
-/* Nút Import đứng riêng */
-.import-button {
-    margin-top: 10px;
-    width: 100%;
-}
-
-/* Group tóm tắt và chi tiết nằm cùng hàng */
+/* Group tóm tắt và chi tiết */
 .summary-detail-buttons {
     display: flex;
-    gap: 10px;
-    margin-top: 15px;
+    gap: 15px;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 .summary-detail-buttons button {
     flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.summary-detail-buttons button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #00d9ff;
+}
+
+.summary-detail-buttons button.active {
+    background: #00d9ff;
+    color: #000;
+    font-weight: bold;
+    border-color: #00d9ff;
+}
+
+/* Panel thông tin chi tiết */
+.info-panel {
+    padding: 15px 25px; /* Giảm padding */
+}
+
+.info-content {
+    margin-top: 15px;
+    max-height: 250px;
+    overflow-y: auto;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.info-content h3 {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 10px;
+    color: #ff9800;
+}
+
+.info-content p, .info-content li {
+    font-size: 0.95rem;
+    color: #ccc;
+    line-height: 1.5;
+}
+
+.info-content ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+
+/* CANVAS (Mindmap) */
+canvas {
+    background: #0b0b1a;
+    border-radius: 12px;
+    margin-top: 10px;
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* NAVBAR (Giữ nguyên) */
+.navbar {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #9b4dff, #00d9ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 30px;
+}
+
+.nav-links a {
+    color: #e0e0e0;
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+.nav-links a:hover,
+.nav-links .active {
+    color: #00d9ff;
+    text-shadow: 0 0 8px #00d9ff;
+}
+
+/* Nút logout */
+#logoutBtn {
+    background: linear-gradient(90deg, #ff4d79, #ff7b4d);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+    position: fixed;
+    top: 850px;
+    right: 50px;
+    z-index: 100; 
+}
+
+
+#logoutBtn:hover {
+    box-shadow: 0 0 15px #ff4d79;
+}
+
+
+/* SCROLLBAR (Giữ nguyên) */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #080819;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #404060;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #00d9ff;
+}
+
+/* BUTTONS */
+button {
+  background: linear-gradient(90deg, #9b4dff, #00d9ff);
+  color: #fff;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: linear-gradient(90deg, #b87cff, #00b3e6);
+  box-shadow: 0 0 12px #00d9ff;
+}
