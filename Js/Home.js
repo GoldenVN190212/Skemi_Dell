@@ -1,15 +1,19 @@
-// Home.js (PHIÊN BẢN MỚI: BỎ LOGIC GIẢ LẬP CỐ ĐỊNH, THAY BẰNG MÔ PHỎNG GỌI SERVER)
+/* Home.js - phiên bản fetch thực + loading UI + 1 alert chủ đề duy nhất */
 
-// Khai báo các biến DOM cố định
+// --- Cấu hình ---
+// Thay bằng endpoint thật của bạn
+const API_ENDPOINT = "http://localhost:8000/generate_mindmap"; // <-- đổi nếu cần
+
+
+// --- DOM Elements (giữ tương thích với file gốc) ---
 const fileInput = document.getElementById("fileInput");
-const importBtn = document.getElementById("importBtn"); // Nút cho chế độ File/Image
+const importBtn = document.getElementById("importBtn");
 const clearBtn = document.getElementById("clearBtn");
 const summaryBtn = document.getElementById("summaryBtn");
 const detailBtn = document.getElementById("detailBtn");
 const canvas = document.getElementById("mindmapCanvas");
 const dropArea = document.getElementById("dropArea");
 
-// Elements cho chuyển đổi chế độ chính (AI vs Manual)
 const modeAI = document.getElementById('mode-ai');
 const modeManual = document.getElementById('mode-manual');
 const aiModeSection = document.getElementById('ai-mode');
@@ -18,7 +22,6 @@ const infoPanel = document.querySelector('.info-panel');
 const summaryContainer = document.getElementById('summaryContainer');
 const detailContainer = document.getElementById('detailContainer');
 
-// Elements cho chế độ nhập liệu AI
 const inputModeText = document.getElementById('input-mode-text');
 const inputModeFile = document.getElementById('input-mode-file');
 const textInputArea = document.getElementById('text-input-area');
@@ -26,89 +29,73 @@ const fileUploadArea = document.getElementById('file-upload-area');
 const textPrompt = document.getElementById('textPrompt');
 const generateTextBtn = document.getElementById('generateTextBtn');
 
-// Elements cho chế độ Thủ công
 const addNodeBtn = document.getElementById('addNodeBtn');
 const connectNodesBtn = document.getElementById('connectNodesBtn');
 const editNodeBtn = document.getElementById('editNodeBtn');
 const saveManualBtn = document.getElementById('saveManualBtn');
 
-// Elements cho Sidebar
 const projectList = document.getElementById('project-list');
 
 if (!canvas) throw new Error("mindmapCanvas element not found!");
 const ctx = canvas.getContext("2d");
 
-let selectedFile = null; 
-let isProcessing = false; 
+let selectedFile = null;
+let isProcessing = false;
+let lastMindmapData = null;
 
-// KHỞI TẠO DỮ LIỆU RỖNG BAN ĐẦU
-let lastMindmapData = null; 
-
-// Cấu hình Canvas
-const CANVAS_WIDTH = 800; 
-const CANVAS_HEIGHT = 600; 
+const CANVAS_WIDTH = 800;
+const CANVAS_HEIGHT = 600;
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
 
 
-// --- UTILITY FUNCTIONS ---
-
-function loadSidebarData() {
-    if (projectList) {
-        projectList.innerHTML = '';
-        const projects = [
-            {id: 1, name: "Dự án 1: Lý thuyết Hóa học", type: "AI"},
-            {id: 2, name: "Dự án 2: Lịch sử Việt Nam", type: "Thủ công"},
-            {id: 3, name: "Dự án 3: Lập trình Web", type: "AI"},
-        ];
-
-        if (projects.length === 0) {
-            projectList.innerHTML = '<li>Chưa có dự án nào được lưu.</li>';
-        } else {
-            projects.forEach(project => {
-                const li = document.createElement('li');
-                li.textContent = project.name + (project.type ? ` (${project.type})` : '');
-                li.setAttribute('data-project-id', project.id);
-                projectList.appendChild(li);
-            });
-        }
+// ----------------- Utility -----------------
+function setLoadingState(on, opts = {}) {
+    // on: boolean
+    // opts: { for: 'import'|'text' }
+    if (opts.for === 'text') {
+        generateTextBtn.disabled = on;
+        generateTextBtn.textContent = on ? '⏳ Đang xử lý...' : '🚀 Tạo Mindmap từ Văn bản';
+    } else {
+        importBtn.disabled = on;
+        clearBtn.disabled = on;
+        importBtn.textContent = on ? '⏳ Đang phân tích file...' : '🚀 Phân tích & Tạo Mindmap';
     }
+    isProcessing = on;
 }
 
-function handleFile(file) {
-    selectedFile = file;
-    dropArea.innerHTML = `
-        <div class="icon">✅</div>
-        <p class="file-info">Đã chọn: ${file.name}</p>
-        <p class="small-text">Nhấn nút "Phân tích" bên dưới để bắt đầu</p>
-        <button id="browseBtn" class="browse-btn">📂 Chọn file khác</button>
-    `;
-    clearBtn.disabled = false; 
-    importBtn.disabled = false;
+function showSingleTopicAlert(topic) {
+    // 1 alert duy nhất, ngắn gọn (the user requested)
+    alert(`📌 Chủ đề: ${topic}`);
 }
 
-function resetDropArea() {
-    selectedFile = null;
-    clearBtn.disabled = true;
-    importBtn.disabled = true;
-    dropArea.innerHTML = `
-        <div class="icon">☁️</div>
-        <p>Kéo thả hình ảnh/tài liệu (.pdf, .docx, .png, .jpg...)</p>
-        <p class="small-text">hoặc nhấn <strong>Ctrl+V</strong> để dán ảnh</p>
-        <button id="browseBtn" class="browse-btn">📂 Chọn file từ máy</button>
-    `;
+function safeText(s) {
+    return String(s || '').replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function toggleInfoContainers(showSummary = false, showDetail = false) {
-    summaryContainer.classList.toggle('hidden', !showSummary);
-    detailContainer.classList.toggle('hidden', !showDetail);
-    summaryBtn.classList.toggle('active', showSummary);
-    detailBtn.classList.toggle('active', showDetail);
+
+// ----------------- Sidebar (unchanged) -----------------
+function loadSidebarData() {
+    if (!projectList) return;
+    projectList.innerHTML = '';
+    const projects = [
+        {id: 1, name: "Dự án 1: Lý thuyết Hóa học", type: "AI"},
+        {id: 2, name: "Dự án 2: Lịch sử Việt Nam", type: "Thủ công"},
+        {id: 3, name: "Dự án 3: Lập trình Web", type: "AI"},
+    ];
+    projects.forEach(p => {
+        const li = document.createElement('li');
+        li.textContent = p.name + (p.type ? ` (${p.type})` : '');
+        li.setAttribute('data-project-id', p.id);
+        projectList.appendChild(li);
+    });
 }
 
+
+// ----------------- Canvas draw (kept from your code) -----------------
 function drawMindmap(data) {
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    if (!data || data.nodes.length === 0) {
+    if (!data || !Array.isArray(data.nodes) || data.nodes.length === 0) {
         ctx.font = "26px Arial";
         ctx.fillStyle = "#444";
         ctx.textAlign = 'center';
@@ -117,39 +104,36 @@ function drawMindmap(data) {
         return;
     }
 
-    // 1. Vẽ các đường nối 
+    // connections (optional)
     ctx.strokeStyle = '#4d4dff';
     ctx.lineWidth = 2;
-    data.connections.forEach(conn => {
+    (data.connections || []).forEach(conn => {
         const fromNode = data.nodes.find(n => n.id === conn.from);
         const toNode = data.nodes.find(n => n.id === conn.to);
-        
         if (fromNode && toNode) {
             ctx.beginPath();
             ctx.moveTo(fromNode.x, fromNode.y);
             const midX = (fromNode.x + toNode.x) / 2;
-            const controlY = Math.min(fromNode.y, toNode.y) - 100; 
-            ctx.quadraticCurveTo(midX, controlY, toNode.x, toNode.y); 
+            const controlY = Math.min(fromNode.y, toNode.y) - 100;
+            ctx.quadraticCurveTo(midX, controlY, toNode.x, toNode.y);
             ctx.stroke();
         }
     });
 
-    // 2. Vẽ các Node
+    // nodes
     data.nodes.forEach(node => {
         const paddingX = 15;
         const paddingY = 8;
-        
         ctx.font = "18px Arial";
         ctx.textAlign = 'center';
         const textMetrics = ctx.measureText(node.text);
         const width = textMetrics.width + 2 * paddingX;
         const height = 18 + 2 * paddingY;
-
         const x = node.x - width / 2;
         const y = node.y - height / 2;
         const radius = 8;
-        
-        ctx.fillStyle = node.color || '#ff6666'; 
+
+        ctx.fillStyle = node.color || '#ff6666';
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 1;
 
@@ -174,13 +158,15 @@ function drawMindmap(data) {
     ctx.textAlign = 'start';
 }
 
+
+// ----------------- Input mode UI -----------------
 function switchInputMode(mode) {
     if (mode === 'file') {
         textInputArea.classList.add('hidden');
         fileUploadArea.classList.remove('hidden');
         inputModeFile.classList.add('active');
         inputModeText.classList.remove('active');
-    } else { 
+    } else {
         textInputArea.classList.remove('hidden');
         fileUploadArea.classList.add('hidden');
         inputModeFile.classList.remove('active');
@@ -194,16 +180,14 @@ function switchMode(mode) {
         manualModeSection.classList.add('hidden');
         modeAI.classList.add('active');
         modeManual.classList.remove('active');
-        infoPanel.classList.remove('hidden'); 
-        drawMindmap(lastMindmapData); 
-        
-    } else if (mode === 'manual') {
+        infoPanel.classList.remove('hidden');
+        drawMindmap(lastMindmapData);
+    } else {
         aiModeSection.classList.add('hidden');
         manualModeSection.classList.remove('hidden');
         modeAI.classList.remove('active');
         modeManual.classList.add('active');
-        infoPanel.classList.add('hidden'); 
-        
+        infoPanel.classList.add('hidden');
         ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         ctx.font = "26px Arial";
         ctx.fillStyle = "#444";
@@ -211,7 +195,6 @@ function switchMode(mode) {
         ctx.fillText("✍️ Khu vực vẽ Mindmap Thủ công", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 30);
         ctx.fillText("Sử dụng các nút bên trên để bắt đầu vẽ.", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 10);
         ctx.textAlign = 'start';
-        
         toggleInfoContainers(false, false);
         summaryBtn.disabled = true;
         detailBtn.disabled = true;
@@ -235,256 +218,300 @@ function initManualModeListeners() {
     });
 }
 
-// ------------------------------------
-// CHỨC NĂNG FETCH MODEL CHO FILE (MÔ PHỎNG GỌI SERVER)
-// ------------------------------------
+
+// ----------------- Fetch file -> server (thực) -----------------
 /**
- * Gửi file đã chọn lên API AI để nhận về Mindmap và Tóm tắt
- * @param {File} file File hình ảnh/tài liệu được chọn
+ * Gửi file (File object) lên server và xử lý kết quả
+ * Server expected JSON response:
+ * {
+ * topic: "string",
+ * mindmap_nodes: [ ... ]  // optional: nodes with x,y,color,id,text
+ * detail: ["...","..."],
+ * summary: ["...","..."] or string
+ * }
  */
 async function fetchMindmapFromAI(file) {
     if (isProcessing) return;
+    if (!file) {
+        alert("Vui lòng chọn một file trước khi phân tích.");
+        return;
+    }
 
-    isProcessing = true;
-    importBtn.textContent = '⏳ Đang gửi file lên Server...';
-    importBtn.disabled = true;
-    clearBtn.disabled = true;
+    setLoadingState(true, { for: 'import' });
 
-    // Thay thế bằng endpoint API Server Mindmap thực tế của bạn
-    const API_ENDPOINT = 'YOUR_FILE_AI_MODEL_API_ENDPOINT_HERE'; 
     const formData = new FormData();
     formData.append('file', file);
-    
-    let fileTitle = file.name;
-    let extractedTopic = `Phân tích cho file: ${fileTitle}`;
-    
+
     try {
-        // --- GIẢ LẬP GỌI API SERVER ---
-        
-        // **BƯỚC 1: MÔ PHỎNG GỬI FILE VÀ CHỜ PHẢN HỒI**
-        importBtn.textContent = '⏳ Đang chờ AI Server xử lý...';
-        
-        // Bạn sẽ cần thay thế Promise/setTimeout bằng lệnh fetch() thực tế
-        /* const response = await fetch(API_ENDPOINT, { method: 'POST', body: formData });
-        if (!response.ok) throw new Error(`Lỗi Server HTTP: ${response.status}`);
-        const apiResult = await response.json(); 
-        // Lấy dữ liệu thực tế: 
-        extractedTopic = apiResult.topic || extractedTopic;
-        const mindmapDataFromServer = apiResult.mindmapData;
-        const summaryText = apiResult.summary;
-        const detailText = apiResult.detail;
-        */
-        
-        await new Promise(resolve => setTimeout(resolve, 3000)); // Chờ 3 giây để giả lập kết nối Server
-        
-        // **BƯỚC 2: PHẢN HỒI GIẢ LẬP**
-        
-        alert(`✅ AI Server đã phản hồi! Chủ đề trích xuất: ${extractedTopic}`);
-        
-        // Dữ liệu Mindmap nhận được (MOCK DATA để đảm bảo giao diện chạy)
-        const mockData = { 
-            title: extractedTopic,
-            nodes: [
-                { id: 'chinh', text: extractedTopic, x: 400, y: 100, color: 'salmon' },
-                { id: 'nhanh_a', text: 'Nhánh A (Từ Server)', x: 200, y: 300, color: '#add8e6' },
-                { id: 'nhanh_b', text: 'Nhánh B (Từ Server)', x: 600, y: 300, color: '#90ee90' },
-            ],
-            connections: [
-                { from: 'chinh', to: 'nhanh_a' },
-                { from: 'chinh', to: 'nhanh_b' },
-            ]
+        // Gọi fetch thực
+        const resp = await fetch(API_ENDPOINT, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!resp.ok) {
+            // Đọc body nếu có thông tin lỗi
+            let text = await resp.text().catch(() => '');
+            throw new Error(`Server trả lỗi: ${resp.status} ${resp.statusText}${text ? ' — ' + text : ''}`);
+        }
+
+        const json = await resp.json();
+
+        // Lấy topic an toàn
+        const topic = json.topic || json.top || (json.mindmap && json.mindmap.title) || 'Không xác định';
+
+        // Hiển thị tóm tắt / chi tiết (nếu có)
+        const summaryText = Array.isArray(json.summary) ? json.summary.join(' • ') : (json.summary || '');
+        const detailText = Array.isArray(json.detail) ? json.detail.join('\n') : (json.detail || '');
+
+        summaryContainer.innerHTML = `<h3>📝 Tóm tắt ý chính</h3><p>${safeText(summaryText)}</p>`;
+        detailContainer.innerHTML = `<h3>🔍 Chi tiết nội dung trích xuất</h3><p>${safeText(detailText).replace(/\n/g, '<br>')}</p>`;
+
+        // Chuẩn bị dữ liệu cho vẽ mindmap: nếu server trả về nodes/còn thiếu connections, normalize
+        const nodesFromServer = json.mindmap_nodes || json.mindmap?.nodes || (json.nodes || []);
+        const connectionsFromServer = json.connections || json.mindmap?.connections || [];
+
+        // Nếu server chỉ trả dạng cây (nodes with children), bạn có thể muốn convert sang flat nodes with coords.
+        // Ở đây giả sử server đã trả nodes có x,y ; nếu không, ta sẽ fallback minimal.
+        let mindmapData = {
+            title: topic,
+            nodes: [],
+            connections: []
         };
-        
-        const summaryText = `Tóm tắt từ File **${file.name}**: Server AI đã xác định chủ đề là **${extractedTopic}** và tạo Mindmap thành công.`;
-        const detailText = `Nội dung chi tiết trích xuất từ Server AI cho File ${fileTitle}:\n[Dữ liệu Mindmap, Tóm tắt, và Chi tiết đã được Server AI tạo ra hoàn toàn]`;
 
-        const result = {
-            mindmapData: mockData,
-            summary: summaryText,
-            detail: detailText,
-        };
-        // --- KẾT THÚC GIẢ LẬP PHẢN HỒI SERVER ---
+        if (Array.isArray(nodesFromServer) && nodesFromServer.length > 0) {
+            // copy nodes, ensure id/text,x,y,color exist
+            mindmapData.nodes = nodesFromServer.map((n, idx) => ({
+                id: n.id || `n${idx}`,
+                text: n.text || n.title || `Node ${idx + 1}`,
+                x: (typeof n.x === 'number') ? n.x : (100 + (idx * 150) % (CANVAS_WIDTH - 200)),
+                y: (typeof n.y === 'number') ? n.y : (150 + Math.floor(idx / 4) * 120),
+                color: n.color || undefined
+            }));
+            mindmapData.connections = Array.isArray(connectionsFromServer) ? connectionsFromServer : [];
+        } else {
+            // fallback: create basic nodes from summary/detail if server didn't send nodes
+            const fallbackList = summaryText ? summaryText.split('•').map(s => s.trim()).filter(Boolean) : (detailText ? detailText.split('\n').slice(0, 4) : []);
+            mindmapData.nodes = fallbackList.map((t, i) => ({
+                id: `f${i}`,
+                text: t || `Ý ${i + 1}`,
+                x: 200 + i * 180,
+                y: 300,
+                color: undefined
+            }));
+            // connect all to first if multiple
+            if (mindmapData.nodes.length > 0) {
+                 mindmapData.connections = mindmapData.nodes.slice(1).map(n => ({ from: mindmapData.nodes[0].id, to: n.id }));
+            }
+        }
 
-        // 4. Cập nhật giao diện
-        summaryContainer.innerHTML = `<h3>📝 Tóm tắt ý chính</h3><p>${result.summary}</p>`;
-        detailContainer.innerHTML = `<h3>🔍 Chi tiết nội dung trích xuất</h3><p>${result.detail.replace(/\n/g, '<br>')}</p>`;
-
-        lastMindmapData = result.mindmapData; 
+        lastMindmapData = mindmapData;
         drawMindmap(lastMindmapData);
-        
+
+        // Enable summary/detail buttons
         summaryBtn.disabled = false;
         detailBtn.disabled = false;
         toggleInfoContainers(true, false);
-        alert(`Tạo Mindmap từ Server cho file "${fileTitle}" hoàn tất!`);
 
-    } catch (error) {
-        console.error("Lỗi khi fetch Mindmap từ Server AI:", error);
-        alert(`Lỗi kết nối Server: Không thể nhận phản hồi từ API Server. Chi tiết: ${error.message}`);
+        // --- ALERT DUY NHẤT ---
+        showSingleTopicAlert(topic);
+
+    } catch (err) {
+        console.error("fetchMindmapFromAI error:", err);
+        // Hiển thị alert ngắn gọn, kèm console để debug
+        alert(`❌ Lỗi khi phân tích file: ${err.message || err}`);
     } finally {
-        isProcessing = false;
-        importBtn.textContent = '🚀 Phân tích & Tạo Mindmap';
-        importBtn.disabled = false;
-        clearBtn.disabled = false;
+        setLoadingState(false, { for: 'import' });
     }
 }
 
-// ------------------------------------
-// CHỨC NĂNG FETCH MODEL CHO TEXT (GIỮ NGUYÊN)
-// ------------------------------------
+
+// ----------------- Fetch from text to model (giữ nguyên nhưng thực) -----------------
 async function fetchMindmapFromText(prompt) {
     if (isProcessing) return;
+    if (!prompt || prompt.trim().length < 5) {
+        alert("Vui lòng nhập prompt có độ dài phù hợp (>=5 ký tự).");
+        return;
+    }
 
-    isProcessing = true;
-    generateTextBtn.textContent = '⏳ Đang xử lý...';
-    generateTextBtn.disabled = true;
+    setLoadingState(true, { for: 'text' });
 
-    const API_ENDPOINT = 'YOUR_TEXT_AI_MODEL_API_ENDPOINT_HERE'; 
-    const data = { prompt: prompt };
+    const TEXT_API = API_ENDPOINT.replace('/generate_mindmap', '/generate_mindmap_from_text') || '/generate_mindmap_from_text';
 
     try {
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        
-        const result = {
-            mindmapData: { // Dữ liệu giả lập cho Text
-                title: "Kết quả từ Prompt",
-                nodes: [
-                    { id: 'root', text: 'Mindmap từ Prompt', x: 400, y: 100, color: '#f0e68c' },
-                    { id: 'nhanh1', text: 'Phân tích từ khóa', x: 200, y: 300, color: '#f08080' },
-                    { id: 'nhanh2', text: 'Tổng hợp cấu trúc', x: 600, y: 300, color: '#87cefa' },
-                ],
-                connections: [
-                    { from: 'root', to: 'nhanh1' },
-                    { from: 'root', to: 'nhanh2' },
-                ]
-            }, 
-            summary: `Tóm tắt từ Prompt: Nội dung Mindmap được tạo theo yêu cầu của bạn.`,
-            detail: `Yêu cầu của bạn: **${prompt}**\n\nNội dung chi tiết được sử dụng để tạo Mindmap:\n[Văn bản chi tiết từ AI dựa trên prompt]`,
-        };
-        
-        alert(`✅ AI đã nhận yêu cầu: "${prompt.substring(0, 30)}..."`);
-        
-        summaryContainer.innerHTML = `<h3>📝 Tóm tắt ý chính</h3><p>${result.summary}</p>`;
-        detailContainer.innerHTML = `<h3>🔍 Chi tiết nội dung trích xuất</h3><p>${result.detail.replace(/\n/g, '<br>')}</p>`;
+        const resp = await fetch(TEXT_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+        });
 
-        lastMindmapData = result.mindmapData; 
+        if (!resp.ok) {
+            const txt = await resp.text().catch(() => '');
+            throw new Error(`Server trả lỗi: ${resp.status} ${resp.statusText}${txt ? ' — ' + txt : ''}`);
+        }
+
+        const json = await resp.json();
+
+        const topic = json.topic || 'Không xác định';
+        const summaryText = Array.isArray(json.summary) ? json.summary.join(' • ') : (json.summary || '');
+        const detailText = Array.isArray(json.detail) ? json.detail.join('\n') : (json.detail || '');
+
+        summaryContainer.innerHTML = `<h3>📝 Tóm tắt ý chính</h3><p>${safeText(summaryText)}</p>`;
+        detailContainer.innerHTML = `<h3>🔍 Chi tiết nội dung trích xuất</h3><p>${safeText(detailText).replace(/\n/g, '<br>')}</p>`;
+
+        // nodes handling similar to file path
+        const nodes = json.mindmap_nodes || json.nodes || [];
+        lastMindmapData = {
+            title: topic,
+            nodes: Array.isArray(nodes) && nodes.length ? nodes.map((n,i) => ({
+                id: n.id || `n${i}`,
+                text: n.text || n.title || `Node ${i+1}`,
+                x: n.x || (100 + i * 150),
+                y: n.y || 200 + Math.floor(i/4)*120,
+                color: n.color || undefined
+            })) : [],
+            connections: json.connections || []
+        };
         drawMindmap(lastMindmapData);
-        
+        toggleInfoContainers(true, false);
         summaryBtn.disabled = false;
         detailBtn.disabled = false;
-        toggleInfoContainers(true, false);
-        alert("Tạo Mindmap từ Văn bản hoàn tất!");
 
-    } catch (error) {
-        console.error("Lỗi khi fetch Mindmap từ Text AI:", error);
-        alert(`Lỗi tạo Mindmap: Không thể kết nối với mô hình AI. Chi tiết: ${error.message}`);
+        // single alert with topic
+        showSingleTopicAlert(topic);
+
+    } catch (err) {
+        console.error("fetchMindmapFromText error:", err);
+        alert(`❌ Lỗi khi tạo Mindmap từ văn bản: ${err.message || err}`);
     } finally {
-        isProcessing = false;
-        generateTextBtn.textContent = '🚀 Tạo Mindmap từ Văn bản';
-        generateTextBtn.disabled = false;
+        setLoadingState(false, { for: 'text' });
     }
 }
 
 
-// -------------------------
-// INITIALIZATION
-// -------------------------
-document.addEventListener("DOMContentLoaded", () => {
-    // 1. Tải dữ liệu Sidebar
-    loadSidebarData();
+// ----------------- Drag & Drop + input handlers -----------------
+function handleFileSelection(file) {
+    handleFile(file); // update UI
+}
 
-    // 2. Gắn sự kiện chuyển đổi chế độ chính (AI vs Manual)
+function handleFile(file) {
+    selectedFile = file;
+    if (!dropArea) return;
+    dropArea.innerHTML = `
+        <div class="icon">✅</div>
+        <p class="file-info">Đã chọn: ${safeText(file.name)}</p>
+        <p class="small-text">Nhấn nút "Phân tích" bên dưới để bắt đầu</p>
+        <button id="browseBtn" class="browse-btn">📂 Chọn file khác</button>
+    `;    clearBtn.disabled = false;
+    importBtn.disabled = false;
+}
+
+function resetDropArea() {
+    selectedFile = null;
+    clearBtn.disabled = true;
+    importBtn.disabled = true;
+    if (!dropArea) return;
+    dropArea.innerHTML = `
+        <div class="icon">☁️</div>
+        <p>Kéo thả hình ảnh/tài liệu (.pdf, .docx, .png, .jpg...)</p>
+        <p class="small-text">hoặc nhấn <strong>Ctrl+V</strong> để dán ảnh</p>
+        <button id="browseBtn" class="browse-btn">📂 Chọn file từ máy</button>
+    `;
+}
+
+function toggleInfoContainers(showSummary, showDetail) {
+    if (summaryContainer) summaryContainer.classList.toggle('hidden', !showSummary);
+    if (detailContainer) detailContainer.classList.toggle('hidden', !showDetail);
+    if (summaryBtn) summaryBtn.classList.toggle('active', showSummary);
+    if (detailBtn) detailBtn.classList.toggle('active', showDetail);
+}
+
+
+// ----------------- Init and wiring events -----------------
+document.addEventListener("DOMContentLoaded", () => {
+    loadSidebarData();
+    initManualModeListeners();
+
     if (modeAI) modeAI.addEventListener('click', () => switchMode('ai'));
     if (modeManual) modeManual.addEventListener('click', () => switchMode('manual'));
-    
-    // 3. Gắn sự kiện chuyển đổi chế độ nhập liệu AI (Text vs File)
+
     if (inputModeText) inputModeText.addEventListener('click', () => switchInputMode('text'));
     if (inputModeFile) inputModeFile.addEventListener('click', () => switchInputMode('file'));
-
-    // Đảm bảo chế độ mặc định Text-to-Mindmap là ẩn File-upload-area
     if (fileUploadArea) fileUploadArea.classList.add('hidden');
 
-
-    // 4. Khởi tạo chức năng cho các nút Thủ công
-    initManualModeListeners();
-    
-    // 5. Thiết lập chế độ mặc định và vẽ Mindmap mẫu
-    switchMode('ai'); 
-
-    // 6. Gắn sự kiện cho các input/button liên quan đến file upload
+    // browseBtn handler delegated
     document.body.addEventListener("click", (e) => {
-        if (e.target.id === "browseBtn") {
+        if (e.target && e.target.id === "browseBtn") {
             if (fileInput) fileInput.click();
         }
     });
 
     if (fileInput) fileInput.addEventListener("change", function() {
-        if (this.files.length > 0) {
+        if (this.files && this.files.length > 0) {
             handleFile(this.files[0]);
         }
     });
-    
-    // 7. Sự kiện xóa file
+
     if (clearBtn) clearBtn.addEventListener("click", () => {
         resetDropArea();
-        lastMindmapData = null; 
+        lastMindmapData = null;
         drawMindmap(lastMindmapData);
     });
 
-    // 8. Sự kiện Phân tích & Tạo Mindmap 
-    
-    // a) File/Image-to-Mindmap
-    if (importBtn) importBtn.addEventListener('click', () => {
-        if (selectedFile) {
-            fetchMindmapFromAI(selectedFile); // Gọi hàm fetch model cho File
-        } else {
+    // Actual upload button: send selectedFile to server
+    if (importBtn) importBtn.addEventListener("click", () => {
+        if (!selectedFile) {
             alert("Vui lòng chọn một file trước khi phân tích.");
+            return;
         }
+        fetchMindmapFromAI(selectedFile);
     });
-    
-    // b) Text-to-Mindmap
-    if (generateTextBtn) generateTextBtn.addEventListener('click', () => {
+
+    if (generateTextBtn) generateTextBtn.addEventListener("click", () => {
         const prompt = textPrompt.value.trim();
         if (prompt.length > 10) {
-            fetchMindmapFromText(prompt); // Gọi hàm fetch model cho Text
+            fetchMindmapFromText(prompt);
         } else {
             alert("Vui lòng nhập yêu cầu có độ dài lớn hơn 10 ký tự.");
         }
     });
 
-
-    // 9. Sự kiện Tóm tắt/Chi tiết
     if (summaryBtn) summaryBtn.addEventListener('click', () => toggleInfoContainers(true, false));
     if (detailBtn) detailBtn.addEventListener('click', () => toggleInfoContainers(false, true));
 
-
-    // 10. Sự kiện Kéo thả (Drag and Drop)
+    // Drag & drop handlers
     if (dropArea) {
         dropArea.addEventListener("dragover", (e) => {
             e.preventDefault();
             dropArea.classList.add("drag-active");
-            dropArea.querySelector("p").innerText = "Thả file vào đây để tải lên";
+            const p = dropArea.querySelector("p");
+            if (p) p.innerText = "Thả file vào đây để tải lên";
         });
         dropArea.addEventListener("dragleave", (e) => {
             e.preventDefault();
             dropArea.classList.remove("drag-active");
-            
+            const p = dropArea.querySelector("p");
             if (selectedFile) {
-                 dropArea.querySelector(".small-text").innerText = "Nhấn nút \"Phân tích\" bên dưới để bắt đầu";
+                const st = dropArea.querySelector(".small-text");
+                if (st) st.innerText = "Nhấn nút \"Phân tích\" bên dưới để bắt đầu";
             } else {
-                 dropArea.querySelector("p").innerText = "Kéo thả hình ảnh/tài liệu (.pdf, .docx, .png, .jpg...)";
+                if (p) p.innerText = "Kéo thả hình ảnh/tài liệu (.pdf, .docx, .png, .jpg...)";
             }
         });
         dropArea.addEventListener("drop", (e) => {
             e.preventDefault();
             dropArea.classList.remove("drag-active");
-            
             const files = e.dataTransfer.files;
             if (files.length > 0) {
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(files[0]);
-                fileInput.files = dataTransfer.files;
+                const dt = new DataTransfer();
+                dt.items.add(files[0]);
+                fileInput.files = dt.files;
                 handleFile(files[0]);
             }
         });
     }
+
+    // default mode
+    switchMode('ai');
+    toggleInfoContainers(false, false);
 });

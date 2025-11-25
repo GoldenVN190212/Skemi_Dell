@@ -1,27 +1,38 @@
 import ollama
-from datetime import datetime
+from typing import List, Dict
 import re
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 MODEL_NAME = "gemma3:1b"
 
-def call_gemma__small_chat(messages):
-    """
-    Gọi model nhỏ, trả lời thuần văn bản, không có Markdown.
-    """
-    # System prompt ép model trả lời thuần text
-    system_prompt = {
-        "role": "system",
-        "content": (
-            "Bạn là trợ lý AI Skemi. "
-            "Luôn trả lời bằng đúng ngôn ngữ người dùng. "
-            "Tuyệt đối không sử dụng Markdown hoặc ký tự đặc biệt như *, **, #, [], v.v. "
-            "Chỉ trả về văn bản thuần."
-        )
-    }
+SYSTEM_PROMPT_FORMAT = (
+    "Bạn là trợ lý AI Skemi. Hãy trả lời một cách tự nhiên và hữu ích như một người bạn, phù hợp với cấp độ câu hỏi đơn giản. "
+    "TUYỆT ĐỐI không sử dụng bất kỳ định dạng Markdown hoặc ký tự đặc biệt nào như *, **, #, [], v.v. "
+    "Chỉ trả về văn bản thuần. Yêu cầu về ngôn ngữ ĐẦU RA (Việt/Anh) phải được TUÂN THỦ NGHIÊM NGẶT từ các hướng dẫn trước đó."
+)
 
-    full_messages = [system_prompt] + messages
+
+def call_gemma__small_chat(messages: List[Dict[str, str]]):
+    
+    lang_system_prompt = next((m for m in messages if m['role'] == 'system'), None)
+    
+    full_messages = []
+    
+    # 1. Thêm System Prompt về Format/Tone
+    full_messages.append({"role": "system", "content": SYSTEM_PROMPT_FORMAT})
+    
+    # 2. Thêm System Prompt về Ngôn ngữ (Ưu tiên cao)
+    if lang_system_prompt:
+        full_messages.append(lang_system_prompt)
+        
+    # 3. Thêm các tin nhắn lịch sử và tin nhắn User hiện tại
+    full_messages.extend([m for m in messages if m['role'] != 'system'])
 
     try:
+        logging.info(f"Calling Ollama Small: {MODEL_NAME} with {len(full_messages)} messages.")
+        
         response = ollama.chat(
             model=MODEL_NAME,
             messages=full_messages,
@@ -29,10 +40,9 @@ def call_gemma__small_chat(messages):
         )
 
         text = getattr(response.message, "content", str(response))
-        # Loại bỏ Markdown nếu còn sót
         text = re.sub(r'[*_~`#]', '', text)
         return text.strip()
 
     except Exception as e:
-        print(f"Lỗi gọi model SMALL: {e}")
+        logging.error(f"Lỗi gọi model SMALL ({MODEL_NAME}): {e}")
         return "Xin lỗi, tôi không thể trả lời lúc này."
