@@ -1,17 +1,15 @@
-/* Home.js - phiên bản fetch thực + loading UI + 1 alert chủ đề duy nhất */
+/* Home.js - phiên bản đã sửa đổi dùng Vis.js Network */
 
 // --- Cấu hình ---
-// Thay bằng endpoint thật của bạn
 const API_ENDPOINT = "http://localhost:8000/generate_mindmap"; // <-- đổi nếu cần
 
-
-// --- DOM Elements (giữ tương thích với file gốc) ---
+// --- DOM Elements ---
 const fileInput = document.getElementById("fileInput");
 const importBtn = document.getElementById("importBtn");
 const clearBtn = document.getElementById("clearBtn");
 const summaryBtn = document.getElementById("summaryBtn");
 const detailBtn = document.getElementById("detailBtn");
-const canvas = document.getElementById("mindmapCanvas");
+const canvas = document.getElementById("mindmapCanvas"); 
 const dropArea = document.getElementById("dropArea");
 
 const modeAI = document.getElementById('mode-ai');
@@ -37,22 +35,22 @@ const saveManualBtn = document.getElementById('saveManualBtn');
 const projectList = document.getElementById('project-list');
 
 if (!canvas) throw new Error("mindmapCanvas element not found!");
-const ctx = canvas.getContext("2d");
 
 let selectedFile = null;
 let isProcessing = false;
-let lastMindmapData = null;
+let lastMindmapData = null; 
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
 
+// ----------------- Vis.js Global Instance -----------------
+let visNetworkInstance = null; 
+
 
 // ----------------- Utility -----------------
 function setLoadingState(on, opts = {}) {
-    // on: boolean
-    // opts: { for: 'import'|'text' }
     if (opts.for === 'text') {
         generateTextBtn.disabled = on;
         generateTextBtn.textContent = on ? '⏳ Đang xử lý...' : '🚀 Tạo Mindmap từ Văn bản';
@@ -65,7 +63,6 @@ function setLoadingState(on, opts = {}) {
 }
 
 function showSingleTopicAlert(topic) {
-    // 1 alert duy nhất, ngắn gọn (the user requested)
     alert(`📌 Chủ đề: ${topic}`);
 }
 
@@ -74,7 +71,7 @@ function safeText(s) {
 }
 
 
-// ----------------- Sidebar (unchanged) -----------------
+// ----------------- Sidebar (Giữ nguyên) -----------------
 function loadSidebarData() {
     if (!projectList) return;
     projectList.innerHTML = '';
@@ -92,10 +89,70 @@ function loadSidebarData() {
 }
 
 
-// ----------------- Canvas draw (kept from your code) -----------------
-function drawMindmap(data) {
-    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+// ----------------- Vis.js Data Transformer -----------------
+
+function convertTreeToVisData(treeNodes, parentId, visNodes, visEdges, rootNodeId) {
+    if (!treeNodes) return;
+    
+    let parentLevel = visNodes.find(n => n.id === parentId)?.level || 0;
+
+    treeNodes.forEach((node, index) => {
+        const nodeId = node.id ? String(node.id) : `${parentId}-c${index}`; 
+        const level = parentId === rootNodeId ? 1 : parentLevel + 1;
+        
+        let nodeColor, nodeShape;
+        
+        if (level === 1) {
+            nodeColor = '#4d4dff'; 
+            nodeShape = 'box';
+        } else if (level === 2) {
+            nodeColor = '#00b33c'; 
+            nodeShape = 'ellipse';
+        } else {
+            nodeColor = '#ff6666'; 
+            nodeShape = 'circle';
+        }
+
+        // --- 1. Thêm Node ---
+        visNodes.push({
+            id: nodeId,
+            label: node.text || "Node",
+            color: nodeColor,
+            shape: nodeShape,
+            font: { size: 16 + (4 - Math.min(level, 4)) * 2, color: 'white' },
+            level: level, 
+        });
+
+        // --- 2. Thêm Edge (nối với Parent) ---
+        if (parentId !== null && parentId !== nodeId) {
+            visEdges.push({
+                from: parentId,
+                to: nodeId,
+                color: { color: nodeColor, highlight: '#aaa' },
+                width: Math.max(3 - (level - 1), 1), 
+                arrows: 'to',
+                smooth: true 
+            });
+        }
+
+        // --- 3. Đệ quy cho Children ---
+        convertTreeToVisData(node.children || [], nodeId, visNodes, visEdges, rootNodeId);
+    });
+}
+
+
+// ----------------- Draw Mindmap (dùng Vis.js) -----------------
+
+function drawMindmapVis(data) {
+    if (visNetworkInstance) {
+        visNetworkInstance.destroy(); 
+        visNetworkInstance = null;
+    }
+
     if (!data || !Array.isArray(data.nodes) || data.nodes.length === 0) {
+        // Fallback drawing text when no data
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         ctx.font = "26px Arial";
         ctx.fillStyle = "#444";
         ctx.textAlign = 'center';
@@ -103,63 +160,95 @@ function drawMindmap(data) {
         ctx.textAlign = 'start';
         return;
     }
+    
+    const visNodesData = [];
+    const visEdgesData = [];
+    const rootNodeId = 'root-topic';
+    const topic = data.title || 'MAIN TOPIC';
+    
+    // Thêm Node Trung tâm (Root Node - Cấp 0)
+    visNodesData.push({
+        id: rootNodeId,
+        label: topic,
+        color: { background: '#ff6666', border: '#e64d4d' },
+        font: { color: 'white', size: 24, multi: 'html' },
+        shape: 'box',
+        level: 0,
+        fixed: true, 
+        x: CANVAS_WIDTH / 2, 
+        y: CANVAS_HEIGHT / 2,
+    });
 
-    // connections (optional)
-    ctx.strokeStyle = '#4d4dff';
-    ctx.lineWidth = 2;
-    (data.connections || []).forEach(conn => {
-        const fromNode = data.nodes.find(n => n.id === conn.from);
-        const toNode = data.nodes.find(n => n.id === conn.to);
-        if (fromNode && toNode) {
-            ctx.beginPath();
-            ctx.moveTo(fromNode.x, fromNode.y);
-            const midX = (fromNode.x + toNode.x) / 2;
-            const controlY = Math.min(fromNode.y, toNode.y) - 100;
-            ctx.quadraticCurveTo(midX, controlY, toNode.x, toNode.y);
-            ctx.stroke();
+    // Chuyển đổi các node con
+    convertTreeToVisData(data.nodes, rootNodeId, visNodesData, visEdgesData, rootNodeId);
+    
+    // Chuẩn bị Dữ liệu Vis.js
+    const visData = {
+        nodes: new vis.DataSet(visNodesData),
+        edges: new vis.DataSet(visEdgesData)
+    };
+    
+    // Cấu hình Tùy chọn (Layout & Physics)
+    const options = {
+        physics: {
+            enabled: true,
+            barnesHut: {
+                gravitationalConstant: -3000, 
+                centralGravity: 0.1,
+                springLength: 150, 
+                springConstant: 0.08,
+                damping: 0.09,
+                avoidOverlap: 1 
+            },
+            solver: 'barnesHut',
+            stabilization: { iterations: 200 } 
+        },
+        interaction: {
+            dragNodes: true, 
+            dragView: true,  
+            zoomView: true   
+        },
+        layout: {
+            hierarchical: { enabled: false }
+        },
+        edges: {
+            smooth: { enabled: true, type: 'continuous' }
+        },
+        nodes: {
+            margin: 10,
+            chosen: true,
+            shadow: true,
+        }
+    };
+    
+    // Khởi tạo Network
+    visNetworkInstance = new vis.Network(canvas, visData, options);
+    
+    // Thêm tương tác phụ
+    visNetworkInstance.on("doubleClick", function (params) {
+        if (params.nodes.length > 0) {
+            const nodeId = params.nodes[0];
+            const node = visData.nodes.get(nodeId);
+            if (node) {
+                alert(`Chi tiết Node: ${node.label}`);
+            }
         }
     });
+}
 
-    // nodes
-    data.nodes.forEach(node => {
-        const paddingX = 15;
-        const paddingY = 8;
-        ctx.font = "18px Arial";
-        ctx.textAlign = 'center';
-        const textMetrics = ctx.measureText(node.text);
-        const width = textMetrics.width + 2 * paddingX;
-        const height = 18 + 2 * paddingY;
-        const x = node.x - width / 2;
-        const y = node.y - height / 2;
-        const radius = 8;
-
-        ctx.fillStyle = node.color || '#ff6666';
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1;
-
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + width - radius, y);
-        ctx.arcTo(x + width, y, x + width, y + radius, radius);
-        ctx.lineTo(x + width, y + height - radius);
-        ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-        ctx.lineTo(x + radius, y + height);
-        ctx.arcTo(x, y + height, x, y + height - radius, radius);
-        ctx.lineTo(x, y + radius);
-        ctx.arcTo(x, y, x + radius, y, radius);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = 'black';
-        ctx.fillText(node.text, node.x, node.y + paddingY / 2);
-    });
-
-    ctx.textAlign = 'start';
+// Wrapper cho drawMindmap
+function drawMindmap(data) {
+    let visData = {
+        title: data?.title || 'Không xác định',
+        nodes: data?.nodes || [] 
+    };
+    
+    drawMindmapVis(visData);
 }
 
 
-// ----------------- Input mode UI -----------------
+// ----------------- Input mode UI (Giữ nguyên) -----------------
+
 function switchInputMode(mode) {
     if (mode === 'file') {
         textInputArea.classList.add('hidden');
@@ -181,13 +270,22 @@ function switchMode(mode) {
         modeAI.classList.add('active');
         modeManual.classList.remove('active');
         infoPanel.classList.remove('hidden');
-        drawMindmap(lastMindmapData);
+        
+        drawMindmap(lastMindmapData); 
+
     } else {
         aiModeSection.classList.add('hidden');
         manualModeSection.classList.remove('hidden');
         modeAI.classList.remove('active');
         modeManual.classList.add('active');
         infoPanel.classList.add('hidden');
+        
+        if (visNetworkInstance) {
+            visNetworkInstance.destroy();
+            visNetworkInstance = null;
+        }
+        
+        const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         ctx.font = "26px Arial";
         ctx.fillStyle = "#444";
@@ -220,16 +318,6 @@ function initManualModeListeners() {
 
 
 // ----------------- Fetch file -> server (thực) -----------------
-/**
- * Gửi file (File object) lên server và xử lý kết quả
- * Server expected JSON response:
- * {
- * topic: "string",
- * mindmap_nodes: [ ... ]  // optional: nodes with x,y,color,id,text
- * detail: ["...","..."],
- * summary: ["...","..."] or string
- * }
- */
 async function fetchMindmapFromAI(file) {
     if (isProcessing) return;
     if (!file) {
@@ -243,82 +331,41 @@ async function fetchMindmapFromAI(file) {
     formData.append('file', file);
 
     try {
-        // Gọi fetch thực
         const resp = await fetch(API_ENDPOINT, {
             method: 'POST',
             body: formData,
         });
 
         if (!resp.ok) {
-            // Đọc body nếu có thông tin lỗi
             let text = await resp.text().catch(() => '');
             throw new Error(`Server trả lỗi: ${resp.status} ${resp.statusText}${text ? ' — ' + text : ''}`);
         }
 
         const json = await resp.json();
 
-        // Lấy topic an toàn
-        const topic = json.topic || json.top || (json.mindmap && json.mindmap.title) || 'Không xác định';
-
-        // Hiển thị tóm tắt / chi tiết (nếu có)
+        const topic = json.topic || 'Không xác định';
+        const nodesFromServer = json.mindmap_nodes || []; 
         const summaryText = Array.isArray(json.summary) ? json.summary.join(' • ') : (json.summary || '');
         const detailText = Array.isArray(json.detail) ? json.detail.join('\n') : (json.detail || '');
 
         summaryContainer.innerHTML = `<h3>📝 Tóm tắt ý chính</h3><p>${safeText(summaryText)}</p>`;
         detailContainer.innerHTML = `<h3>🔍 Chi tiết nội dung trích xuất</h3><p>${safeText(detailText).replace(/\n/g, '<br>')}</p>`;
 
-        // Chuẩn bị dữ liệu cho vẽ mindmap: nếu server trả về nodes/còn thiếu connections, normalize
-        const nodesFromServer = json.mindmap_nodes || json.mindmap?.nodes || (json.nodes || []);
-        const connectionsFromServer = json.connections || json.mindmap?.connections || [];
-
-        // Nếu server chỉ trả dạng cây (nodes with children), bạn có thể muốn convert sang flat nodes with coords.
-        // Ở đây giả sử server đã trả nodes có x,y ; nếu không, ta sẽ fallback minimal.
-        let mindmapData = {
+        lastMindmapData = {
             title: topic,
-            nodes: [],
-            connections: []
+            nodes: nodesFromServer 
         };
 
-        if (Array.isArray(nodesFromServer) && nodesFromServer.length > 0) {
-            // copy nodes, ensure id/text,x,y,color exist
-            mindmapData.nodes = nodesFromServer.map((n, idx) => ({
-                id: n.id || `n${idx}`,
-                text: n.text || n.title || `Node ${idx + 1}`,
-                x: (typeof n.x === 'number') ? n.x : (100 + (idx * 150) % (CANVAS_WIDTH - 200)),
-                y: (typeof n.y === 'number') ? n.y : (150 + Math.floor(idx / 4) * 120),
-                color: n.color || undefined
-            }));
-            mindmapData.connections = Array.isArray(connectionsFromServer) ? connectionsFromServer : [];
-        } else {
-            // fallback: create basic nodes from summary/detail if server didn't send nodes
-            const fallbackList = summaryText ? summaryText.split('•').map(s => s.trim()).filter(Boolean) : (detailText ? detailText.split('\n').slice(0, 4) : []);
-            mindmapData.nodes = fallbackList.map((t, i) => ({
-                id: `f${i}`,
-                text: t || `Ý ${i + 1}`,
-                x: 200 + i * 180,
-                y: 300,
-                color: undefined
-            }));
-            // connect all to first if multiple
-            if (mindmapData.nodes.length > 0) {
-                 mindmapData.connections = mindmapData.nodes.slice(1).map(n => ({ from: mindmapData.nodes[0].id, to: n.id }));
-            }
-        }
+        drawMindmap(lastMindmapData); 
 
-        lastMindmapData = mindmapData;
-        drawMindmap(lastMindmapData);
-
-        // Enable summary/detail buttons
         summaryBtn.disabled = false;
         detailBtn.disabled = false;
         toggleInfoContainers(true, false);
 
-        // --- ALERT DUY NHẤT ---
         showSingleTopicAlert(topic);
 
     } catch (err) {
         console.error("fetchMindmapFromAI error:", err);
-        // Hiển thị alert ngắn gọn, kèm console để debug
         alert(`❌ Lỗi khi phân tích file: ${err.message || err}`);
     } finally {
         setLoadingState(false, { for: 'import' });
@@ -326,7 +373,7 @@ async function fetchMindmapFromAI(file) {
 }
 
 
-// ----------------- Fetch from text to model (giữ nguyên nhưng thực) -----------------
+// ----------------- Fetch from text to model (Giữ nguyên) -----------------
 async function fetchMindmapFromText(prompt) {
     if (isProcessing) return;
     if (!prompt || prompt.trim().length < 5) {
@@ -353,31 +400,23 @@ async function fetchMindmapFromText(prompt) {
         const json = await resp.json();
 
         const topic = json.topic || 'Không xác định';
+        const nodesFromServer = json.mindmap_nodes || json.nodes || []; 
         const summaryText = Array.isArray(json.summary) ? json.summary.join(' • ') : (json.summary || '');
         const detailText = Array.isArray(json.detail) ? json.detail.join('\n') : (json.detail || '');
 
         summaryContainer.innerHTML = `<h3>📝 Tóm tắt ý chính</h3><p>${safeText(summaryText)}</p>`;
         detailContainer.innerHTML = `<h3>🔍 Chi tiết nội dung trích xuất</h3><p>${safeText(detailText).replace(/\n/g, '<br>')}</p>`;
 
-        // nodes handling similar to file path
-        const nodes = json.mindmap_nodes || json.nodes || [];
         lastMindmapData = {
             title: topic,
-            nodes: Array.isArray(nodes) && nodes.length ? nodes.map((n,i) => ({
-                id: n.id || `n${i}`,
-                text: n.text || n.title || `Node ${i+1}`,
-                x: n.x || (100 + i * 150),
-                y: n.y || 200 + Math.floor(i/4)*120,
-                color: n.color || undefined
-            })) : [],
-            connections: json.connections || []
+            nodes: nodesFromServer 
         };
+
         drawMindmap(lastMindmapData);
         toggleInfoContainers(true, false);
         summaryBtn.disabled = false;
         detailBtn.disabled = false;
 
-        // single alert with topic
         showSingleTopicAlert(topic);
 
     } catch (err) {
@@ -389,7 +428,7 @@ async function fetchMindmapFromText(prompt) {
 }
 
 
-// ----------------- Drag & Drop + input handlers -----------------
+// ----------------- Drag & Drop + input handlers (Giữ nguyên) -----------------
 function handleFileSelection(file) {
     handleFile(file); // update UI
 }
@@ -402,7 +441,7 @@ function handleFile(file) {
         <p class="file-info">Đã chọn: ${safeText(file.name)}</p>
         <p class="small-text">Nhấn nút "Phân tích" bên dưới để bắt đầu</p>
         <button id="browseBtn" class="browse-btn">📂 Chọn file khác</button>
-    `;    clearBtn.disabled = false;
+    `; 	clearBtn.disabled = false;
     importBtn.disabled = false;
 }
 
@@ -417,6 +456,8 @@ function resetDropArea() {
         <p class="small-text">hoặc nhấn <strong>Ctrl+V</strong> để dán ảnh</p>
         <button id="browseBtn" class="browse-btn">📂 Chọn file từ máy</button>
     `;
+    lastMindmapData = null;
+    drawMindmap(lastMindmapData); 
 }
 
 function toggleInfoContainers(showSummary, showDetail) {
@@ -427,7 +468,7 @@ function toggleInfoContainers(showSummary, showDetail) {
 }
 
 
-// ----------------- Init and wiring events -----------------
+// ----------------- Init and wiring events (Giữ nguyên) -----------------
 document.addEventListener("DOMContentLoaded", () => {
     loadSidebarData();
     initManualModeListeners();
@@ -439,7 +480,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (inputModeFile) inputModeFile.addEventListener('click', () => switchInputMode('file'));
     if (fileUploadArea) fileUploadArea.classList.add('hidden');
 
-    // browseBtn handler delegated
     document.body.addEventListener("click", (e) => {
         if (e.target && e.target.id === "browseBtn") {
             if (fileInput) fileInput.click();
@@ -458,7 +498,6 @@ document.addEventListener("DOMContentLoaded", () => {
         drawMindmap(lastMindmapData);
     });
 
-    // Actual upload button: send selectedFile to server
     if (importBtn) importBtn.addEventListener("click", () => {
         if (!selectedFile) {
             alert("Vui lòng chọn một file trước khi phân tích.");
@@ -479,7 +518,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (summaryBtn) summaryBtn.addEventListener('click', () => toggleInfoContainers(true, false));
     if (detailBtn) detailBtn.addEventListener('click', () => toggleInfoContainers(false, true));
 
-    // Drag & drop handlers
+    // Drag & drop handlers (Giữ nguyên logic)
     if (dropArea) {
         dropArea.addEventListener("dragover", (e) => {
             e.preventDefault();

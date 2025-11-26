@@ -19,7 +19,7 @@ try:
     # Cần đảm bảo các module này tồn tại hoặc được mock
     from Train.model_gemma_pro_chat import call_gemma_pro_chat
     from Train.model_gemma_small_chat import call_gemma__small_chat
-    from Train.model_llava import call_mindmap_generation
+    from Train.model_llava import call_mindmap_generation # Dùng phiên bản đã sửa
 except ImportError as e:
     logging.error(f"Error importing AI modules: {e}. Using local mocks.")
     def call_gemma_pro_chat(messages):
@@ -33,8 +33,8 @@ except ImportError as e:
         return f"Mock Small: I am running in mock mode. You asked: {last_user_message}"
     
     def call_mindmap_generation(input_data: Any) -> List[Any]:
-        # Cần đảm bảo nodes mock có x, y
-        return ["Mock Topic - Document Analysis (English)", [{"text": "Mock Node Main", "children": [{"text": "Mock Child Node"}], "x": 500, "y": 200, "id": "m1"}]]
+        # SỬA MOCK: Đảm bảo nodes mock KHÔNG CÓ x, y 
+        return ["Mock Topic - Document Analysis (English)", [{"text": "Mock Node Main", "children": [{"text": "Mock Child Node"}], "id": "m1"}]]
 
 
 # ----------------- APP INIT -----------------
@@ -135,6 +135,7 @@ async def ask_ai(data: Question):
 
     if model_tier == "small":
         model_response = await asyncio.to_thread(call_gemma__small_chat, messages_with_system)
+        model_used = "gemmaSmall"
     else:
         model_response = await asyncio.to_thread(call_gemma_pro_chat, messages_with_system)
         model_used = "gemmaPro"
@@ -168,7 +169,7 @@ async def generate_mindmap(file: UploadFile = File(...)):
             topic, final_nodes, detail_list, summary_list = mindmap_cache[file_hash]
             return JSONResponse({
                 "topic": topic,
-                "mindmap_nodes": final_nodes,
+                "mindmap_nodes": final_nodes, # Nodes không có x, y
                 "detail": detail_list,
                 "summary": summary_list
             })
@@ -180,7 +181,7 @@ async def generate_mindmap(file: UploadFile = File(...)):
         if not isinstance(result, list) or len(result) != 2:
             raise Exception(f"Vision Model trả về định dạng không hợp lệ: {result}")
 
-        topic, final_nodes = result
+        topic, final_nodes = result # final_nodes ở đây là cấu trúc cây không có tọa độ
 
         if isinstance(topic, str) and topic.startswith(("Lỗi", "Error", "Cannot", "Undefined Topic")):
             # Xử lý lỗi từ mô hình vision/OCR/Fallback
@@ -189,7 +190,7 @@ async def generate_mindmap(file: UploadFile = File(...)):
                  "detail": [f"Không thể phân tích hoặc Mindmap bị lỗi: {topic}"],
                  "summary": [],
                  "mindmap_nodes": []
-             })
+               })
 
         if not final_nodes:
             return JSONResponse({
@@ -218,7 +219,7 @@ async def generate_mindmap(file: UploadFile = File(...)):
 
         return JSONResponse({
             "topic": topic,
-            "mindmap_nodes": final_nodes, 
+            "mindmap_nodes": final_nodes, # Trả về nodes dạng cây không tọa độ
             "detail": detail_list, 
             "summary": summary_list[:4]
         })

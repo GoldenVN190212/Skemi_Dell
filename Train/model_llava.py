@@ -1,5 +1,5 @@
 import json
-import math
+import math # Giữ math nhưng không dùng trong logic tính tọa độ
 import logging
 import re
 import tempfile
@@ -39,9 +39,7 @@ def _clean_and_extract_json(raw_text: str) -> str | None:
 
 def simple_vn_to_en_topic(vn_topic: str) -> str:
     """
-    Sửa: Loại bỏ logic chuyển đổi thô. 
-    Chủ đề phải được Model LLM trả về Tiếng Anh (như đã yêu cầu trong prompt).
-    Hàm này chỉ nên dùng để làm sạch (clean up) và xử lý các trường hợp đặc biệt.
+    Hàm làm sạch chủ đề (giữ nguyên logic của bạn)
     """
     vn_topic = vn_topic.strip()
     vn_topic = re.sub(r'[\{\}\'"]', '', vn_topic).strip()
@@ -57,43 +55,27 @@ def simple_vn_to_en_topic(vn_topic: str) -> str:
     if not vn_topic:
         return 'Topic Not Found'
         
-    return vn_topic # Trả về kết quả đã làm sạch, hy vọng nó là Tiếng Anh
+    return vn_topic 
 
 def fallback_to_flat_nodes(text_list: List[str]) -> List[Any]:
+    """
+    SỬA: Loại bỏ việc gán tọa độ x, y thủ công.
+    """
     nodes = []
     # Chỉ lấy các dòng có nội dung đáng kể
     clean_texts = [t for t in text_list if len(t.split()) > 2]
     for i, text in enumerate(clean_texts[:5]):
-        x = 200 + (i % 3) * 200
-        y = 150 + (i // 3) * 150
-        nodes.append({"text": text, "children": [], "x": x, "y": y, "id": f"f{i}"})
+        # Đã loại bỏ x và y
+        nodes.append({"text": text, "children": [], "id": f"f{i}"})
     return nodes
 
-# (Giữ nguyên assign_coords_recursive và save_bytes_to_tempfile)
-def assign_coords_recursive(nodes_list: List[Dict[str, Any]], center_x: int, center_y: int, level: int =1, angle_offset: float=0):
-    if not nodes_list: return
-    if level == 1:
-        total_nodes = len(nodes_list)
-        radius = 300
-        angle_step = 360 / total_nodes
-        for i, node in enumerate(nodes_list):
-            angle = (i * angle_step) % 360
-            node["x"] = center_x + int(radius * math.cos(math.radians(angle)))
-            node["y"] = center_y + int(radius * math.sin(math.radians(angle)))
-            assign_coords_recursive(node.get("children", []), node["x"], node["y"], level=2, angle_offset=angle)
-    else:
-        parent_angle = angle_offset
-        child_radius = 180
-        child_angle_range = 90
-        if 90 < parent_angle < 270: child_angle_range = -90
-        num_children = len(nodes_list)
-        if num_children > 0:
-            angle_step = child_angle_range / (num_children + 1)
-            for i, child in enumerate(nodes_list):
-                angle = parent_angle + angle_step * (i + 1)
-                child["x"] = center_x + int(child_radius * math.cos(math.radians(angle)))
-                child["y"] = center_y + int(child_radius * math.sin(math.radians(angle)))
-                assign_coords_recursive(child.get("children", []), child["x"], child["y"], level + 1, angle_offset=angle)
+# --- PHẦN BỊ XÓA (Logic tính toán tọa độ) ---
+# XÓA toàn bộ hàm assign_coords_recursive (vì Frontend đã dùng Vis.js để tự động layout)
+# def assign_coords_recursive(nodes_list: List[Dict[str, Any]], center_x: int, center_y: int, level: int =1, angle_offset: float=0):
+#     if not nodes_list: return
+#     ...
+# ---------------------------------------------
+
 
 def save_bytes_to_tempfile(file_bytes: bytes, suffix: str = ".png") -> str:
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
@@ -115,10 +97,8 @@ def call_mindmap_generation(input_data: bytes) -> List[Any]:
         temp_path = save_bytes_to_tempfile(input_data)
         ocr_lines = extract_text_from_image(temp_path)
         
-        # SỬA 1: Xử lý trường hợp ảnh không có chữ (như ảnh CR7)
+        # SỬA 1: Xử lý trường hợp ảnh không có chữ (Logic VLLM giữ nguyên)
         if not ocr_lines or not "".join(ocr_lines).strip():
-            # Thay vì lỗi OCR, ta cố gắng phân tích TÊN FILE hoặc ảnh trực tiếp (nếu model LLava hỗ trợ)
-            # Vì LLava là VLLM, nó có thể xử lý cả hình ảnh và text cùng lúc.
             logging.warning("No significant text extracted by OCR. Using VLLM for image description.")
             
             # --- TẠO PROMPT MỚI CHO VLLM (Visual Language Model) ---
@@ -152,7 +132,7 @@ def call_mindmap_generation(input_data: bytes) -> List[Any]:
         input_text = "\n".join(ocr_lines)
         logging.info(f"OCR success: {len(ocr_lines)} lines")
 
-        # SỬA 2: ÉP buộc đầu ra Tiếng Anh cho TOPIC và kèm theo YÊU CẦU JSON
+        # SỬA 2: ÉP buộc đầu ra Tiếng Anh cho TOPIC và kèm theo YÊU CẦU JSON (Logic giữ nguyên)
         prompt = (
             "You are a mind map generation expert. TASK: Based on the following text, "
             "identify the MAIN TOPIC in **ENGLISH** and create mindmap nodes in Vietnamese "
@@ -178,9 +158,8 @@ def call_mindmap_generation(input_data: bytes) -> List[Any]:
             
             if lines:
                 first_line = lines[0].strip()
-                # Cố gắng trích xuất topic từ chuỗi lỗi/thô và làm sạch
                 topic_raw = first_line.replace('{','').replace('}','').split(',')[0].split(':')[-1].strip().replace("'", "").replace('"', "")
-                topic_guess = simple_vn_to_en_topic(topic_raw) # Sử dụng hàm làm sạch mới
+                topic_guess = simple_vn_to_en_topic(topic_raw) 
                 nodes = fallback_to_flat_nodes(lines)
                 
             return [topic_guess, nodes]
@@ -191,13 +170,13 @@ def call_mindmap_generation(input_data: bytes) -> List[Any]:
         nodes = data.get("nodes", [])
         
         if not topic or (isinstance(topic, str) and topic.strip() == ''):
-            # Nếu trường topic trong JSON bị trống
             topic = "Topic Not Found (Empty Field)"
         else:
-            # SỬA 3: Đảm bảo làm sạch topic từ JSON (có thể Model vẫn thêm dấu ngoặc kép)
             topic = simple_vn_to_en_topic(topic) 
             
-        assign_coords_recursive(nodes, 400, 300)
+        # --- ĐÃ XÓA LỆNH GỌI TÍNH TỌA ĐỘ ---
+        # assign_coords_recursive(nodes, 400, 300)
+        # ------------------------------------
         return [topic, nodes]
 
     except Exception as e:
