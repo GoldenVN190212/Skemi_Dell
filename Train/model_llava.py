@@ -6,6 +6,7 @@ import tempfile
 from typing import Any, List, Dict
 import os
 
+# (Giữ nguyên phần import module OCR và OLLAMA)
 try:
     from .ocr_module import extract_text_from_image
     _OCR_AVAILABLE = True
@@ -16,7 +17,7 @@ except ImportError:
 try:
     from ollama import chat
     _OLLAMA_AVAILABLE = True
-    MODEL_NAME = "llava-llama3:latest"
+    MODEL_NAME = "llava:13b"
     OLLAMA_OPTIONS = {"temperature":0.1, "seed":42, "num_ctx":4096}
 except Exception:
     logging.warning("OLLAMA not available, using mock")
@@ -37,26 +38,38 @@ def _clean_and_extract_json(raw_text: str) -> str | None:
     return None
 
 def simple_vn_to_en_topic(vn_topic: str) -> str:
-    """Chuyển đổi Tiếng Việt cơ bản sang Tiếng Anh cho topic (đảm bảo sạch và Tiếng Anh)"""
-    vn_topic = vn_topic.lower().strip()
-    vn_topic = vn_topic.replace('{', '').replace('}', '').replace("'", '').replace('"', '').replace('topic:', '').replace('chủ đề:', '').strip()
+    """
+    Sửa: Loại bỏ logic chuyển đổi thô. 
+    Chủ đề phải được Model LLM trả về Tiếng Anh (như đã yêu cầu trong prompt).
+    Hàm này chỉ nên dùng để làm sạch (clean up) và xử lý các trường hợp đặc biệt.
+    """
+    vn_topic = vn_topic.strip()
+    vn_topic = re.sub(r'[\{\}\'"]', '', vn_topic).strip()
     
-    if 'tê giác trắng phương bắc' in vn_topic or 'rhino' in vn_topic:
+    # Xử lý các nhãn tiếng Việt còn sót lại (chỉ là ví dụ nhỏ)
+    if 'biến đổi khí hậu' in vn_topic.lower():
+        return 'Climate Change'
+    if 'tê giác trắng phương bắc' in vn_topic.lower():
         return 'Northern White Rhino'
+    if 'ô nhiễm nhựa thái bình dương' in vn_topic.lower():
+        return 'Pacific Plastic Pollution'
+    
     if not vn_topic:
         return 'Topic Not Found'
-    
-    # Giả định: nếu không khớp key, giữ nguyên nhưng đã được làm sạch
-    return vn_topic
+        
+    return vn_topic # Trả về kết quả đã làm sạch, hy vọng nó là Tiếng Anh
 
 def fallback_to_flat_nodes(text_list: List[str]) -> List[Any]:
     nodes = []
-    for i, text in enumerate(text_list[:5]):
+    # Chỉ lấy các dòng có nội dung đáng kể
+    clean_texts = [t for t in text_list if len(t.split()) > 2]
+    for i, text in enumerate(clean_texts[:5]):
         x = 200 + (i % 3) * 200
         y = 150 + (i // 3) * 150
         nodes.append({"text": text, "children": [], "x": x, "y": y, "id": f"f{i}"})
     return nodes
 
+# (Giữ nguyên assign_coords_recursive và save_bytes_to_tempfile)
 def assign_coords_recursive(nodes_list: List[Dict[str, Any]], center_x: int, center_y: int, level: int =1, angle_offset: float=0):
     if not nodes_list: return
     if level == 1:
@@ -90,6 +103,7 @@ def save_bytes_to_tempfile(file_bytes: bytes, suffix: str = ".png") -> str:
         temp_file.close()
     return temp_file.name
 
+
 def call_mindmap_generation(input_data: bytes) -> List[Any]:
     if not _OCR_AVAILABLE:
         return ["Error: OCR Module is not available", []]
@@ -100,15 +114,49 @@ def call_mindmap_generation(input_data: bytes) -> List[Any]:
     try:
         temp_path = save_bytes_to_tempfile(input_data)
         ocr_lines = extract_text_from_image(temp_path)
-        if not ocr_lines:
-            return ["Error OCR: No text extracted", []]
+        
+        # SỬA 1: Xử lý trường hợp ảnh không có chữ (như ảnh CR7)
+        if not ocr_lines or not "".join(ocr_lines).strip():
+            # Thay vì lỗi OCR, ta cố gắng phân tích TÊN FILE hoặc ảnh trực tiếp (nếu model LLava hỗ trợ)
+            # Vì LLava là VLLM, nó có thể xử lý cả hình ảnh và text cùng lúc.
+            logging.warning("No significant text extracted by OCR. Using VLLM for image description.")
+            
+            # --- TẠO PROMPT MỚI CHO VLLM (Visual Language Model) ---
+            vllm_prompt = (
+                "You are a Mind Map Topic Identifier. "
+                "TASK: Identify the MAIN TOPIC/SUBJECT of the uploaded IMAGE (no OCR text available). "
+                "Respond ONLY with a JSON object: {'topic':'TOPIC_IN_ENGLISH','nodes':[]}. "
+                "If the image is a person/logo/simple object, use the name as the topic. If it's a diagram, describe the subject."
+                "Example 1: {'topic':'Cristiano Ronaldo Footballer','nodes':[]}. Example 2: {'topic':'Chatbot Digital Assistant','nodes':[]}"
+            )
+            
+            messages_vllm = [
+                {"role":"system","content": vllm_prompt},
+                {"role":"user","content":[{"type":"text","text":"Analyze image for main topic."}, {"type":"image","path":temp_path}]}
+            ]
+            
+            resp_vllm = chat(model=MODEL_NAME, messages=messages_vllm, options=OLLAMA_OPTIONS)
+            raw_vllm = getattr(resp_vllm, "message", {}).get("content", str(resp_vllm))
+            cleaned_json_vllm = _clean_and_extract_json(raw_vllm)
+            
+            if cleaned_json_vllm:
+                data_vllm = json.loads(cleaned_json_vllm)
+                topic = simple_vn_to_en_topic(data_vllm.get("topic", "Topic Not Found"))
+                
+                # Trả về ngay khi xác định được chủ đề ảnh, không có nodes
+                return [topic, []] 
+            
+            return ["Topic Not Found (Image or OCR Empty)", []]
+
+
         input_text = "\n".join(ocr_lines)
         logging.info(f"OCR success: {len(ocr_lines)} lines")
 
+        # SỬA 2: ÉP buộc đầu ra Tiếng Anh cho TOPIC và kèm theo YÊU CẦU JSON
         prompt = (
             "You are a mind map generation expert. TASK: Based on the following text, "
             "identify the MAIN TOPIC in **ENGLISH** and create mindmap nodes in Vietnamese "
-            "up to 3 levels deep. ONLY RETURN JSON: {'topic':'TOPIC_IN_ENGLISH','nodes':[{'text':'','children':[...]}]}.\n"
+            "up to 3 levels deep. ONLY RETURN JSON: {'topic':'TOPIC_IN_ENGLISH','nodes':[{'text':'','children':[...]}]}. "
             f"Text:\n--- {input_text} ---"
         )
         messages = [
@@ -125,20 +173,14 @@ def call_mindmap_generation(input_data: bytes) -> List[Any]:
             
             # FALLBACK LOGIC
             lines = [ln.strip() for ln in (raw or "").splitlines() if ln.strip()]
-            topic_guess = "Undefined Topic (LLM Failed to return English)"
+            topic_guess = "Undefined Topic (JSON Error)"
             nodes = []
             
             if lines:
                 first_line = lines[0].strip()
                 # Cố gắng trích xuất topic từ chuỗi lỗi/thô và làm sạch
-                if 'topic' in first_line:
-                    start_idx = first_line.find('topic')
-                    topic_part = first_line[start_idx:].split(',')[0].strip()
-                    topic_raw = topic_part.split(':')[-1].strip().replace("'", "").replace('"', "")
-                    topic_guess = simple_vn_to_en_topic(topic_raw)
-                else:
-                    topic_guess = simple_vn_to_en_topic(first_line)
-                
+                topic_raw = first_line.replace('{','').replace('}','').split(',')[0].split(':')[-1].strip().replace("'", "").replace('"', "")
+                topic_guess = simple_vn_to_en_topic(topic_raw) # Sử dụng hàm làm sạch mới
                 nodes = fallback_to_flat_nodes(lines)
                 
             return [topic_guess, nodes]
@@ -149,9 +191,10 @@ def call_mindmap_generation(input_data: bytes) -> List[Any]:
         nodes = data.get("nodes", [])
         
         if not topic or (isinstance(topic, str) and topic.strip() == ''):
-            topic = "Topic Not Found in Valid JSON"
+            # Nếu trường topic trong JSON bị trống
+            topic = "Topic Not Found (Empty Field)"
         else:
-            # Đảm bảo topic là Tiếng Anh (hoặc đã được làm sạch)
+            # SỬA 3: Đảm bảo làm sạch topic từ JSON (có thể Model vẫn thêm dấu ngoặc kép)
             topic = simple_vn_to_en_topic(topic) 
             
         assign_coords_recursive(nodes, 400, 300)
