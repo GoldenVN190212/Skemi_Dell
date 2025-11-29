@@ -18,7 +18,7 @@ from langdetect import detect
 try:
     # Cần đảm bảo các module này tồn tại hoặc được mock
     from Train.model_gemma_pro_chat import call_gemma_pro_chat
-    from Train.model_gemma_small_chat import call_gemma__small_chat
+    from Train.model_llama_small_chat import call_gemma__small_chat
     from Train.model_llava import call_mindmap_generation # Dùng phiên bản đã sửa
 except ImportError as e:
     logging.error(f"Error importing AI modules: {e}. Using local mocks.")

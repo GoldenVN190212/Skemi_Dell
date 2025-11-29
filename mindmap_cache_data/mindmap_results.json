@@ -42,5 +42,79 @@
             "\"text\": \"Các đặc điểm của loài tê giác này\"",
             "\"text\": \"Tình trạng bảo tôn\","
         ]
+    ],
+    "eb367e523a3f6241912a0fbc53c1d5496656e8f23c9b165268a57a117fcb534b": [
+        "Công nghệ AI và Machine Learning",
+        [
+            {
+                "text": "Tài liệu Word về Công nghệ AI và Machine Learning",
+                "children": [
+                    {
+                        "text": "Mô hình Học sâu (Deep Learning)",
+                        "children": [
+                            {
+                                "text": "CNN (Convolutional Neural Networks)",
+                                "children": []
+                            },
+                            {
+                                "text": "RNN (Recurrent Neural Networks)",
+                                "children": []
+                            },
+                            {
+                                "text": "Transformers",
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        [
+            "Tài liệu Word về Công nghệ AI và Machine Learning",
+            "Mô hình Học sâu (Deep Learning)",
+            "CNN (Convolutional Neural Networks)",
+            "RNN (Recurrent Neural Networks)",
+            "Transformers"
+        ],
+        [
+            "Tài liệu Word về Công nghệ AI và Machine Learning"
+        ]
+    ],
+    "9ae8bedd15b215d5bce1f88264687af77d0dc15a06b0cc011b84e16ae116cf5a": [
+        "Công nghệ AI và Machine Learning",
+        [
+            {
+                "text": "Tài liệu Word về Công nghệ AI và Machine Learning",
+                "children": [
+                    {
+                        "text": "Mô hình Học sâu (Deep Learning)",
+                        "children": [
+                            {
+                                "text": "CNN (Convolutional Neural Networks)",
+                                "children": []
+                            },
+                            {
+                                "text": "RNN (Recurrent Neural Networks)",
+                                "children": []
+                            },
+                            {
+                                "text": "Transformers",
+                                "children": []
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        [
+            "Tài liệu Word về Công nghệ AI và Machine Learning",
+            "Mô hình Học sâu (Deep Learning)",
+            "CNN (Convolutional Neural Networks)",
+            "RNN (Recurrent Neural Networks)",
+            "Transformers"
+        ],
+        [
+            "Tài liệu Word về Công nghệ AI và Machine Learning"
+        ]
     ]
 }

@@ -5,7 +5,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-MODEL_NAME = "gemma3:4b-it-q8_0"
+MODEL_NAME = "llama3.1:8b-instruct-q5_K_S"
 
 SYSTEM_PROMPT_FORMAT = (
     "Bạn là trợ lý AI chuyên nghiệp và hữu ích. Hãy trả lời một cách tự nhiên và thân thiện, "
