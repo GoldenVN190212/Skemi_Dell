@@ -1,30 +1,177 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="/Css/design-tokens.css?v=20260701b">
+    <link rel="stylesheet" href="/Css/Motion.css?v=20260607k">
+    <script defer src="/Js/motion.js?v=20260531a"></script>
+        <script src="/Js/guest-storage-guard.js?v=20260527"></script>
+        <script src="/Js/account-storage.js?v=20260527"></script>
+        <script type="module" src="/Js/Auth.js?v=20260527"></script>
+        <script type="module" src="/Js/UserScopedStorage.js?v=20260527"></script>
+        <script type="module" src="/Js/CloudSync.js?v=20260702b"></script>
+        <script src="/Js/UserDataManager.js?v=20260531b"></script>
+        <script src="/Js/Preferences.js?v=20260621a"></script>
+        <script src="/Js/UI.js?v=20260510"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta name="description" content="Skemi Chart - Theo doi tien do hoc tap và thong ke su dung.">
+    <title>Chart - Skemi</title>
+    <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9733;</text></svg>">
+    <link rel="stylesheet" href="./Css/Global.css?v=20260629c">
+    <link rel="stylesheet" href="./Css/Polish.css?v=20260630d" />
     <link rel="stylesheet" href="./Css/Chart.css">
+    <link rel="stylesheet" href="./Css/Features.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./Js/preferences.js"></script>
 </head>
 
 <body>
     <nav class="navbar">
-        <div class="logo">SkemI</div>
+        <a href="Home.html" class="logo">
+            <span class="logo-mark">&#9733;</span>
+            <span class="logo-text">Skemi</span>
+        </a>
 
-        <div class="nav-links-center">
-            <ul class="nav-links">
-                <li><a href="Home.html">🏠 Home</a></li>
-                <li><a href="Chart.html" class="active"> 📚 Chart</a></li>
-                <li><a href="Chatbot.html">🤖 Chatbot</a></li>
-            </ul>
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div id="auth-buttons"></div>
         </div>
-
-        <div id="auth-buttons" class="auth-buttons"></div>
     </nav>
 
-    <script type="module" src="./Js/User_navbar.js"></script>
-    <script src="./Js/Chart.js"></script>
+    <div class="app-layout">
+        <aside class="app-sidebar" id="appSidebar">
+            <ul class="sidebar-links">
+                <li><a href="Home.html" id="mindmap-link"><span class="icon">&#127891;</span><span
+                            data-i18n="nav.dashboard">Studio</span></a></li>
+                <li><a href="Search.html" id="search-link"><span class="icon">&#128269;</span><span
+                            data-i18n="nav.search">Tra cuu</span></a></li>
+                <li><a href="Chart.html" class="active"><span class="icon">&#128202;</span><span>Chart</span></a></li>
+                <li><a href="Home.html#quiz" id="quiz-link"><span class="icon">&#128221;</span><span
+                            data-i18n="nav.quiz">Quiz</span></a></li>
+                <li><a href="Settings.html" id="settings-link"><span class="icon">&#9881;</span><span
+                            data-i18n="nav.settings">Cai dat</span></a></li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <button class="toggle-sidebar-btn" id="toggleSidebar" title="Thu gọn menu">
+                    <span>&#9664;</span>
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-content-wrapper">
+            <div class="chart-container-wrapper animate-fadeIn">
+                <header class="mb-2">
+                    <h1>Thong ke su dung</h1>
+                    <p style="color: var(--text-secondary)">Tong quan ve tao mindmap và tuong tac AI cua ban</p>
+                </header>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">24</div>
+                        <div class="stat-label">Mindmap da tao</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">128</div>
+                        <div class="stat-label">Cau hoi AI</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">15</div>
+                        <div class="stat-label">Du an da luu</div>
+                    </div>
+                </div>
+
+                <div class="charts-grid"
+                    style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-top: 24px;">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Hoat dong theo tuan</h3>
+                            <div class="chart-legend">
+                                <span class="legend-item"><span class="dot" style="background: #6366f1;"></span>
+                                    Mindmap</span>
+                                <span class="legend-item"><span class="dot" style="background: #10b981;"></span> AI
+                                    Chat</span>
+                            </div>
+                        </div>
+                        <div class="chart-body" style="height: 400px; position: relative;">
+                            <canvas id="myChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="charts-column" style="display: flex; flex-direction: column; gap: 24px;">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Muc do su dung tinh nang</h3>
+                            </div>
+                            <div class="chart-body" style="height: 180px; position: relative;">
+                                <canvas id="radarChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card" style="flex: 1;">
+                            <div class="chart-header">
+                                <h3>Phan bo dau ra</h3>
+                            </div>
+                            <div class="chart-body" style="height: 180px; position: relative;">
+                                <canvas id="doughnutChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script type="module" src="./Js/Galaxy.js"></script>
+    <script>
+        (function () {
+            const theme = localStorage.getItem('skemi-theme') || 'light';
+            document.body.classList.remove('dark-mode', 'galaxy-mode');
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+            }
+            if (theme === 'galaxy') {
+                document.body.classList.add('galaxy-mode', 'dark-mode');
+            }
+        })();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            gsap.from('.navbar', { y: -100, opacity: 0, duration: 0.8, ease: 'power3.out' });
+            gsap.from('.app-sidebar', { x: -300, opacity: 0, duration: 0.8, delay: 0.2, ease: 'power3.out' });
+            gsap.from('.chart-container-wrapper', { y: 30, opacity: 0, duration: 1, delay: 0.4, ease: 'power3.out' });
+
+            const sidebar = document.getElementById('appSidebar');
+            const toggleBtn = document.getElementById('toggleSidebar');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('collapsed');
+                    toggleBtn.querySelector('span').innerText = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+                });
+            }
+
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => {
+                    const current = localStorage.getItem('skemi-theme') || 'light';
+                    const next = current === 'light' ? 'dark' : 'light';
+                    localStorage.setItem('skemi-theme', next);
+                    document.body.classList.remove('dark-mode', 'galaxy-mode');
+                    if (next === 'dark') {
+                        document.body.classList.add('dark-mode');
+                    }
+                });
+            }
+        });
+    </script>
+<script type="module" src="./Js/LanguageManager.js?v=20260701e"></script>
+    <script src="./Js/upgrade-nudge.js?v=20260531a"></script>
+    <script src="./Js/entitlements.js?v=20260701d"></script>
+    <script type="module" src="./Js/User_navbar.js?v=20260702b"></script>
+    <script type="module" src="./Js/Chart.js"></script>
+    <script type="module" src="./Js/Features.js"></script>
 </body>
 
 </html>
+

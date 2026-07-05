@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/Css/design-tokens.css?v=20260701b">
+    <link rel="stylesheet" href="/Css/Motion.css?v=20260607k">
+    <script defer src="/Js/motion.js?v=20260531a"></script>
+        <script src="/Js/guest-storage-guard.js?v=20260527"></script>
+        <script src="/Js/account-storage.js?v=20260527"></script>
+        <script type="module" src="/Js/Auth.js?v=20260527"></script>
+        <script type="module" src="/Js/UserScopedStorage.js?v=20260527"></script>
+        <script type="module" src="/Js/CloudSync.js?v=20260702b"></script>
+        <script src="/Js/UserDataManager.js?v=20260531b"></script>
+        <script src="/Js/Preferences.js?v=20260621a"></script>
+        <script src="/Js/UI.js?v=20260510"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Skemi Prompt Agent - AI giúp bạn tối ưu prompt tức thì.">
+    <title>Prompt Agent - Skemi</title>
+    <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9733;</text></svg>">
+    <link rel="stylesheet" href="./Css/Global.css?v=20260629c" />
+    <link rel="stylesheet" href="./Css/Polish.css?v=20260630d" />
+    <link rel="stylesheet" href="./Css/AIChat.css?v=20260409b" />
+    <script src="./Js/preferences.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+    /* ===== PAGE CORE ===== */
+    .pa-page { position: relative; min-height: 100vh; overflow-x: hidden; }
+    /* The decorative pink/purple orb haze + particle canvas tinted this page's
+       background so it no longer matched the rest of the app (which uses the plain
+       theme background — white / dark / galaxy — set in Settings). Removed so every
+       section shares ONE consistent background. */
+    .pa-bg, #neuralCanvas { display: none !important; }
+    .pa-content {
+    position: relative; z-index: 2;
+    max-width: 960px; margin: 0 auto; padding: 40px 24px 80px;
+    }
+    /* ===== HERO ===== */
+    .pa-hero {
+    text-align: center; margin-bottom: 48px;
+    animation: fadeUp 0.8s ease-out;
+    }
+    .pa-hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 18px; border-radius: 999px;
+    background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3);
+    color: #c084fc; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; margin-bottom: 20px;
+    }
+    /* Light theme: #c084fc is a light purple that fails on the light hero — darken to
+       violet-700 (≈5.9:1). The badge sits on the page bg, not a dark panel. */
+    :is(body.light-mode, [data-skemi-bg="light"]) .pa-hero-badge { color: #6d28d9; background: rgba(168, 85, 247, 0.16); border-color: rgba(109, 40, 217, 0.4); }
+    .pa-hero-badge .pulse-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: #a855f7;
+    animation: pulseDot 1.5s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.4); }
+    }
+    .pa-hero h1 {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: 700;
+    line-height: 1.15; letter-spacing: -.02em; margin-bottom: 12px;
+    color: var(--text-primary, #f5f6fa);
+    }
+    .pa-hero p {
+    color: var(--text-secondary, rgba(255,255,255,0.6));
+    font-size: 1.05rem; max-width: 540px; margin: 0 auto; line-height: 1.6;
+    }
+    /* ===== MAIN WORKSPACE ===== */
+    .pa-workspace {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    animation: fadeUp 0.8s ease-out 0.3s both;
+    }
+    .pa-card {
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.08));
+    border-radius: 24px;
+    background: rgba(14, 7, 26, 0.65);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    overflow: hidden; position: relative;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .pa-card:hover {
+    border-color: rgba(168, 85, 247, 0.25);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+    }
+    .pa-card-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 18px 22px 0;
+    }
+    .pa-card-header .header-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(244, 114, 182, 0.15));
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    }
+    .pa-card-header h3 {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    /* Card is always a dark panel → fixed light heading (var(--text-primary) goes
+       near-black in light mode and disappears on the dark card). */
+    font-weight: 700; font-size: 1rem; color: #f1f5f9;
+    margin: 0; letter-spacing: -0.3px;
+    }
+    .pa-card-body { padding: 16px 22px 22px; }
+    /* ===== INPUT PANEL ===== */
+    .pa-textarea-wrap {
+    position: relative; border-radius: 16px; overflow: hidden;
+    border: 1px solid rgba(168, 85, 247, 0.15);
+    background: rgba(0, 0, 0, 0.3);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .pa-textarea-wrap:focus-within {
+    border-color: rgba(168, 85, 247, 0.45);
+    box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.08), 0 0 30px rgba(168, 85, 247, 0.1);
+    }
+    .pa-textarea {
+    width: 100%; min-height: 200px; resize: vertical;
+    padding: 18px; border: none; outline: none;
+    /* Panel is always a dark box → fixed light text, not theme var (which is
+       near-black in light mode and made typed text invisible). */
+    background: transparent; color: #f1f5f9;
+    font-family: var(--font-body, 'Inter', sans-serif);
+    font-size: 0.95rem; line-height: 1.7;
+    }
+    .pa-textarea::placeholder { color: rgba(226,232,240,0.55); }
+    .pa-textarea-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 18px; border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .char-count { font-size: 0.75rem; color: rgba(255,255,255,0.4); font-variant-numeric: tabular-nums; transition: color .2s; }
+    .char-count.warn { color: #fbbf24; }
+    .char-count.over { color: #f87171; font-weight: 600; }
+    /* ===== GENERATE BUTTON ===== */
+    .pa-generate-btn {
+    width: 100%; margin-top: 16px;
+    padding: 14px 24px; border: none; border-radius: 14px;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 1rem; font-weight: 700; cursor: pointer;
+    background: linear-gradient(135deg, #a855f7 0%, #f472b6 100%);
+    color: #fff; position: relative; overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 8px 30px rgba(168, 85, 247, 0.3);
+    }
+    .pa-generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(168, 85, 247, 0.4);
+    }
+    .pa-generate-btn:active { transform: translateY(0); }
+    .pa-generate-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.15), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+    }
+    .pa-generate-btn:hover::before { transform: translateX(100%); }
+    .pa-generate-btn.loading {
+    pointer-events: none; opacity: 0.8;
+    }
+    .pa-generate-btn .btn-spinner {
+    display: none; width: 20px; height: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 8px;
+    }
+    .pa-generate-btn.loading .btn-spinner { display: inline-block; }
+    .pa-generate-btn.loading .btn-text-normal { display: none; }
+    .pa-generate-btn.loading .btn-text-loading { display: inline; }
+    .btn-text-loading { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    /* ===== OUTPUT PANEL ===== */
+    .pa-output-area {
+    min-height: 200px; max-height: 450px; overflow-y: auto;
+    padding: 18px; border-radius: 16px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(168, 85, 247, 0.1);
+    font-family: 'Inter', sans-serif; font-size: 0.9rem;
+    line-height: 1.75; color: #e8eef7;
+    white-space: pre-wrap; word-break: break-word;
+    }
+    .pa-output-area.empty {
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.2); font-style: italic;
+    text-align: center; font-size: 0.9rem;
+    }
+    .pa-output-area::-webkit-scrollbar { width: 4px; }
+    .pa-output-area::-webkit-scrollbar-track { background: transparent; }
+    .pa-output-area::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.3); border-radius: 4px; }
+    /* Output action buttons */
+    .pa-output-actions {
+    display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+    }
+    .pa-out-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px; border-radius: 10px; cursor: pointer;
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.1));
+    background: var(--glass-bg, rgba(255,255,255,0.04));
+    color: var(--text-secondary, rgba(255,255,255,0.6));
+    font-size: 0.82rem; font-weight: 600;
+    transition: all 0.25s ease;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    }
+    .pa-out-btn:hover {
+    background: rgba(168, 85, 247, 0.12);
+    border-color: rgba(168, 85, 247, 0.35);
+    color: #e0b0ff; transform: translateY(-1px);
+    }
+    .pa-out-btn.copied {
+    background: rgba(34, 197, 94, 0.15) !important;
+    border-color: rgba(34, 197, 94, 0.4) !important;
+    color: #4ade80 !important;
+    }
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+    }
+    /* ===== STATUS TOAST ===== */
+    .pa-toast {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(80px);
+    padding: 12px 24px; border-radius: 14px;
+    background: rgba(14, 7, 26, 0.9); backdrop-filter: blur(20px);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    color: #e0b0ff; font-size: 0.88rem; font-weight: 600;
+    z-index: 999; opacity: 0; pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .pa-toast.show {
+    opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto;
+    }
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+    .pa-workspace { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+    .pa-content { padding: 24px 16px 60px; }
+    }
+
+    /* ===== LIGHT THEME SKIN =====
+       The panels above are hardcoded dark (dark cards + light text + a near-white
+       hero gradient) which looks broken on a light background — dark boxes floating
+       on a light page, low-contrast hero. Re-skin every panel to solid light cards
+       with dark ink so Prompt Agent matches the user's chosen theme like the rest
+       of the app. */
+    :is(body.light-mode, body[data-skemi-bg="light"], [data-skemi-bg="light"]) .pa-hero h1 {
+      color: #1e2330;
+    }
+    :is(body.light-mode, body[data-skemi-bg="light"], [data-skemi-bg="light"]) .pa-hero p { color: #475569; }
+    :is(body.light-mode, body[data-skemi-bg="light"], [data-skemi-bg="light"]) .pa-bg .orb { opacity: 0.18; }
+    :is(body.light-mode, body[data-skemi-bg="light"], [data-skemi-bg="light"]) .pa-card {
+      background: #ffffff; border-color: rgba(15, 23, 42, 0.10);
+      box-shadow: 0 8px 30px rgba(15, 23, 42, 0.07);
+    }
+    :is(body.light-mode, body[data-skemi-bg="light"], [data-skemi-bg="light"]) .pa-card:hover {
+      border-color: rgba(124, 58, 237, 0.35); box-shadow: 0 10px 36px rgba(124, 58, 237, 0.12);
+    }
+    :is(body.light-mode, body[data-skemi-bg="light"], [data-skemi-bg="light"]) .pa-card-header h3 { color: #1e293b; }
+    :is(body.light-mode, body[data-skemi-bg="light"], [data-skemi-bg="light"]) .pa-textarea-wrap {
+      background: #f6f8fc; border-color: rgba(124, 58, 237, 0.20);
+    }
+    :is(body.light-mode, body[data-skemi-bg="light"], [data-skemi-bg="light"]) .pa-textarea { color: #1e293b; }
+    :is(body.light-mode, body[data-skemi-bg="light"], [data-skemi-bg="light"]) .pa-textarea::placeholder { color: #94a3b8; }
+    :is(body.light-mode, body[data-skemi-bg="light"], [data-skemi-bg="light"]) .pa-textarea-footer { border-top-color: rgba(15, 23, 42, 0.08); }
+    :is(body.light-mode, body[data-skemi-bg="light"], [data-skemi-bg="light"]) .char-count { color: #64748b; }
+    :is(body.light-mode, body[data-skemi-bg="light"], [data-skemi-bg="light"]) .pa-output-area {
+      background: #f6f8fc; border-color: rgba(124, 58, 237, 0.15); color: #1e293b;
+    }
+    :is(body.light-mode, body[data-skemi-bg="light"], [data-skemi-bg="light"]) .pa-output-area.empty { color: #94a3b8; }
+    :is(body.light-mode, body[data-skemi-bg="light"], [data-skemi-bg="light"]) .pa-out-btn { color: #475569; border-color: rgba(15,23,42,0.12); background: #fff; }
+    </style>
+    <style id="pa-reskin-2026">
+    .pa-content { max-width: 1180px; }
+    .pa-head-v2 { text-align: left; margin-bottom: 18px; }
+    .pa-title-v2 { font-family: var(--font-heading,'Outfit',sans-serif); font-size: 1.9rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); margin: 0 0 6px; }
+    .pa-sub-v2 { color: var(--text-secondary); font-size: 0.95rem; margin: 0; }
+    .pa-preset-row { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+    .pa-preset-label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
+    .pa-presets { display: inline-flex; gap: 2px; padding: 3px; background: var(--bg-tertiary); border: 1px solid var(--border-light); border-radius: var(--radius-md); }
+    .pa-preset { border: none; background: transparent; color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; padding: 7px 15px; border-radius: var(--radius-sm); cursor: pointer; transition: background var(--transition-fast), color var(--transition-fast); }
+    .pa-preset.is-on { background: var(--bg-secondary); color: var(--brand-primary); box-shadow: var(--shadow-sm); }
+    .pa-layout-v2 { display: grid; grid-template-columns: minmax(0,1fr); gap: 20px; align-items: start; }
+    @media (min-width: 980px) { .pa-layout-v2 { grid-template-columns: minmax(0,1.9fr) 300px; } }
+    .pa-workspace { animation: none; }
+    .pa-card { background: var(--bg-secondary) !important; border: 1px solid var(--border-light) !important; border-radius: var(--radius-lg); backdrop-filter: none !important; box-shadow: var(--shadow-sm); }
+    .pa-card:hover { border-color: var(--border-medium) !important; box-shadow: var(--shadow-md); }
+    .pa-card-header .header-icon { background: var(--brand-light); border: 1px solid var(--border-light); }
+    .pa-card-header h3 { color: var(--text-primary) !important; }
+    .pa-textarea-wrap { background: var(--bg-tertiary) !important; border: 1px solid var(--border-light) !important; border-radius: var(--radius-md); }
+    .pa-textarea-wrap:focus-within { border-color: var(--brand-primary) !important; box-shadow: 0 0 0 3px var(--brand-light) !important; }
+    .pa-textarea { color: var(--text-primary) !important; }
+    .pa-textarea::placeholder { color: var(--text-muted) !important; }
+    .pa-textarea-footer { border-top-color: var(--border-light); }
+    .char-count { color: var(--text-muted); }
+    .pa-generate-btn { background: var(--brand-gradient) !important; border-radius: var(--radius-md); box-shadow: var(--shadow-sm) !important; }
+    .pa-generate-btn:hover { box-shadow: var(--shadow-md) !important; }
+    .pa-output-area { background: var(--bg-tertiary) !important; border: 1px solid var(--border-light) !important; color: var(--text-primary) !important; border-radius: var(--radius-md); }
+    .pa-output-area.empty { color: var(--text-muted) !important; }
+    .pa-out-btn { background: var(--bg-secondary) !important; border: 1px solid var(--border-light) !important; color: var(--text-secondary) !important; border-radius: var(--radius-sm); }
+    .pa-out-btn:hover { background: var(--brand-light) !important; border-color: var(--brand-primary) !important; color: var(--brand-primary) !important; }
+    .pa-chip { background: var(--bg-secondary) !important; border: 1px solid var(--border-light) !important; color: var(--text-secondary) !important; }
+    .pa-chip:hover { border-color: var(--brand-primary) !important; color: var(--text-primary) !important; }
+    .pa-chip-label { color: var(--text-muted) !important; }
+    .pa-history { background: var(--bg-secondary); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-sm); }
+    .pa-history-head { font-family: var(--font-heading,'Outfit',sans-serif); font-weight: 700; font-size: 1rem; color: var(--text-primary); }
+    .pa-history-list { display: flex; flex-direction: column; gap: 8px; }
+    .pa-history-empty { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+    .pa-history-item { text-align: left; border: none; background: var(--bg-tertiary); border-radius: var(--radius-md); padding: 10px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 3px; transition: background var(--transition-fast); }
+    .pa-history-item:hover { background: var(--brand-light); }
+    .pa-hi-title { font-size: 0.85rem; font-weight: 500; color: var(--text-primary); }
+    .pa-hi-meta { font-size: 0.72rem; color: var(--text-muted); }
+
+    /* 2026-07 rebuild → matches PromptAgent.dc.html exactly: flat 2-column
+       "Prompt thô | Prompt nâng cấp" + history on the right, no card chrome. */
+    .pa-workspace { display: block !important; }
+    .pa-cols { display: grid; grid-template-columns: 1fr; gap: 22px; }
+    @media (min-width: 760px) { .pa-cols { grid-template-columns: 1fr 1fr; } }
+    .pa-col { display: flex; flex-direction: column; min-width: 0; }
+    .pa-col-label { font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 9px; }
+    .pa-textarea-wrap { display: flex; flex-direction: column; min-height: 320px; }
+    .pa-textarea { flex: 1; min-height: 260px; resize: vertical; }
+    .pa-output-area { min-height: 320px; display: flex; flex-direction: column; overflow-y: auto; }
+    .pa-output-area.empty { align-items: center; justify-content: center; text-align: center; gap: 12px; }
+    .pa-output-area.empty::before { content: "⚡"; font-size: 2rem; line-height: 1; color: var(--brand-primary); opacity: 0.85; }
+    .pa-generate-btn { margin-top: 22px; width: auto; display: inline-flex; }
+    </style>
+    <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      var presets = document.getElementById('paPresets');
+      if (presets) presets.addEventListener('click', function(e){
+        var b = e.target.closest('.pa-preset'); if(!b) return;
+        presets.querySelectorAll('.pa-preset').forEach(function(x){ x.classList.remove('is-on'); });
+        b.classList.add('is-on');
+      });
+      var out = document.getElementById('outputArea');
+      var listEl = document.getElementById('paHistoryList');
+      var hist = [];
+      if (out && listEl) {
+        var mo = new MutationObserver(function(){
+          if (out.classList.contains('empty')) return;
+          var ii = document.getElementById('ideaInput');
+          var idea = ((ii && ii.value) || '').trim(); if(!idea) return;
+          if (hist[0] && hist[0].idea === idea) return;
+          var st = presets && presets.querySelector('.pa-preset.is-on');
+          hist.unshift({ idea: idea, style: st ? st.dataset.style : 'Chung' });
+          hist = hist.slice(0, 12);
+          listEl.innerHTML = hist.map(function(h){
+            var t = h.idea.length > 42 ? h.idea.slice(0,42)+'…' : h.idea;
+            return '<button type="button" class="pa-history-item" data-idea="'+h.idea.replace(/"/g,'&quot;')+'"><div class="pa-hi-title">'+t.replace(/</g,'&lt;')+'</div><div class="pa-hi-meta">'+h.style+' · vừa xong</div></button>';
+          }).join('');
+          listEl.querySelectorAll('.pa-history-item').forEach(function(it){
+            it.addEventListener('click', function(){
+              var i2 = document.getElementById('ideaInput');
+              if(i2){ i2.value = it.dataset.idea; i2.dispatchEvent(new Event('input')); i2.focus(); }
+            });
+          });
+        });
+        mo.observe(out, { childList:true, characterData:true, subtree:true });
+      }
+    });
+    </script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="Home.html" class="logo">
+            <span class="logo-mark">★</span>
+            <span class="logo-text">Skemi</span>
+        </a>
+        <div class="navbar-shortcuts" aria-label="Điều hướng chính">
+            <a href="Home.html" class="nav-shortcut"><span>🎓</span><span>Studio</span></a>
+            <a href="Search.html" class="nav-shortcut"><span>🔍</span><span>Tra cứu</span></a>
+            <a href="Quiz.html" class="nav-shortcut"><span>📝</span><span>Quiz</span></a>
+            <a href="/Chat.html" class="nav-shortcut"><span>💬</span><span>Chat</span></a>
+        </div>
+        <div class="navbar-actions">
+            <div id="auth-buttons"></div>
+        </div>
+    </nav>
+
+    <div class="app-layout">
+        <aside class="app-sidebar" id="appSidebar">
+            <ul class="sidebar-links">
+                <li><a href="Home.html" id="mindmap-link"><span class="icon">🎓</span><span>Studio</span></a></li>
+                <li><a href="Search.html" id="search-link"><span class="icon">🔍</span><span>Tra cứu</span></a></li>
+                <li><a href="Quiz.html" id="quiz-link"><span class="icon">📝</span><span>Quiz</span></a></li>
+                <li><a href="/Chat.html" id="chat-link"><span class="icon">💬</span><span>Chat</span></a></li>
+                <li><a href="PromptAgent.html" class="active" id="prompt-agent-link"><span class="icon">⚡</span><span>Prompt Agent</span></a></li>
+                <li><a href="Computer.html" id="computer-link"><span class="icon">🖥</span><span>Skemi Control</span></a></li>
+                <li><a href="Remote.html" id="remote-link"><span class="icon">📡</span><span>Điều khiển từ xa</span></a></li>
+                <li><a href="Settings.html" id="settings-link"><span class="icon">⚙</span><span>Cài đặt</span></a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <button class="toggle-sidebar-btn" id="toggleSidebar" title="Thu gọn menu"><span>◀</span></button>
+            </div>
+        </aside>
+
+        <div class="main-content-wrapper">
+            <div class="pa-page">
+                <!-- Background effects -->
+                <div class="pa-bg">
+                    <div class="orb orb-1"></div>
+                    <div class="orb orb-2"></div>
+                    <div class="orb orb-3"></div>
+                </div>
+                <canvas id="neuralCanvas"></canvas>
+
+                <div class="pa-content">
+                    <!-- Header (2026-07 reskin -> PromptAgent.dc.html mockup) -->
+                    <div class="pa-head-v2">
+                        <h1 class="pa-title-v2">Prompt Agent</h1>
+                        <p class="pa-sub-v2">Biến prompt thô thành prompt chuyên nghiệp — rõ ràng, đủ ngữ cảnh, đúng định dạng.</p>
+                    </div>
+                    <div class="pa-preset-row">
+                        <span class="pa-preset-label">Phong cách</span>
+                        <div class="pa-presets" id="paPresets" role="tablist">
+                            <button type="button" class="pa-preset is-on" data-style="Chung">Chung</button>
+                            <button type="button" class="pa-preset" data-style="Code">Code</button>
+                            <button type="button" class="pa-preset" data-style="Sáng tạo">Sáng tạo</button>
+                            <button type="button" class="pa-preset" data-style="Phân tích">Phân tích</button>
+                        </div>
+                    </div>
+
+                    <div class="pa-layout-v2">
+                    <!-- Workspace -->
+                    <div class="pa-workspace">
+                        <div class="pa-cols">
+                            <!-- Raw prompt -->
+                            <div class="pa-col">
+                                <div class="pa-col-label">Prompt thô</div>
+                                <div class="pa-textarea-wrap">
+                                    <textarea id="ideaInput" class="pa-textarea" data-i18n-placeholder="pa_input_placeholder"
+                                        placeholder="Ví dụ: viết email xin nghỉ phép"></textarea>
+                                    <div class="pa-textarea-footer">
+                                        <span class="char-count" id="charCountWrap"><span id="charCount">0</span> / 80.000 ký tự</span>
+                                    </div>
+                                </div>
+                                <!-- Quick-suggestion chips removed to match mockup; handler no-ops without them. -->
+                                <div class="pa-chip-row" id="paChipRow" hidden></div>
+                            </div>
+
+                            <!-- Upgraded prompt -->
+                            <div class="pa-col">
+                                <div class="pa-col-label">Prompt nâng cấp</div>
+                                <div class="pa-output-area empty" id="outputArea" data-no-runtime-translate="1">Nhập prompt và bấm "Nâng cấp" để xem kết quả.</div>
+                                <div class="pa-output-actions" id="outputActions" style="display:none;">
+                                    <button class="pa-out-btn" id="copyBtn" type="button">Sao chép</button>
+                                    <button class="pa-out-btn" id="sendStudioBtn" type="button">→ Studio</button>
+                                    <button class="pa-out-btn" id="sendSearchBtn" type="button">→ Tra cứu</button>
+                                    <button class="pa-out-btn" id="sendChatBtn" type="button">→ Chat</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="pa-generate-btn" id="generateBtn" type="button">
+                            <span class="btn-spinner"></span>
+                            <span class="btn-text-normal">+ Nâng cấp</span>
+                            <span class="btn-text-loading">Đang tối ưu...</span>
+                        </button>
+                    </div>
+
+                        <!-- History — from this session's optimisations -->
+                        <aside class="pa-history" id="paHistory">
+                            <div class="pa-history-head">Lịch sử</div>
+                            <div class="pa-history-list" id="paHistoryList">
+                                <div class="pa-history-empty">Chưa có prompt nào được tối ưu trong phiên này. Nhập ý tưởng và bấm “Nâng cấp”.</div>
+                            </div>
+                        </aside>
+                    </div><!-- /pa-layout-v2 -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="pa-toast" id="toast"></div>
+
+    <script src="./Js/upgrade-nudge.js?v=20260531a"></script>
+    <script src="./Js/entitlements.js?v=20260701d"></script>
+    <script type="module" src="./Js/User_navbar.js?v=20260702b"></script>
+    <script src="./Js/i18n-lang-meta.js?v=20260527"></script>
+    <script src="./Js/i18n-packs.js?v=20260601b"></script>
+    <script type="module" src="./Js/LanguageManager.js?v=20260701e"></script>
+    <script src="./Js/GlobalStatus.js?v=20260704a"></script>
+    <script src="./Js/LegionSectionConfig.js?v=20260705a"></script>
+    <script>
+        // ===== NEURAL PARTICLE CANVAS =====
+        (() => {
+            const canvas = document.getElementById('neuralCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let W, H, particles = [];
+            const PARTICLE_COUNT = 60;
+
+            function resize() {
+                W = canvas.width = window.innerWidth;
+                H = canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            class Particle {
+                constructor() { this.reset(); }
+                reset() {
+                    this.x = Math.random() * W;
+                    this.y = Math.random() * H;
+                    this.vx = (Math.random() - 0.5) * 0.4;
+                    this.vy = (Math.random() - 0.5) * 0.4;
+                    this.r = Math.random() * 2 + 0.5;
+                    this.alpha = Math.random() * 0.5 + 0.2;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > W) this.vx *= -1;
+                    if (this.y < 0 || this.y > H) this.vy *= -1;
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(168, 85, 247, ${this.alpha})`;
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
+
+            function drawConnections() {
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 150) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(168, 85, 247, ${0.08 * (1 - dist / 150)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, W, H);
+                particles.forEach(p => { p.update(); p.draw(); });
+                drawConnections();
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
+
+        // ===== PROMPT AGENT LOGIC =====
+        const STUDIO_SEED_KEY = 'skemi_workspace_seed_v1';
+        const AI_COMMAND_KEY = 'skemi_ai_pending_command_v1';
+
+        const ideaInput = document.getElementById('ideaInput');
+        const charCount = document.getElementById('charCount');
+        const charCountWrap = document.getElementById('charCountWrap');
+        const generateBtn = document.getElementById('generateBtn');
+        const outputArea = document.getElementById('outputArea');
+        const outputActions = document.getElementById('outputActions');
+        const toast = document.getElementById('toast');
+
+        // ===== CHARACTER BUDGET (cap input at 20.000 characters) =====
+        // Characters, not tokens — it's what the user actually types and is far
+        // clearer than an opaque token estimate.
+        const MAX_CHARS = 80000;
+        function isVi() {
+            return (localStorage.getItem('skemi-language') || localStorage.getItem('skemi_lang') || 'vi').startsWith('vi');
+        }
+        function fmtNum(n) { return n.toLocaleString(isVi() ? 'vi-VN' : 'en-US'); }
+
+        function refreshCounts() {
+            const len = ideaInput.value.length;
+            charCount.textContent = fmtNum(len);
+            charCountWrap.classList.toggle('warn', len > MAX_CHARS * 0.8 && len <= MAX_CHARS);
+            charCountWrap.classList.toggle('over', len > MAX_CHARS);
+            const over = len > MAX_CHARS;
+            generateBtn.disabled = over;
+            generateBtn.style.opacity = over ? '0.5' : '';
+            generateBtn.style.cursor = over ? 'not-allowed' : '';
+            return len;
+        }
+
+        // Live character count
+        ideaInput.addEventListener('input', refreshCounts);
+
+        // Quick-start idea chips: fill the textarea and update counts.
+        document.querySelectorAll('#paChipRow .pa-chip').forEach(function (chip) {
+            chip.addEventListener('click', function () {
+                ideaInput.value = chip.getAttribute('data-idea') || '';
+                ideaInput.dispatchEvent(new Event('input'));
+                ideaInput.focus();
+            });
+        });
+
+        // Toast notification
+        function showToast(msg, duration = 2500) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        // Build optimized prompt (client-side fallback when the backend is offline).
+        // UNIVERSAL — no mode picker: a single structured template that fits any
+        // domain. The user just types an idea; Skemi (backend LLM) infers the role.
+        function buildOptimizedPrompt(rawIdea) {
+            const idea = (rawIdea || '').trim();
+            if (!idea) return '';
+            const vi = isVi();
+            const L = vi ? {
+                role: '# VAI TRÒ HỆ THỐNG', ctx: '# BỐI CẢNH', obj: '# MỤC TIÊU',
+                con: '# RÀNG BUỘC', reason: '# QUY TRÌNH LẬP LUẬN', fmt: '# ĐỊNH DẠNG ĐẦU RA',
+                qa: '# CỔNG KIỂM ĐỊNH CHẤT LƯỢNG',
+                roleBody: 'Chuyên gia hàng đầu trong lĩnh vực liên quan nhất tới yêu cầu dưới đây.',
+                ctxBody: 'Người dùng cung cấp một ý tưởng sơ khai. Hãy diễn giải đầy đủ ý định, bổ sung giả định hợp lý và nêu rõ giả định đó nếu có.',
+                conBody: '1. Bám sát đúng lĩnh vực của yêu cầu\n2. Nêu nguồn/dẫn chứng khi đưa ra khẳng định\n3. Trình bày rõ ràng, đúng định dạng phù hợp',
+                reasonBody: '1. Phân rã yêu cầu thành các thành phần nhỏ\n2. Xác định thông tin còn thiếu, hỏi lại nếu cần\n3. Lập kế hoạch trước khi trả lời\n4. Tự kiểm tra lại kết quả trước khi kết luận',
+                fmtBody: 'Trình bày có cấu trúc, mạch lạc, dễ hành động — định dạng phù hợp nhất với loại yêu cầu.',
+                qaBody: '- Không bịa đặt thông tin; nếu không chắc → nói rõ\n- Bám sát mục tiêu, không lan man\n- Trình bày có cấu trúc, dễ hành động\n- Ngôn ngữ trả lời: tiếng Việt'
+            } : {
+                role: '# SYSTEM ROLE', ctx: '# CONTEXT', obj: '# OBJECTIVE',
+                con: '# CONSTRAINTS', reason: '# REASONING PROCESS', fmt: '# OUTPUT FORMAT',
+                qa: '# QUALITY GATE',
+                roleBody: 'A top expert in the field most relevant to the request below.',
+                ctxBody: 'The user provides a raw idea. Fully interpret their intent, add reasonable assumptions, and state any assumption explicitly.',
+                conBody: '1. Stay strictly within the request\'s domain\n2. Cite sources/evidence for any claim\n3. Present clearly in the most fitting format',
+                reasonBody: '1. Decompose the request into sub-components\n2. Identify missing information; ask if essential\n3. Plan before answering\n4. Self-verify the result before concluding',
+                fmtBody: 'Structured, coherent, actionable — in the format best suited to the request type.',
+                qaBody: '- No fabrication; if uncertain → say so\n- Stay on objective, no rambling\n- Structured, actionable presentation\n- Respond in English'
+            };
+            return [
+                `${L.role}\n${L.roleBody}`,
+                `${L.ctx}\n${L.ctxBody}`,
+                `${L.obj}\n${idea}`,
+                `${L.con}\n${L.conBody}`,
+                `${L.reason}\n${L.reasonBody}`,
+                `${L.fmt}\n${L.fmtBody}`,
+                `${L.qa}\n${L.qaBody}`
+            ].join('\n\n');
+        }
+
+        // Generate
+        generateBtn.addEventListener('click', async () => {
+            const idea = ideaInput.value.trim();
+            if (!idea) {
+                showToast(isVi() ? 'Hãy nhập ý tưởng trước' : 'Enter an idea first');
+                return;
+            }
+            if (idea.length > MAX_CHARS) {
+                showToast(isVi()
+                    ? `Vượt giới hạn 80.000 ký tự (hiện ${fmtNum(idea.length)}). Hãy rút gọn.`
+                    : `Over the 80,000-character limit (${fmtNum(idea.length)} now). Please shorten.`, 3500);
+                return;
+            }
+
+            generateBtn.classList.add('loading');
+
+            // Simulate AI processing with slight delay for UX
+            await new Promise(r => setTimeout(r, 800));
+
+            // Try calling backend first, fallback to local
+            let result = '';
+            try {
+                const resp = await fetch('/api/prompt-agent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idea })
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    result = data.prompt || data.result || '';
+                }
+            } catch (e) { /* fallback to local */ }
+
+            if (!result) {
+                result = buildOptimizedPrompt(idea);
+            }
+
+            outputArea.textContent = result;
+            outputArea.classList.remove('empty');
+            outputActions.style.display = 'flex';
+            generateBtn.classList.remove('loading');
+            showToast('✅ Prompt đã được tối ưu');
+        });
+
+        // Copy
+        document.getElementById('copyBtn').addEventListener('click', async () => {
+            const text = outputArea.textContent;
+            if (!text || outputArea.classList.contains('empty')) return;
+            try {
+                await navigator.clipboard.writeText(text);
+                const btn = document.getElementById('copyBtn');
+                btn.classList.add('copied');
+                btn.textContent = '✓ Đã sao chép';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.textContent = '📋 Sao chép';
+                }, 2000);
+            } catch { showToast('Không thể sao chép'); }
+        });
+
+        // Send to Studio
+        document.getElementById('sendStudioBtn').addEventListener('click', () => {
+            const text = outputArea.textContent;
+            if (!text || outputArea.classList.contains('empty')) return;
+            localStorage.setItem(STUDIO_SEED_KEY, JSON.stringify({
+                prompt: text,
+                type: 'mindmap'
+            }));
+            window.location.href = 'Home.html';
+        });
+
+        // Send to Search
+        document.getElementById('sendSearchBtn').addEventListener('click', () => {
+            const query = ideaInput.value.trim();
+            if (!query) return;
+            localStorage.setItem(AI_COMMAND_KEY, JSON.stringify({
+                id: `cmd_${Date.now()}`, type: 'search.run', target: 'search',
+                targetPage: 'search', displayText: query,
+                executePayload: { query, language: 'vi' },
+                createdAt: Date.now()
+            }));
+            window.location.href = 'Search.html';
+        });
+
+        // Send to Chat
+        document.getElementById('sendChatBtn').addEventListener('click', () => {
+            window.location.href = 'Chat.html';
+        });
+
+        // Sidebar toggle
+        document.getElementById('toggleSidebar')?.addEventListener('click', () => {
+            const sidebar = document.getElementById('appSidebar');
+            sidebar?.classList.toggle('collapsed');
+            const span = document.querySelector('#toggleSidebar span');
+            if (span) span.textContent = sidebar?.classList.contains('collapsed') ? '▶' : '◀';
+        });
+
+        // Theme
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('skemi-theme') || 'galaxy';
+            document.body.className = `${savedTheme}-mode`;
+            refreshCounts();
+        });
+    </script>
+</body>
+
+</html>

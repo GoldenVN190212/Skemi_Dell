@@ -1,0 +1,193 @@
+/* ========================================================================
+   SKEMI MOTION & POLISH LAYER  —  site-wide professional micro-interactions
+   ------------------------------------------------------------------------
+   Loaded after Global.css on EVERY page. This is a pure enhancement layer:
+   it adds entrance animation + tasteful micro-interactions to the components
+   that already exist, WITHOUT changing any layout, spacing, or color.
+
+   Safety contract:
+     • Default state is fully visible. If motion.js never runs, nothing hides.
+     • All entrance animation is gated behind body.skemi-anim-in (added by JS).
+     • Honors BOTH body.reduce-motion (Settings toggle) AND the OS-level
+       @media (prefers-reduced-motion: reduce).
+     • Uses GPU-friendly transform/opacity only — no layout thrash.
+   Theme-aware: every value derives from design-tokens.css variables, so it
+   automatically follows light / dark / galaxy + the custom accent color.
+======================================================================== */
+
+/* ============================ KEYFRAMES ============================ */
+@keyframes skemiFadeUp   { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes skemiFadeIn   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes skemiScaleIn  { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes skemiDropIn   { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+@keyframes skemiSlideIn  { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+@keyframes skemiRipple   { to { transform: scale(2.8); opacity: 0; } }
+@keyframes skemiSpin     { to { transform: rotate(360deg); } }
+@keyframes skemiFloat    { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes skemiShimmer  { 0% { background-position: -540px 0; } 100% { background-position: 540px 0; } }
+@keyframes skemiGlowPulse {
+    0%, 100% { box-shadow: 0 0 0 0 hsla(var(--brand-primary-h, 240), 84%, 60%, .35); }
+    50%      { box-shadow: 0 0 22px 4px hsla(var(--brand-primary-h, 240), 84%, 60%, .18); }
+}
+
+/* ====================== PAGE ENTRANCE (JS-gated) ====================== */
+/* These only fire once, when motion.js adds .skemi-anim-in to <body>. */
+body.skemi-anim-in .navbar               { animation: skemiDropIn  .5s  var(--transition-normal) both; }
+body.skemi-anim-in .app-sidebar          { animation: skemiSlideIn .55s var(--transition-normal) both; }
+body.skemi-anim-in .main-content-wrapper { animation: skemiFadeUp  .55s var(--transition-normal) both; animation-delay: .05s; }
+
+/* Staggered entrance for repeating content blocks. motion.js tags these with
+   [data-skemi-stagger] and sets --i = their index so they cascade in. */
+body.skemi-anim-in [data-skemi-stagger] {
+    animation: skemiFadeUp .5s var(--transition-normal) both;
+    animation-delay: calc(var(--i, 0) * 55ms + .08s);
+}
+
+/* ===================== SCROLL REVEAL (opt-in) ===================== */
+/* Add data-reveal="" to any element; motion.js flips it to .is-in when it
+   scrolls into view. Falls back to visible if JS is absent (see below). */
+.js [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity .6s var(--transition-normal), transform .6s var(--transition-normal); will-change: opacity, transform; }
+.js [data-reveal].is-in { opacity: 1; transform: none; }
+[data-reveal][data-reveal="fade"] { transform: none; }
+
+/* ===================== BUTTON POLISH + RIPPLE ===================== */
+/* Make the primary CTA feel alive: a soft sheen sweeps across on hover and a
+   material ripple blooms from the click point (added by motion.js). */
+.btn, button.btn, .nav-shortcut, .btn-primary, .btn-secondary, .btn-outline {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast),
+                filter var(--transition-fast), background var(--transition-fast),
+                border-color var(--transition-fast);
+}
+.btn:active, button.btn:active, .btn-primary:active,
+.btn-secondary:active, .nav-shortcut:active { transform: translateY(0) scale(.97); }
+
+/* sheen sweep on the gradient CTA */
+.btn-primary::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.35) 50%, transparent 70%);
+    transform: translateX(-130%);
+    transition: transform .7s cubic-bezier(.22,1,.36,1);
+    pointer-events: none; z-index: 1;
+}
+.btn-primary:hover::after { transform: translateX(130%); }
+
+/* the ripple element motion.js injects */
+.skemi-ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    background: currentColor;
+    opacity: .28;
+    pointer-events: none;
+    z-index: 0;
+    animation: skemiRipple .6s cubic-bezier(.22,1,.36,1) forwards;
+}
+.btn-primary .skemi-ripple { background: #fff; opacity: .35; }
+
+/* ===================== CARD / PANEL HOVER LIFT ===================== */
+.settings-card, .stats-card, .plan-card, .glass-panel, .chart-container,
+.studio-card, .feature-card, .result-card, .source-card, .quiz-card {
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal),
+                border-color var(--transition-normal);
+    will-change: transform;
+}
+.settings-card:hover, .stats-card:hover, .plan-card:hover, .glass-panel:hover,
+.studio-card:hover, .feature-card:hover, .result-card:hover, .source-card:hover,
+.quiz-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--border-medium);
+}
+
+/* ===================== NAV LINK UNDERLINE ===================== */
+.sidebar-links li a { position: relative; }
+.sidebar-links li a::after {
+    content: ""; position: absolute; left: 14px; right: 14px; bottom: 6px; height: 2px;
+    background: var(--brand-gradient); border-radius: 2px;
+    transform: scaleX(0); transform-origin: left; opacity: 0;
+    transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+.sidebar-links li a:hover::after { transform: scaleX(1); opacity: .9; }
+
+/* ===================== INPUT FOCUS GLOW ===================== */
+input, textarea, select { transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast); }
+input:focus, textarea:focus, select:focus { box-shadow: 0 0 0 3px var(--brand-light); }
+
+/* ===================== AVATAR / LOGO MICRO-MOTION ===================== */
+.logo:hover .logo-mark { animation: skemiFloat 1.6s ease-in-out infinite; }
+.btn-user-premium { transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast); }
+.btn-user-premium:hover { transform: translateY(-1px); filter: brightness(1.05); }
+
+/* ===================== TOAST / MODAL ENTRANCE ===================== */
+.toast { animation: skemiScaleIn .32s var(--transition-normal) both; }
+.modal-content, .dialog, [role="dialog"] > * { animation: skemiScaleIn .28s var(--transition-normal) both; }
+
+/* ===================== SKELETON SHIMMER (reusable) ===================== */
+.skemi-skeleton {
+    position: relative; overflow: hidden;
+    background: var(--bg-tertiary); border-radius: var(--radius-sm);
+}
+.skemi-skeleton::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, var(--bg-glass-hover), transparent);
+    background-size: 540px 100%;
+    animation: skemiShimmer 1.3s linear infinite;
+}
+
+/* ===================== SPINNER (reusable) ===================== */
+.skemi-spinner {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid var(--border-medium);
+    border-top-color: var(--brand-primary);
+    animation: skemiSpin .7s linear infinite;
+    display: inline-block;
+}
+
+/* ===================== TEXT SELECTION + FOCUS RING ===================== */
+::selection { background: var(--brand-light); color: var(--text-primary); }
+:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+/* ===================== CUSTOM SCROLLBAR (scroll panels) ===================== */
+.skemi-scroll::-webkit-scrollbar, .scrollable::-webkit-scrollbar { width: 10px; height: 10px; }
+.skemi-scroll::-webkit-scrollbar-thumb, .scrollable::-webkit-scrollbar-thumb {
+    background: var(--border-medium); border-radius: var(--radius-full);
+    border: 2px solid transparent; background-clip: content-box;
+}
+.skemi-scroll::-webkit-scrollbar-thumb:hover, .scrollable::-webkit-scrollbar-thumb:hover { background: var(--border-strong); background-clip: content-box; }
+
+/* ===================== GLOBAL POLISH (site-wide) ===================== */
+html { scroll-behavior: smooth; }
+
+/* Top-nav shortcuts: subtle lift + active pill feel */
+.nav-shortcut { transition: transform var(--transition-fast), color var(--transition-fast), background var(--transition-fast); border-radius: var(--radius-full); }
+.nav-shortcut:hover { transform: translateY(-1px); color: var(--brand-primary); }
+
+/* Tactile press on all buttons (depth feedback) */
+.btn-primary:active:not(:disabled), .btn-secondary:active:not(:disabled),
+.btn-outline:active:not(:disabled), .btn-danger:active:not(:disabled),
+.btn-premium-search:active, .rg-btn:active, .rg-open-btn:active,
+button:active:not(:disabled) { transform: translateY(0) scale(.97); }
+
+/* Smooth, consistent hover for any element opting in */
+[data-lift] { transition: transform var(--transition-fast), box-shadow var(--transition-fast); }
+[data-lift]:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+
+/* Links get a soft brand transition everywhere */
+a { transition: color var(--transition-fast), opacity var(--transition-fast); }
+
+/* ===================== REDUCED MOTION — kill everything ===================== */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+    }
+    .js [data-reveal] { opacity: 1 !important; transform: none !important; }
+}
+body.reduce-motion .js [data-reveal] { opacity: 1 !important; transform: none !important; }
+body.reduce-motion .btn-primary::after { display: none; }

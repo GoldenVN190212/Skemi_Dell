@@ -1,0 +1,911 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/Css/design-tokens.css?v=20260701b">
+    <link rel="stylesheet" href="/Css/Motion.css?v=20260607k">
+    <script defer src="/Js/motion.js?v=20260531a"></script>
+        <script src="/Js/guest-storage-guard.js?v=20260527"></script>
+        <script src="/Js/account-storage.js?v=20260527"></script>
+        <script type="module" src="/Js/Auth.js?v=20260527"></script>
+        <script type="module" src="/Js/UserScopedStorage.js?v=20260527"></script>
+        <script type="module" src="/Js/CloudSync.js?v=20260702b"></script>
+        <script src="/Js/UserDataManager.js?v=20260531b"></script>
+        <script src="/Js/Preferences.js?v=20260621a"></script>
+        <script src="/Js/UI.js?v=20260510"></script>
+    <script src="/Js/Skills.js?v=20260624d"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng Thí Nghiệm Ý Tưởng — Skemi</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>★</text></svg>">
+    <link rel="stylesheet" href="./Css/Global.css?v=20260629c" />
+    <link rel="stylesheet" href="./Css/Polish.css?v=20260630d" />
+    <style>
+        :root { --lab-a: #2dd4a7; --lab-b: #38bdf8; --lab-c: #818cf8; --lab-warn: #f59e0b; --lab-risk: #f43f5e;
+                --lab-line: var(--border-light, rgba(255,255,255,.08)); --lab-surface: var(--bg-secondary, rgba(255,255,255,.025)); }
+        .lab-main { flex: 1; min-height: 0; padding: 30px 34px 70px; overflow-y: auto; }
+        .lab-wrap { max-width: 1080px; margin: 0 auto; }
+        /* Calm, single-surface header — typography carries the hierarchy (no loud
+           dual-gradient panel). */
+        .lab-console {
+            border-radius: 16px; padding: 28px 30px; margin-bottom: 26px;
+            background: var(--lab-surface); border: 1px solid var(--lab-line);
+        }
+        .lab-kicker { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text2, #8b93a7); font-weight: 600; margin: 0 0 8px; }
+        .lab-title { font-size: clamp(1.55rem, 3vw, 2.05rem); font-weight: 700; margin: 0 0 10px; color: var(--text, #fff); letter-spacing: -.02em; line-height: 1.15; }
+        .lab-title b { font-weight: 700; color: var(--lab-b); }
+        .lab-sub { color: var(--text2, #9aa0aa); font-size: .96rem; margin: 0 0 16px; max-width: 640px; line-height: 1.55; }
+        .lab-input { width: 100%; min-height: 88px; resize: vertical; border-radius: 14px; padding: 14px 16px;
+            background: var(--bg2, rgba(0,0,0,.3)); border: 1px solid color-mix(in srgb, var(--lab-b) 24%, transparent);
+            color: var(--text, #e8e8ea); font-size: .97rem; line-height: 1.55; outline: none; font-family: inherit; }
+        .lab-input:focus { border-color: var(--lab-b); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lab-b) 13%, transparent); }
+        .lab-input::placeholder { color: rgba(180,190,210,.5); }
+        .lab-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
+        .lab-run { cursor: pointer; border: 0; border-radius: 10px; padding: 11px 20px; font-weight: 600; letter-spacing: 0; font-size: .9rem; color: #04140d;
+            background: var(--lab-b); transition: filter .16s ease, transform .16s ease; }
+        .lab-run:hover { filter: brightness(1.06); transform: translateY(-1px); }
+        .lab-run:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+        .lab-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+        .lab-chip { cursor: pointer; border: 1px solid var(--border, rgba(255,255,255,.12)); background: var(--bg-glass, rgba(255,255,255,.05)); color: var(--text, #e2e8f0); padding: 7px 13px; border-radius: 999px; font-size: .8rem; font-weight: 600; transition: all .16s ease; }
+        .lab-chip:hover { transform: translateY(-2px); border-color: var(--lab-b); }
+        /* Report */
+        .lab-report { display: none; animation: labUp .5s ease both; }
+        .lab-report.show { display: block; }
+        @keyframes labUp { from { opacity: 0; transform: translateY(14px);} to { opacity:1; transform: none;} }
+        .lab-verdict { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; border-radius: 18px; padding: 20px 22px; margin-bottom: 18px;
+            background: var(--bg2, rgba(255,255,255,.04)); border: 1px solid var(--border, rgba(255,255,255,.09)); }
+        .gauge { --v: 0; width: 96px; height: 96px; flex: none; border-radius: 50%;
+            background: conic-gradient(var(--lab-a) calc(var(--v)*1%), rgba(125,125,160,.18) 0);
+            display: flex; align-items: center; justify-content: center; position: relative; }
+        .gauge::after { content: ''; position: absolute; inset: 9px; border-radius: 50%; background: var(--bg, #0a0a0b); }
+        .gauge span { position: relative; z-index: 1; font-size: 1.5rem; font-weight: 800; color: var(--text, #fff); }
+        .lab-verdict-txt h3 { margin: 0 0 4px; font-size: 1.05rem; color: var(--text, #fff); }
+        .lab-badge { display: inline-block; font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; padding: 4px 11px; border-radius: 999px; margin-bottom: 8px; }
+        .lab-verdict-txt p { margin: 0; color: var(--text2, #aab); font-size: .92rem; line-height: 1.55; }
+        .lab-factors { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 18px; }
+        .lab-fac { background: var(--bg-glass, rgba(255,255,255,.04)); border: 1px solid var(--border, rgba(255,255,255,.1)); border-radius: 14px; padding: 12px 14px; }
+        .lab-fac-top { display: flex; justify-content: space-between; align-items: baseline; font-size: .82rem; font-weight: 700; color: var(--text, #e2e8f0); }
+        .lab-fac-top b { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+        .lab-fac-bar { height: 7px; border-radius: 99px; background: rgba(125,125,160,.2); margin: 7px 0 8px; overflow: hidden; }
+        .lab-fac-bar i { display: block; height: 100%; border-radius: 99px; transition: width .6s cubic-bezier(.2,.7,.2,1); }
+        .lab-fac-note { margin: 0; font-size: .76rem; line-height: 1.45; color: var(--text2, #9aa0aa); }
+        .lab-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .lab-card { border-radius: 16px; padding: 18px; background: var(--bg2, rgba(255,255,255,.035)); border: 1px solid var(--border, rgba(255,255,255,.09)); }
+        .lab-card h4 { margin: 0 0 12px; font-size: .95rem; color: var(--text, #fff); display: flex; align-items: center; gap: 8px; }
+        .lab-card ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
+        .lab-card li { font-size: .88rem; line-height: 1.5; color: var(--text, #d6dae3); }
+        .scn { display: flex; flex-direction: column; gap: 12px; }
+        .scn-item b { color: var(--text, #fff); font-size: .9rem; }
+        .scn-item p { margin: 3px 0 6px; font-size: .82rem; color: var(--text2, #aab); }
+        .pbar { height: 7px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+        .pbar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--lab-b), var(--lab-a)); }
+        .lab-whatif { margin-top: 16px; border-radius: 16px; padding: 18px; background: var(--bg2, rgba(255,255,255,.04)); border: 1px dashed color-mix(in srgb, var(--lab-c) 40%, transparent); }
+        .lab-whatif h4 { margin: 0 0 10px; font-size: .95rem; color: var(--text, #fff); }
+        .lab-whatif-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .lab-whatif input { flex: 1; min-width: 200px; border-radius: 10px; padding: 10px 12px; background: var(--bg2, rgba(0,0,0,.3)); border: 1px solid var(--border, rgba(255,255,255,.12)); color: var(--text, #fff); outline: none; }
+        .lab-whatif button { cursor: pointer; border: 0; border-radius: 10px; padding: 10px 18px; font-weight: 700; background: #7c3aed; color: #fff; } /* #7c3aed: white text ≈5.8:1 (var(--lab-c) #a855f7 was only 3.96) */
+        #whatifOut { margin-top: 10px; font-size: .88rem; color: var(--text, #d6dae3); line-height: 1.55; }
+        .lab-spin { display:inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: labrot .7s linear infinite; vertical-align: middle; }
+        @keyframes labrot { to { transform: rotate(360deg); } }
+        @media (max-width: 760px) { .lab-cards { grid-template-columns: 1fr; } .lab-main { padding: 18px 14px 50px; } }
+        /* Whiteboard */
+        .lab-wb-section { margin: 22px 0; }
+        .lab-wb-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .lab-wb-head h2 { margin: 0; font-size: 1.1rem; color: var(--text, #fff); }
+        .lab-wb-tools { display: flex; gap: 8px; }
+        .lab-wb-btn { cursor: pointer; border: 1px solid var(--border, rgba(255,255,255,.14)); background: var(--bg-glass, rgba(255,255,255,.05)); color: var(--text, #e8e8ea); border-radius: 10px; padding: 8px 14px; font-weight: 700; font-size: .8rem; transition: all .16s ease; }
+        .lab-wb-btn:hover { border-color: var(--lab-b); transform: translateY(-1px); }
+        .lab-wb-btn.active { background: var(--lab-b); color: #04140d; border-color: var(--lab-b); }
+        .lab-wb-btn.ghost:hover { border-color: var(--lab-risk); color: var(--lab-risk); }
+        .lab-wb-hint { color: var(--text2, #9aa0aa); font-size: .82rem; margin: 6px 0 10px; }
+        .lab-wb { position: relative; height: 440px; border-radius: 18px; overflow: hidden; background: var(--bg2, rgba(255,255,255,.03)); border: 1px solid var(--border, rgba(255,255,255,.09)); background-image: radial-gradient(rgba(125,140,180,.16) 1px, transparent 1px); background-size: 24px 24px; }
+        .lab-wb.connect { cursor: crosshair; }
+        .lab-wb-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+        .lab-wb-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--text2, #9aa0aa); font-size: .92rem; padding: 20px; }
+        .lab-node { position: absolute; width: 190px; border-radius: 12px; background: var(--bg2, #14141c); border: 1px solid var(--lab-line); box-shadow: 0 6px 18px rgba(0,0,0,.28); user-select: none; }
+        .lab-node::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; background: var(--lab-b); opacity: .8; }
+        .lab-node.sel { border-color: var(--lab-b); box-shadow: 0 0 0 2px color-mix(in srgb, var(--lab-b) 35%, transparent), 0 6px 18px rgba(0,0,0,.28); }
+        .lab-node-bar { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; cursor: grab; border-bottom: 1px solid rgba(255,255,255,.07); }
+        .lab-node-bar:active { cursor: grabbing; }
+        .lab-node-grip { color: var(--text2, #9aa0aa); font-size: .9rem; letter-spacing: 1px; }
+        .lab-node-x { cursor: pointer; border: 0; background: transparent; color: var(--text2, #9aa0aa); font-size: 1rem; line-height: 1; padding: 0 2px; }
+        .lab-node-x:hover { color: var(--lab-risk); }
+        .lab-node-txt { padding: 9px 11px; font-size: .85rem; line-height: 1.4; color: var(--text, #f1f5f9); outline: none; min-height: 22px; word-break: break-word; }
+        .lab-node-link { position: absolute; right: -9px; bottom: -9px; width: 24px; height: 24px; border-radius: 50%; border: 0; cursor: pointer; background: var(--lab-b); color: #04140d; font-size: .7rem; font-weight: 800; box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+        /* Experiment history */
+        .lab-hist { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .lab-hist-h { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--text2, #9aa0aa); width: 100%; }
+        .lab-hist-item { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; border: 1px solid var(--border, rgba(255,255,255,.12)); background: var(--bg-glass, rgba(255,255,255,.04)); color: var(--text2, #aab); border-radius: 999px; padding: 6px 13px; font-size: .78rem; max-width: 320px; transition: all .15s ease; }
+        .lab-hist-item:hover { border-color: var(--lab-b); color: var(--text, #fff); transform: translateY(-1px); }
+        .lab-hist-item b { color: var(--lab-a); }
+        .lab-hist-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* Light theme: neon cyan/emerald accents used as TEXT fail on the near-white
+           page (WCAG). Darken to cyan-700 / emerald-700 (≈4.7-5.3:1). Backgrounds,
+           gauges and progress bars keep the bright accents (they sit on dark fills). */
+        :is(body.light-mode, [data-skemi-bg="light"]) .lab-kicker { color: #155e75; }
+        :is(body.light-mode, [data-skemi-bg="light"]) .lab-hist-item b { color: #047857; }
+        /* First-principles + breakthrough paths (the companion's core value) */
+        .lab-fp { border-radius: 16px; padding: 16px 18px; margin-bottom: 18px;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--lab-c) 12%, var(--bg2, #14111f)), var(--bg2, rgba(255,255,255,.035)));
+            border: 1px solid color-mix(in srgb, var(--lab-c) 36%, transparent); }
+        .lab-fp h4 { margin: 0 0 10px; font-size: .95rem; color: var(--text, #fff); display: flex; align-items: center; gap: 8px; }
+        .lab-fp ul { margin: 0 0 6px; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+        .lab-fp li { font-size: .87rem; line-height: 1.5; color: var(--text, #d6dae3); }
+        .lab-paths { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px,1fr)); gap: 10px; margin-top: 10px; }
+        .lab-path { border-radius: 12px; padding: 12px 14px; background: var(--bg, rgba(0,0,0,.25)); border: 1px solid color-mix(in srgb, var(--lab-b) 30%, transparent); }
+        .lab-path b { display: block; font-size: .86rem; color: var(--lab-b); margin-bottom: 4px; }
+        .lab-path p { margin: 0; font-size: .8rem; line-height: 1.45; color: var(--text2, #9aa0aa); }
+        .lab-path .feas { display: inline-block; margin-top: 6px; font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; }
+        /* R&D Live Chronicle */
+        .lab-chronicle { border-radius: 18px; padding: 20px 22px; margin: 22px 0;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--lab-b) 8%, var(--bg, #0a0a0b)), var(--bg2, rgba(255,255,255,.03)));
+            border: 1px solid color-mix(in srgb, var(--lab-b) 30%, transparent); }
+        .lab-chron-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+        .lab-chron-head h2 { margin: 0; font-size: 1.12rem; color: var(--text, #fff); display: flex; align-items: center; gap: 8px; }
+        .lab-chron-stat { display: flex; gap: 14px; flex-wrap: wrap; font-size: .76rem; color: var(--text2, #9aa0aa); margin: 4px 0 12px; }
+        .lab-chron-stat b { color: var(--lab-b); font-variant-numeric: tabular-nums; }
+        .lab-chron-log { max-height: 360px; overflow-y: auto; border-radius: 12px; padding: 10px 12px; background: #0b0c14;
+            border: 1px solid var(--border, rgba(255,255,255,.09)); font-family: 'JetBrains Mono', ui-monospace, monospace; }
+        .chron-line { display: flex; gap: 10px; padding: 5px 6px; border-radius: 7px; font-size: .8rem; line-height: 1.5; animation: labUp .3s ease both; }
+        .chron-line + .chron-line { margin-top: 2px; }
+        .chron-time { color: #5b6472; flex: none; font-size: .74rem; }
+        .chron-msg { color: #c4ccda; white-space: pre-wrap; word-break: break-word; }
+        .chron-line.info .chron-msg { color: #9fb0c4; }
+        .chron-line.live { background: rgba(34,211,238,.07); } .chron-line.live .chron-msg { color: #67e8f9; }
+        .chron-line.ok { background: rgba(52,211,153,.08); } .chron-line.ok .chron-msg { color: #6ee7b7; font-weight: 600; }
+        .chron-line.breakthrough { background: linear-gradient(90deg, rgba(52,211,153,.22), transparent); border: 1px solid rgba(52,211,153,.4); }
+        .chron-line.breakthrough .chron-msg { color: #34d399; font-weight: 800; letter-spacing: .02em; }
+        .chron-line.emergency { background: linear-gradient(90deg, rgba(251,113,133,.2), transparent); border: 1px solid rgba(251,113,133,.4); }
+        .chron-line.emergency .chron-msg { color: #fb7185; font-weight: 800; }
+        @keyframes chronFlash { 0%,100% { box-shadow: 0 0 0 0 transparent; } 40% { box-shadow: 0 0 22px 2px currentColor; } }
+        .chron-line.breakthrough, .chron-line.emergency { animation: labUp .3s ease both, chronFlash 1.1s ease 2; }
+        .lab-chron-cta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+        .lab-chron-chat { display: none; margin-top: 12px; }
+        .lab-chron-chat.show { display: block; }
+        .lab-chron-chat textarea { width: 100%; min-height: 64px; border-radius: 12px; padding: 11px 13px; resize: vertical;
+            background: var(--bg2, rgba(0,0,0,.3)); border: 1px solid color-mix(in srgb, var(--lab-c) 30%, transparent); color: var(--text, #e8e8ea); font-family: inherit; font-size: .9rem; outline: none; }
+        #chronChatOut { margin-top: 10px; font-size: .88rem; line-height: 1.6; color: var(--text, #d6dae3); white-space: pre-wrap; }
+    </style>
+</head>
+<body class="galaxy-mode">
+    <nav class="navbar">
+        <a href="Home.html" class="logo"><span class="logo-mark">★</span><span class="logo-text">Skemi</span></a>
+        <div class="navbar-shortcuts" aria-label="Điều hướng chính">
+            <a href="Home.html" class="nav-shortcut"><span>🎓</span><span data-i18n="nav_studio">Studio</span></a>
+            <a href="Search.html" class="nav-shortcut"><span>🔍</span><span data-i18n="nav_search">Tra cứu</span></a>
+            <a href="Quiz.html" class="nav-shortcut"><span>📝</span><span data-i18n="nav_quiz">Quiz</span></a>
+            <a href="Chat.html" class="nav-shortcut"><span>💬</span><span data-i18n="nav_chat">Chat</span></a>
+        </div>
+        <div class="navbar-actions"><div id="auth-buttons"></div></div>
+    </nav>
+
+    <div class="app-layout">
+        <aside class="app-sidebar" id="appSidebar">
+            <ul class="sidebar-links">
+                <li><a href="Home.html" id="mindmap-link"><span class="icon">🎓</span><span data-i18n="nav_studio">Studio</span></a></li>
+                <li><a href="Search.html" class="active" id="search-link"><span class="icon">🔍</span><span data-i18n="nav_search">Tra cứu</span></a></li>
+                <li><a href="Quiz.html" id="quiz-link"><span class="icon">📝</span><span data-i18n="nav_quiz">Quiz</span></a></li>
+                <li><a href="Chat.html" id="chat-link"><span class="icon">💬</span><span data-i18n="nav_chat">Chat</span></a></li>
+                <li><a href="PromptAgent.html" id="prompt-agent-link"><span class="icon">⚡</span><span data-i18n="nav_prompt_agent">Prompt Agent</span></a></li>
+                <li><a href="Legion.html" id="legion-link"><span class="icon">🛡️</span><span>Legion</span></a></li>
+                <li><a href="Computer.html" id="computer-link"><span class="icon">🖥️</span><span data-i18n="nav_computer">Skemi Control</span></a></li>
+                <li><a href="Settings.html" id="settings-link"><span class="icon">⚙️</span><span data-i18n="nav_settings">Cài đặt</span></a></li>
+            </ul>
+        </aside>
+
+        <div class="main-content-wrapper">
+            <main class="lab-main">
+                <div class="lab-wrap">
+                    <section class="lab-console">
+                        <p class="lab-kicker">Phòng thí nghiệm</p>
+                        <h1 class="lab-title">Thực nghiệm <b>mọi ý tưởng</b></h1>
+                        <p class="lab-sub">Nhập một ý tưởng. Skemi chấm độ khả thi, chỉ ra rủi ro và đề xuất bước thực nghiệm tiếp theo.</p>
+                        <textarea id="ideaInput" class="lab-input" data-i18n-placeholder="lab_idea_placeholder" placeholder="Vd: Dùng tảo biển nuôi trong nhà để hấp thụ CO₂ và sản xuất điện sinh học cho hộ gia đình..."></textarea>
+                        <div class="lab-row">
+                            <button id="analyzeBtn" class="lab-run">Phân tích ý tưởng</button>
+                        </div>
+                        <div class="lab-chips" id="ideaChips">
+                            <button class="lab-chip" data-idea="Tạo pin lưu trữ điện bằng cát nung nóng cho làng vùng cao">🔋 Pin cát</button>
+                            <button class="lab-chip" data-idea="Dạy AI tự phát hiện tin giả bằng cách đối chiếu chéo 300 nguồn theo thời gian thực">🧠 AI chống tin giả</button>
+                            <button class="lab-chip" data-idea="Vườn thẳng đứng tự động trong đô thị dùng nước mưa tái chế">🌿 Vườn đứng đô thị</button>
+                        </div>
+                        <div class="lab-hist" id="labHistory" style="display:none;"></div>
+                    </section>
+
+                    <section class="lab-wb-section">
+                        <div class="lab-wb-head">
+                            <h2>Bảng trắng ý tưởng</h2>
+                            <div class="lab-wb-tools">
+                                <button id="wbImport" class="lab-wb-btn" style="display:none">📥 Nạp bản đồ từ Search</button>
+                                <button id="wbAdd" class="lab-wb-btn">＋ Ý tưởng</button>
+                                <button id="wbConnect" class="lab-wb-btn">🔗 Nối</button>
+                                <button id="wbClear" class="lab-wb-btn ghost">🗑 Xoá hết</button>
+                            </div>
+                        </div>
+                        <p class="lab-wb-hint">Kéo để sắp xếp, sửa chữ trực tiếp, bấm <b>Nối</b> để liên kết 2 thẻ. Tự lưu.</p>
+                        <div class="lab-wb" id="labBoard">
+                            <svg class="lab-wb-svg" id="wbSvg"></svg>
+                            <div class="lab-wb-empty" id="wbEmpty">Bảng trống — bấm <b>＋ Ý tưởng</b> để bắt đầu phác thảo &amp; liên kết.</div>
+                        </div>
+                    </section>
+
+                    <section class="lab-report" id="labReport">
+                        <div class="lab-verdict">
+                            <div class="gauge" id="gauge"><span id="gaugeVal">0%</span></div>
+                            <div class="lab-verdict-txt">
+                                <span class="lab-badge" id="verdictBadge">—</span>
+                                <h3 id="verdictTitle">Kết quả phân tích</h3>
+                                <p id="verdictSummary"></p>
+                            </div>
+                        </div>
+
+                        <!-- Per-factor breakdown: makes the verdict "dựa trên nhiều thứ"
+                             visible — the headline score is derived from these. -->
+                        <div class="lab-factors" id="factorsList"></div>
+
+                        <!-- First-principles dissection + breakthrough paths: the
+                             companion's core — attack the problem at its root and name
+                             the feasible 1% to try, never discourage. -->
+                        <div class="lab-fp" id="fpBlock" style="display:none">
+                            <h4>Tư duy nguyên bản</h4>
+                            <ul id="fpList"></ul>
+                            <h4 style="margin-top:12px">Hướng đột phá có thể thử</h4>
+                            <div class="lab-paths" id="pathsList"></div>
+                        </div>
+
+                        <div class="lab-cards">
+                            <div class="lab-card" style="grid-column:1/-1">
+                                <h4>Kịch bản mô phỏng</h4>
+                                <div class="scn" id="scnList"></div>
+                            </div>
+                            <div class="lab-card"><h4>Lỗ hổng kiến thức</h4><ul id="gapsList"></ul></div>
+                            <div class="lab-card"><h4>Rủi ro</h4><ul id="risksList"></ul></div>
+                            <div class="lab-card"><h4>Bước thực nghiệm tiếp theo</h4><ul id="stepsList"></ul></div>
+                            <div class="lab-card"><h4>Nguồn lực gợi ý</h4><ul id="resList"></ul></div>
+                        </div>
+
+                        <div class="lab-whatif">
+                            <h4>Thử nghiệm “What-if” nhanh</h4>
+                            <div class="lab-whatif-row">
+                                <input id="whatifInput" data-i18n-placeholder="lab_whatif_placeholder" placeholder="Đổi 1 biến số… vd: tăng quy mô gấp 10 lần, giảm chi phí 50%...">
+                                <button id="whatifBtn">Mô phỏng</button>
+                            </div>
+                            <div id="whatifOut"></div>
+                        </div>
+
+                        <!-- Multi-agent squad: only shown when the user enabled the
+                             "Đội quân AI đa tác tử" skill in Settings. Dispatches the idea
+                             to a real Legion (manager → role-specialised workers → synthesis). -->
+                        <div class="lab-whatif" id="squadBox" style="display:none">
+                            <h4>Đội quân AI nghiên cứu</h4>
+                            <p style="margin:0 0 10px;font-size:.85rem;color:var(--text2,#9aa0aa)">Mỗi tác tử một vai, chạy song song; Chỉ huy tổng hợp thành phương án.</p>
+                            <button id="squadBtn" class="lab-run" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff">⚡ Cho đội quân nghiên cứu ý tưởng này</button>
+                            <div id="squadOut" style="margin-top:14px"></div>
+                        </div>
+
+                        <!-- REAL test sandbox: AI writes a runnable JS prototype + test
+                             cases, and we EXECUTE it in a sandboxed Web Worker so
+                             success/failure is genuine (the code runs), not AI opinion. -->
+                        <div class="lab-whatif" id="sandboxBox" style="border-color:color-mix(in srgb,var(--lab-a) 45%,transparent)">
+                            <h4>Sandbox kiểm chứng — chạy code thật</h4>
+                            <p style="margin:0 0 10px;font-size:.85rem;color:var(--text2,#9aa0aa)">AI viết nguyên mẫu + ca kiểm thử rồi <b>chạy thật</b> — thành/bại dựa trên kết quả chạy, không phán đại.</p>
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+                                <button id="protoBtn" class="lab-run" style="background:linear-gradient(135deg,var(--lab-a),var(--lab-b));color:#04140d">🤖 AI viết nguyên mẫu chạy được</button>
+                                <button id="runCodeBtn" class="lab-run" data-feature="lab_sandbox" data-feature-badge="off" style="background:var(--bg2,rgba(255,255,255,.08));color:var(--text,#fff)">▶️ Chạy thử thật</button>
+                            </div>
+                            <div id="protoExplain" style="font-size:.84rem;color:var(--text2,#9aa0aa);margin-bottom:8px"></div>
+                            <textarea id="codeEditor" spellcheck="false" placeholder="// AI sẽ viết hàm solve(input) ở đây — bạn có thể sửa rồi chạy lại."
+                                style="width:100%;min-height:150px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.82rem;line-height:1.5;border-radius:12px;padding:12px 14px;background:#0b0c14;color:#d6dae3;border:1px solid var(--border,rgba(255,255,255,.12));resize:vertical;white-space:pre"></textarea>
+                            <div id="sandboxOut" style="margin-top:12px"></div>
+                        </div>
+
+                        <!-- R&D Live Chronicle: long-term research. One batched LLM call
+                             builds first-principles hypotheses (each with runnable code);
+                             every hypothesis is verified TOKEN-FREE in the sandbox and
+                             logged live — breakthroughs and honest dead-ends, plus
+                             continue-chat to keep going on any finding. -->
+                        <div class="lab-chronicle" id="chronicle">
+                            <div class="lab-chron-head">
+                                <h2>Nghiên cứu chuyên sâu — nhật ký trực tiếp</h2>
+                                <span id="chronConn" style="font-size:.74rem;color:var(--text2,#9aa0aa)"></span>
+                            </div>
+                            <p style="margin:0 0 4px;font-size:.86rem;color:var(--text2,#9aa0aa);line-height:1.55">
+                                Dựng giả thuyết rồi <b>chạy code thật để kiểm chứng</b>. Mỗi đột phá hay bế tắc hiện ngay bên dưới để bạn bàn tiếp.
+                            </p>
+                            <div class="lab-chron-stat">
+                                <span>Vòng: <b id="chronRound">0</b></span>
+                                <span>Giả thuyết đã thử: <b id="chronTried">0</b></span>
+                                <span>Đột phá: <b id="chronWins">0</b></span>
+                                <span>Token tiết kiệm (chạy code): <b id="chronSaved">0</b></span>
+                            </div>
+                            <div class="lab-chron-log" id="chronLog"><div class="chron-line info"><span class="chron-time">—</span><span class="chron-msg">Phân tích một vấn đề ở trên, rồi bấm “Bắt đầu nghiên cứu” để khởi động phòng R&amp;D.</span></div></div>
+                            <div class="lab-chron-cta">
+                                <button id="chronStart" class="lab-run">Bắt đầu nghiên cứu</button>
+                                <button id="chronNext" class="lab-wb-btn" style="display:none">↻ Nghiên cứu thêm một vòng</button>
+                                <button id="chronSquad" class="lab-wb-btn" style="display:none">🛡️ Gọi Legion nghiên cứu trường kỳ</button>
+                                <button id="chronPackage" class="lab-wb-btn" style="display:none;border-color:color-mix(in srgb,var(--lab-a) 50%,transparent);color:var(--lab-a)">📦 Đóng gói thành tựu</button>
+                            </div>
+                            <!-- Turnkey delivery: package a verified breakthrough into a
+                                 ready-to-use artifact (code + tests + usage guide) the user
+                                 can download + reuse — "biết áp dụng" not just theory. -->
+                            <div id="chronPackOut" style="margin-top:12px"></div>
+                            <div class="lab-chron-chat" id="chronChat">
+                                <p style="margin:0 0 6px;font-size:.82rem;color:var(--lab-a);font-weight:700">💬 Bàn tiếp về phát hiện này — AI nhớ ngữ cảnh và nghiên cứu sâu hơn</p>
+                                <textarea id="chronChatIn" placeholder="Vd: hướng #2 chạy được rồi, giờ tối ưu cho chip yếu hơn thì đổi gì? · hay thử đổi hàm kích hoạt xem sao…"></textarea>
+                                <div style="margin-top:8px"><button id="chronChatBtn" class="lab-run" style="background:linear-gradient(135deg,var(--lab-a),var(--lab-b));color:#04140d">Gửi cho đội R&amp;D</button></div>
+                                <div id="chronChatOut"></div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const $ = (id) => document.getElementById(id);
+            // Bilingual JS-painted chrome (button states, what-if, history header) — these are
+            // re-written by JS so the web-translate sweep can't hold them; pick by language.
+            const LAB_STR = {
+                vi: { analyzing: '<span class="lab-spin"></span> Đang phân tích…', analyze: 'Phân tích ý tưởng', recent: 'Thí nghiệm gần đây', simulating: '<span class="lab-spin"></span> Đang mô phỏng…', simFail: 'Mô phỏng thất bại, thử lại.', analyzeFail: 'Không phân tích được, thử lại.', del: 'Xoá', connect: 'Nối', wfResult: 'Kết quả', wfConfidence: 'Độ tin cậy', wfInsight: 'Insight', clearConfirm: 'Xoá toàn bộ bảng trắng?' },
+                en: { analyzing: '<span class="lab-spin"></span> Analyzing…', analyze: 'Analyze idea', recent: 'Recent experiments', simulating: '<span class="lab-spin"></span> Simulating…', simFail: 'Simulation failed, please try again.', analyzeFail: 'Analysis failed, please try again.', del: 'Delete', connect: 'Connect', wfResult: 'Result', wfConfidence: 'Confidence', wfInsight: 'Insight', clearConfirm: 'Clear the whole whiteboard?' }
+            };
+            function labLang() { try { var l = (window.languageManager && window.languageManager.currentLanguage) || localStorage.getItem('skemi_language') || 'vi'; return String(l).toLowerCase().replace(/"/g, '').startsWith('vi') ? 'vi' : 'en'; } catch (e) { return 'vi'; } }
+            function LS(k) { var d = LAB_STR[labLang()] || LAB_STR.vi; return (k in d) ? d[k] : (LAB_STR.vi[k] || k); }
+            let lastIdea = '';
+            function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+            function li(arr){ return (arr||[]).map(x=>`<li>${esc(typeof x==='string'?x:JSON.stringify(x))}</li>`).join('') || '<li style="opacity:.5">—</li>'; }
+
+            async function analyze(idea) {
+                lastIdea = idea;
+                const btn = $('analyzeBtn'); btn.disabled = true; btn.innerHTML = LS('analyzing');
+                let data = null;
+                try {
+                    const lang = (localStorage.getItem('skemi_language')||'vi').replace(/"/g,'');
+                    const r = await fetch('/api/lab/analyze', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ idea, language: lang }) });
+                    data = await r.json();
+                } catch (e) {}
+                btn.disabled = false; btn.innerHTML = LS('analyze');
+                if (!data || !data.success) { alert(LS('analyzeFail')); return; }
+                render(data.report);
+                saveHistory(idea, data.report);
+            }
+
+            // ── Experiment history (per account; recall a past analysis instantly) ──
+            // Uses loadUserData/saveUserData (account-storage.js) — namespaced by the
+            // signed-in uid, so it's cleared on logout and synced to the server by
+            // CloudSync.js instead of being a raw, un-scoped, un-synced localStorage key.
+            function loadHistory() { try { return JSON.parse((window.loadUserData && window.loadUserData('skemi_lab_history')) || '[]') || []; } catch (e) { return []; } }
+            function saveHistory(idea, report) {
+                const h = loadHistory().filter(x => x.idea !== idea);
+                h.unshift({ idea, feasibility: report.feasibility, verdict: report.verdict, report, ts: Date.now() });
+                try { window.saveUserData && window.saveUserData('skemi_lab_history', JSON.stringify(h.slice(0, 15))); } catch (e) {}
+                renderHistory();
+            }
+            function renderHistory() {
+                const box = $('labHistory'); if (!box) return;
+                const h = loadHistory();
+                if (!h.length) { box.style.display = 'none'; return; }
+                box.style.display = 'block';
+                box.innerHTML = '<div class="lab-hist-h">' + LS('recent') + '</div>' + h.map((x, i) =>
+                    `<button class="lab-hist-item" data-i="${i}"><b>${x.feasibility}%</b> <span>${esc((x.idea || '').slice(0, 64))}</span></button>`
+                ).join('');
+                box.querySelectorAll('.lab-hist-item').forEach((b) => b.addEventListener('click', () => {
+                    const item = loadHistory()[+b.dataset.i]; if (!item) return;
+                    lastIdea = item.idea; $('ideaInput').value = item.idea; render(item.report);
+                }));
+            }
+
+            function render(rep) {
+                const v = Math.max(0, Math.min(100, rep.feasibility || 0));
+                const g = $('gauge'); g.style.setProperty('--v', v);
+                const col = v < 50 ? 'var(--lab-c)' : (v < 70 ? 'var(--lab-warn)' : 'var(--lab-a)');
+                g.style.background = `conic-gradient(${col} ${v}%, rgba(125,125,160,.18) 0)`;
+                $('gaugeVal').textContent = v + '%';
+                const badge = $('verdictBadge'); badge.textContent = rep.verdict || '—';
+                // Solid deep-accent fill + white text → readable (WCAG AA) in light, dark AND
+                // galaxy themes (the pale-tint + bright-accent text version failed on light bg).
+                const colSolid = v < 50 ? '#6d28d9' : (v < 70 ? '#b45309' : '#047857');
+                badge.style.background = colSolid; badge.style.color = '#fff';
+                $('verdictSummary').textContent = rep.summary || '';
+                // Per-factor breakdown bars (technical/resources/novelty/value/evidence).
+                const FLABEL = { technical:'⚙️ Kỹ thuật', resources:'💰 Nguồn lực', novelty:'✨ Độ mới', value:'🚀 Giá trị', evidence:'📚 Cơ sở' };
+                const facs = Array.isArray(rep.factors) ? rep.factors : [];
+                $('factorsList').innerHTML = facs.map(f => {
+                    const s = Math.max(0, Math.min(100, f.score || 0));
+                    const fc = s < 50 ? 'var(--lab-risk)' : (s < 70 ? 'var(--lab-warn)' : 'var(--lab-a)');
+                    return `<div class="lab-fac"><div class="lab-fac-top"><span>${esc(FLABEL[f.key] || f.key || '—')}</span><b>${s}</b></div>`
+                         + `<div class="lab-fac-bar"><i style="width:${s}%;background:${fc}"></i></div>`
+                         + `<p class="lab-fac-note">${esc(f.note || '')}</p></div>`;
+                }).join('');
+                // First-principles dissection + breakthrough paths (companion core).
+                const fp = Array.isArray(rep.first_principles) ? rep.first_principles : [];
+                const paths = Array.isArray(rep.breakthrough_paths) ? rep.breakthrough_paths : [];
+                if (fp.length || paths.length) {
+                    $('fpBlock').style.display = 'block';
+                    $('fpList').innerHTML = li(fp);
+                    $('pathsList').innerHTML = paths.map(p => {
+                        const ok = p && p.feasible !== false;
+                        return `<div class="lab-path"><b>${esc(p.path || p.name || 'Hướng đột phá')}</b><p>${esc(p.why || p.reason || '')}</p>`
+                            + `<span class="feas" style="background:${ok ? 'rgba(52,211,153,.18)' : 'rgba(251,191,36,.18)'};color:${ok ? '#34d399' : '#fbbf24'}">${ok ? '✓ Khả thi để thử' : '◑ Cần kiểm chứng'}</span></div>`;
+                    }).join('') || '<p style="opacity:.5">—</p>';
+                } else { $('fpBlock').style.display = 'none'; }
+                $('scnList').innerHTML = (rep.scenarios||[]).map(s=>`<div class="scn-item"><b>${esc(s.name||'Kịch bản')}</b><p>${esc(s.outcome||'')}</p><div class="pbar"><i style="width:${Math.max(0,Math.min(100,s.probability||0))}%"></i></div></div>`).join('') || '<p style="opacity:.5">—</p>';
+                $('gapsList').innerHTML = li(rep.gaps);
+                $('risksList').innerHTML = li(rep.risks);
+                $('stepsList').innerHTML = li(rep.next_steps);
+                $('resList').innerHTML = li(rep.resources);
+                $('whatifOut').textContent = '';
+                // Show the multi-agent squad launcher only if the user enabled it.
+                try { $('squadBox').style.display = (window.SkemiLegion && window.SkemiLegion.active()) ? 'block' : 'none'; } catch(e){}
+                $('squadOut').innerHTML = '';
+                $('labReport').classList.add('show');
+                $('labReport').scrollIntoView({ behavior:'smooth', block:'start' });
+            }
+
+            $('analyzeBtn').addEventListener('click', () => { const v = $('ideaInput').value.trim(); if (v) analyze(v); else $('ideaInput').focus(); });
+            $('ideaInput').addEventListener('keydown', (e)=>{ if ((e.ctrlKey||e.metaKey) && e.key==='Enter'){ const v=$('ideaInput').value.trim(); if(v) analyze(v); } });
+            document.querySelectorAll('#ideaChips .lab-chip').forEach(c=>c.addEventListener('click',()=>{ $('ideaInput').value = c.getAttribute('data-idea'); analyze($('ideaInput').value); }));
+
+            $('whatifBtn').addEventListener('click', async () => {
+                const change = $('whatifInput').value.trim();
+                if (!lastIdea) { return; }
+                const out = $('whatifOut'); out.innerHTML = LS('simulating');
+                let data = null;
+                try { const r = await fetch('/api/lab/simulate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ hypothesis: lastIdea, change }) }); data = await r.json(); } catch(e){}
+                if (data && data.success) {
+                    const d = data.data;
+                    out.innerHTML = `<b>${LS('wfResult')}:</b> ${esc(d.result||'')}<br><b>${LS('wfConfidence')}:</b> ${d.confidence||0}% &nbsp;•&nbsp; <b>${LS('wfInsight')}:</b> ${esc(d.insight||'')}`;
+                } else { out.textContent = LS('simFail'); }
+            });
+
+            // ── Đội quân AI nghiên cứu ý tưởng (multi-agent) ───────────────────
+            const SQUAD_ROSTER = ['Khảo sát thị trường & nhu cầu', 'Khả thi kỹ thuật & công nghệ',
+                'Rủi ro & rào cản', 'Giải pháp & bước thực thi', 'Mô hình giá trị / lợi ích'];
+            $('squadBtn') && $('squadBtn').addEventListener('click', async () => {
+                if (!lastIdea || !window.SkemiLegion) return;
+                const btn = $('squadBtn'); const out = $('squadOut');
+                const n = window.SkemiLegion.agentCount();
+                btn.disabled = true; btn.textContent = '⏳ Đội quân đang nghiên cứu…';
+                out.innerHTML = `<p style="opacity:.6;font-size:.85rem">${n} tác tử đang chạy song song, Chỉ huy sẽ tổng hợp…</p>`;
+                try {
+                    const data = await window.SkemiLegion.runTask(
+                        `Nghiên cứu, đánh giá và đề xuất giải pháp khả thi cho ý tưởng: ${lastIdea}`,
+                        { agents: n, roster: SQUAD_ROSTER.slice(0, Math.max(2, n - 1)) }
+                    );
+                    if (!data || !data.success) { out.textContent = 'Đội quân chưa chạy được. Thử lại.'; return; }
+                    const agentsHtml = (data.agents || []).map(a =>
+                        `<div class="lab-card" style="margin:8px 0"><h4 style="margin:0 0 4px">🤖 ${esc(a.id)} — ${esc(a.function)} <span style="font-size:.72rem;opacity:.6">(${Math.round((a.ms||0)/1000)}s${a.ok?'':' • lỗi'})</span></h4>`
+                        + `<div style="font-size:.84rem;line-height:1.55;color:var(--text2,#aab);white-space:pre-wrap">${esc((a.output||'').slice(0,700))}</div></div>`).join('');
+                    out.innerHTML = `<div class="lab-card" style="border-color:color-mix(in srgb,#a855f7 40%,transparent)"><h4>🧠 Tổng hợp của Chỉ huy</h4>`
+                        + `<div style="font-size:.9rem;line-height:1.7;white-space:pre-wrap">${esc(data.result||'')}</div></div>`
+                        + `<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700;font-size:.85rem">Xem đóng góp từng tác tử (${data.workers_ok}/${data.worker_count})</summary>${agentsHtml}</details>`;
+                } catch (e) {
+                    out.textContent = 'Lỗi gọi đội quân: ' + (e.message || e);
+                } finally {
+                    btn.disabled = false; btn.textContent = '⚡ Cho đội quân nghiên cứu ý tưởng này';
+                }
+            });
+
+            // ── Sandbox kiểm chứng THẬT (chạy code trong Web Worker cô lập) ────
+            let labTests = [];
+            function runInSandbox(code, tests, timeoutMs) {
+                return new Promise((resolve) => {
+                    const workerSrc = `self.onmessage=function(e){var code=e.data.code,tests=e.data.tests,logs=[];`
+                        + `var sc={log:function(){logs.push([].slice.call(arguments).map(String).join(' '))},`
+                        + `error:function(){logs.push('ERR: '+[].slice.call(arguments).map(String).join(' '))},`
+                        + `warn:function(){logs.push([].slice.call(arguments).map(String).join(' '))}};`
+                        + `var solve;try{var fn=new Function('console',code+';return typeof solve!=="undefined"?solve:null;');solve=fn(sc);}`
+                        + `catch(err){self.postMessage({error:'Lỗi biên dịch: '+err.message,logs:logs});return;}`
+                        + `if(typeof solve!=='function'){self.postMessage({error:'Không tìm thấy hàm solve(input).',logs:logs});return;}`
+                        + `var results=[];for(var i=0;i<tests.length;i++){var t=tests[i],actual,ok=false,er=null;`
+                        + `try{actual=solve(t.input);ok=JSON.stringify(actual)===JSON.stringify(t.expected);}catch(ex){er=ex.message;}`
+                        + `results.push({name:t.name,input:t.input,expected:t.expected,actual:(actual===undefined?null:actual),ok:ok,error:er});}`
+                        + `self.postMessage({results:results,logs:logs});};`;
+                    let w;
+                    try { w = new Worker(URL.createObjectURL(new Blob([workerSrc], { type: 'application/javascript' }))); }
+                    catch (e) { resolve({ error: 'Không tạo được sandbox: ' + e.message, logs: [] }); return; }
+                    const timer = setTimeout(() => { w.terminate(); resolve({ error: 'Hết thời gian — có thể vòng lặp vô hạn.', logs: [] }); }, timeoutMs || 4000);
+                    w.onmessage = (e) => { clearTimeout(timer); w.terminate(); resolve(e.data); };
+                    w.onerror = (e) => { clearTimeout(timer); w.terminate(); resolve({ error: e.message || 'Lỗi runtime', logs: [] }); };
+                    w.postMessage({ code: code, tests: tests });
+                });
+            }
+            function renderSandbox(data) {
+                const out = $('sandboxOut');
+                if (data.error) { out.innerHTML = `<div class="lab-card" style="border-color:var(--lab-risk)"><b style="color:var(--lab-risk)">❌ ${esc(data.error)}</b>${(data.logs && data.logs.length) ? '<pre style="font-size:.78rem;white-space:pre-wrap;margin:8px 0 0">' + esc(data.logs.join('\n')) + '</pre>' : ''}</div>`; return; }
+                const res = data.results || [];
+                const pass = res.filter(r => r.ok).length;
+                const allOk = pass === res.length && res.length > 0;
+                const head = `<div class="lab-verdict" style="margin-bottom:12px"><div class="gauge" style="--v:${res.length ? Math.round(pass / res.length * 100) : 0};background:conic-gradient(${allOk ? 'var(--lab-a)' : 'var(--lab-warn)'} ${res.length ? pass / res.length * 100 : 0}%,rgba(125,125,160,.18) 0)"><span>${pass}/${res.length}</span></div>`
+                    + `<div class="lab-verdict-txt"><span class="lab-badge" style="background:${allOk ? '#047857' : '#b45309'};color:#fff">${allOk ? 'CHẠY THÀNH CÔNG' : 'CÒN LỖI'}</span><h3>Kết quả chạy thật ${pass}/${res.length} ca</h3><p>Đây là kết quả THỰC THI code, không phải đánh giá AI.</p></div></div>`;
+                const rows = res.map(r => `<div class="lab-card" style="margin:6px 0;border-color:${r.ok ? 'color-mix(in srgb,var(--lab-a) 40%,transparent)' : 'color-mix(in srgb,var(--lab-risk) 45%,transparent)'}">`
+                    + `<b>${r.ok ? '✅' : '❌'} ${esc(r.name)}</b>`
+                    + `<div style="font-size:.78rem;font-family:monospace;margin-top:4px;color:var(--text2,#9aa0aa);white-space:pre-wrap">input: ${esc(JSON.stringify(r.input))}\nexpected: ${esc(JSON.stringify(r.expected))}\nactual:   ${esc(JSON.stringify(r.actual))}${r.error ? '\nlỗi: ' + esc(r.error) : ''}</div></div>`).join('');
+                out.innerHTML = head + rows + ((data.logs && data.logs.length) ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-size:.82rem">Console (${data.logs.length})</summary><pre style="font-size:.78rem;white-space:pre-wrap">${esc(data.logs.join('\n'))}</pre></details>` : '');
+            }
+            $('protoBtn') && $('protoBtn').addEventListener('click', async () => {
+                if (!lastIdea) { $('sandboxOut').textContent = 'Hãy phân tích một ý tưởng trước.'; return; }
+                const btn = $('protoBtn'); btn.disabled = true; btn.textContent = '⏳ AI đang viết nguyên mẫu…';
+                try {
+                    const r = await fetch('/api/lab/prototype', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idea: lastIdea }) });
+                    const data = await r.json();
+                    if (!data.success) { $('sandboxOut').textContent = data.error || 'Không tạo được nguyên mẫu.'; return; }
+                    $('codeEditor').value = data.code || '';
+                    labTests = data.tests || [];
+                    $('protoExplain').textContent = (data.explanation || '') + (labTests.length ? `  •  ${labTests.length} ca kiểm thử` : '');
+                    $('sandboxOut').innerHTML = '<p style="opacity:.6;font-size:.85rem">Đã có nguyên mẫu — bấm "▶️ Chạy thử thật" để thực thi.</p>';
+                } catch (e) { $('sandboxOut').textContent = 'Lỗi: ' + (e.message || e); }
+                finally { btn.disabled = false; btn.textContent = '🤖 AI viết nguyên mẫu chạy được'; }
+            });
+            $('runCodeBtn') && $('runCodeBtn').addEventListener('click', async () => {
+                const code = $('codeEditor').value.trim();
+                if (!code) { $('sandboxOut').textContent = 'Chưa có code. Bấm "AI viết nguyên mẫu" trước (hoặc tự viết hàm solve(input)).'; return; }
+                const btn = $('runCodeBtn'); btn.disabled = true; btn.textContent = '▶️ Đang chạy…';
+                const data = await runInSandbox(code, labTests, 4000);
+                renderSandbox(data);
+                btn.disabled = false; btn.textContent = '▶️ Chạy thử thật';
+            });
+
+            // ── R&D Live Chronicle: long-term research loop ────────────────────
+            // ONE batched LLM call → several first-principles hypotheses (each with
+            // runnable code) → every hypothesis VERIFIED token-free in the sandbox →
+            // logged live with honest breakthrough/dead-end. Hardware is the referee.
+            const chron = { round: 0, tried: 0, wins: 0, saved: 0, findings: [], logLines: [], breakthroughs: [], running: false, idea: '' };
+            const CHRON_KEY = 'skemi_lab_chronicle';
+            function chTime() { const d = new Date(); return d.toTimeString().slice(0, 8); }
+            // Persist the whole R&D timeline so it SURVIVES navigation/refresh/sessions —
+            // a long-term project ("vài ngày/tháng") you can leave and return to.
+            function saveChron() {
+                try { window.saveUserData && window.saveUserData(CHRON_KEY, JSON.stringify({
+                    idea: chron.idea || lastIdea || '', round: chron.round, tried: chron.tried, wins: chron.wins,
+                    saved: chron.saved, findings: chron.findings.slice(-12), logLines: chron.logLines.slice(-120),
+                    breakthroughs: (chron.breakthroughs || []).slice(-8), ts: Date.now()
+                })); } catch (e) {}
+            }
+            function chronLog(msg, level, _noPersist) {
+                const log = $('chronLog'); if (!log) return;
+                if (log.children.length === 1 && log.firstChild.textContent.includes('Bắt đầu nghiên cứu')) log.innerHTML = '';
+                const t = chTime();
+                const line = document.createElement('div');
+                line.className = 'chron-line ' + (level || 'info');
+                line.innerHTML = `<span class="chron-time">${t}</span><span class="chron-msg">${esc(msg)}</span>`;
+                log.appendChild(line); log.scrollTop = log.scrollHeight;
+                if (!_noPersist) { chron.logLines.push({ t, msg, level: level || 'info' }); saveChron(); }
+                // Breakthrough / emergency: also flash a global alert AND queue a cross-page
+                // notice so the user is told even from another section (the "Breaking News").
+                if (level === 'breakthrough' || level === 'emergency') {
+                    chronGlobalAlert(msg, level);
+                    try {
+                        const q = JSON.parse((window.loadUserData && window.loadUserData('skemi_lab_alerts')) || '[]');
+                        q.push({ msg: msg.slice(0, 160), level, ts: Date.now(), seen: false });
+                        window.saveUserData && window.saveUserData('skemi_lab_alerts', JSON.stringify(q.slice(-20)));
+                    } catch (e) {}
+                }
+            }
+            function restoreChron() {
+                let s = null; try { s = JSON.parse((window.loadUserData && window.loadUserData(CHRON_KEY)) || 'null'); } catch (e) {}
+                if (!s || !Array.isArray(s.logLines) || !s.logLines.length) return;
+                chron.round = s.round || 0; chron.tried = s.tried || 0; chron.wins = s.wins || 0;
+                chron.saved = s.saved || 0; chron.findings = s.findings || []; chron.logLines = []; chron.idea = s.idea || '';
+                chron.breakthroughs = Array.isArray(s.breakthroughs) ? s.breakthroughs : [];
+                const log = $('chronLog'); if (log) log.innerHTML = '';
+                (s.logLines || []).forEach(l => {
+                    const line = document.createElement('div'); line.className = 'chron-line ' + (l.level || 'info');
+                    line.innerHTML = `<span class="chron-time">${esc(l.t || '')}</span><span class="chron-msg">${esc(l.msg || '')}</span>`;
+                    if (log) log.appendChild(line);
+                });
+                chron.logLines = s.logLines || [];
+                if (log) log.scrollTop = log.scrollHeight;
+                chronStat();
+                $('chronNext').style.display = 'inline-flex';
+                if (chron.findings.length > 0) $('chronChat').classList.add('show');
+                updatePackBtn();
+                const conn = $('chronConn'); if (conn && s.idea) conn.textContent = '⏳ Tiếp tục dự án: "' + String(s.idea).slice(0, 40) + '"';
+            }
+            function chronStat() { $('chronRound').textContent = chron.round; $('chronTried').textContent = chron.tried; $('chronWins').textContent = chron.wins; $('chronSaved').textContent = chron.saved.toLocaleString(); }
+            function chronGlobalAlert(msg, level) {
+                try {
+                    if (window.GlobalStatus && typeof window.GlobalStatus.toast === 'function') { window.GlobalStatus.toast((level === 'breakthrough' ? '💥 ' : '🚨 ') + msg, level === 'breakthrough' ? 'success' : 'error'); return; }
+                } catch (e) {}
+            }
+            // Knowledge-map context = whiteboard nodes + links (the "bản đồ tri thức" the
+            // user assembles) → feeds the research so the map CONNECTS to the lab.
+            function mapContext() {
+                try {
+                    if (!wb || !wb.nodes || !wb.nodes.length) return '';
+                    const names = {}; wb.nodes.forEach(n => names[n.id] = (n.text || '').slice(0, 60));
+                    const nodeTxt = wb.nodes.map(n => '• ' + (n.text || '').slice(0, 80)).join('\n');
+                    const linkTxt = (wb.links || []).map(l => `${names[l.a] || '?'} ↔ ${names[l.b] || '?'}`).join('; ');
+                    return 'Bản đồ tri thức (whiteboard):\n' + nodeTxt + (linkTxt ? '\nLiên kết: ' + linkTxt : '');
+                } catch (e) { return ''; }
+            }
+            async function chronResearch(prior) {
+                if (chron.running) return; if (!lastIdea) { chronLog('Hãy phân tích một vấn đề trước khi nghiên cứu.', 'emergency'); return; }
+                // New topic → start a fresh chronicle; same topic → continue the saved one.
+                if (chron.idea && chron.idea !== lastIdea) { chron.round = 0; chron.tried = 0; chron.wins = 0; chron.saved = 0; chron.findings = []; chron.logLines = []; }
+                chron.idea = lastIdea;
+                chron.running = true; chron.round++;
+                const sBtn = $('chronStart'), nBtn = $('chronNext');
+                sBtn.disabled = true; nBtn.disabled = true; sBtn.textContent = '⏳ Đội R&D đang tư duy…';
+                chronLog(`Vòng ${chron.round} — tư duy nguyên bản, dựng giả thuyết kiểm chứng được…`, 'live');
+                let data = null;
+                try {
+                    const r = await fetch('/api/lab/research', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idea: lastIdea, context: mapContext(), prior: prior || chron.findings.slice(-3).join(' · ') }) });
+                    data = await r.json();
+                } catch (e) { chronLog('Lỗi gọi engine nghiên cứu: ' + (e.message || e), 'emergency'); }
+                sBtn.disabled = false; nBtn.disabled = false; sBtn.textContent = '🔬 Bắt đầu nghiên cứu trường kỳ';
+                if (!data || !data.success) { chronLog('Chưa dựng được giả thuyết kiểm chứng được vòng này — thử diễn đạt vấn đề cụ thể hơn hoặc nghiên cứu thêm vòng.', 'emergency'); chron.running = false; chronStat(); return; }
+                (data.first_principles || []).forEach(fp => chronLog('🧬 ' + fp, 'info'));
+                const hyps = data.hypotheses || [];
+                chronLog(`Đã dựng ${hyps.length} giả thuyết — bắt đầu CHẠY CODE THẬT để kiểm chứng (0 token)…`, 'live');
+                for (const h of hyps) {
+                    chronLog(`🧪 Thử: ${h.name} — ${(h.idea || '').slice(0, 90)}`, 'live');
+                    await new Promise(r => setTimeout(r, 120));
+                    chron.tried++;
+                    // Conceptual hypothesis (no runnable code) → honest: it needs a real
+                    // experiment, we DON'T fake a pass/fail. Code hypothesis → run it.
+                    if (h.kind === 'concept' || !h.code || !(h.tests || []).length) {
+                        chron.findings.push(`${h.name}: ${h.idea}`);
+                        chronLog(`📐 ${h.name}: ý tưởng có cơ sở — chưa rút gọn được thành code, cần thí nghiệm thật: ${(h.test_plan || 'thiết kế thí nghiệm đo 1 biến số.').slice(0, 110)}`, 'ok');
+                        chronStat(); continue;
+                    }
+                    chron.saved += Math.max(60, Math.round((String(h.code).length + JSON.stringify(h.tests || []).length) / 3.5));
+                    const res = await runInSandbox(h.code, h.tests || [], 4000);
+                    if (res.error) { chronLog(`✗ ${h.name}: nguyên mẫu lỗi — ${res.error}`, 'info'); }
+                    else {
+                        const r2 = res.results || []; const pass = r2.filter(x => x.ok).length;
+                        if (r2.length && pass === r2.length) {
+                            chron.wins++; chron.findings.push(`${h.name}: ${h.idea}`);
+                            // Keep the WINNING code/tests so it can be packaged ("turnkey").
+                            chron.breakthroughs.push({ name: h.name, idea: h.idea, code: h.code, tests: h.tests || [], pass, total: r2.length, idea_topic: chron.idea, ts: Date.now() });
+                            chronLog(`💥 ĐỘT PHÁ! "${h.name}" chạy ĐÚNG ${pass}/${r2.length} ca kiểm thử — hướng khả thi, đáng dồn sức!`, 'breakthrough');
+                        } else if (pass === 0) {
+                            chronLog(`✗ ${h.name}: 0/${r2.length} ca — bế tắc, cần đổi cách tiếp cận.`, 'info');
+                        } else {
+                            chron.findings.push(`${h.name} (một phần): ${h.idea}`);
+                            chronLog(`◐ ${h.name}: ${pass}/${r2.length} ca đúng — có tiềm năng, cần tinh chỉnh.`, 'ok');
+                        }
+                    }
+                    chronStat();
+                }
+                if (data.verdict_hint) chronLog('🧭 ' + data.verdict_hint, 'ok');
+                if (chron.findings.length > 0) { $('chronChat').classList.add('show'); chronLog(chron.wins > 0 ? 'Có phát hiện khả thi — bàn tiếp ở khung chat bên dưới để cùng đẩy xa hơn.' : 'Có hướng đáng theo đuổi — bàn tiếp ở khung chat để định hướng vòng sau.', 'ok'); }
+                $('chronNext').style.display = 'inline-flex';
+                try { $('chronSquad').style.display = (window.SkemiLegion && window.SkemiLegion.active && window.SkemiLegion.active()) ? 'inline-flex' : 'none'; } catch (e) {}
+                updatePackBtn();
+                chron.running = false; chronStat(); saveChron();
+            }
+            $('chronStart') && $('chronStart').addEventListener('click', () => chronResearch());
+            $('chronNext') && $('chronNext').addEventListener('click', () => chronResearch());
+            $('chronChatBtn') && $('chronChatBtn').addEventListener('click', async () => {
+                const txt = $('chronChatIn').value.trim(); if (!txt) return;
+                const out = $('chronChatOut'); out.innerHTML = '<span class="lab-spin"></span> Đội R&D đang nghiên cứu theo định hướng của bạn…';
+                chronLog('👤 Định hướng từ bạn: ' + txt, 'live');
+                $('chronChatIn').value = '';
+                // Continue the research IN CONTEXT — the user's steer becomes prior+context.
+                await chronResearch('Định hướng mới từ người dùng: ' + txt + '. Đã có: ' + chron.findings.slice(-3).join(' · '));
+                out.innerHTML = '';
+            });
+            $('chronSquad') && $('chronSquad').addEventListener('click', async () => {
+                if (!window.SkemiLegion || !lastIdea) return;
+                const btn = $('chronSquad'); btn.disabled = true; btn.textContent = '⏳ Legion đang nghiên cứu…';
+                chronLog('🛡️ Giao cho Legion — đội nhiều tác tử nghiên cứu song song, bổ trợ nhau…', 'live');
+                try {
+                    const data = await window.SkemiLegion.runTask(`Nghiên cứu trường kỳ, tư duy nguyên bản để hiện thực hoá: ${lastIdea}. Bối cảnh: ${mapContext().slice(0,400)}`, { section: 'lab' });
+                    if (data && data.success) { chronLog('🛡️ Legion tổng hợp: ' + String(data.result || '').slice(0, 260), 'ok'); chron.findings.push('Legion: ' + String(data.result || '').slice(0, 120)); $('chronChat').classList.add('show'); }
+                    else chronLog('Legion chưa chạy được vòng này.', 'info');
+                } catch (e) { chronLog('Lỗi gọi Legion: ' + (e.message || e), 'emergency'); }
+                finally { btn.disabled = false; btn.textContent = '🛡️ Gọi Legion nghiên cứu trường kỳ'; }
+            });
+
+            // ── Turnkey delivery: đóng gói thành tựu → dùng được ngay ──────────
+            function updatePackBtn() {
+                const b = $('chronPackage'); if (!b) return;
+                const n = (chron.breakthroughs || []).length;
+                b.style.display = n ? 'inline-flex' : 'none';
+                b.textContent = `📦 Đóng gói thành tựu (${n})`;
+            }
+            function buildArtifact() {
+                const bks = chron.breakthroughs || []; const topic = chron.idea || lastIdea || 'Ý tưởng';
+                const date = new Date().toISOString().slice(0, 10);
+                let md = `# Skemi R&D — Hồ sơ Phát minh\n\n**Vấn đề:** ${topic}\n**Ngày:** ${date}\n`
+                    + `**Số hướng đột phá đã kiểm chứng (chạy code thật):** ${bks.length}\n\n`
+                    + `> Mỗi hàm \`solve()\` dưới đây ĐÃ chạy thật và vượt qua toàn bộ ca kiểm thử trong sandbox cô lập của Skemi — không phải đánh giá cảm tính.\n\n---\n`;
+                let js = `/* Skemi R&D — ${topic} (${date})\n * Các hàm dưới đây đã vượt 100% ca kiểm thử trong sandbox Skemi.\n * Cách dùng: import/copy hàm cần thiết, gọi solve(input) với input theo ví dụ test. */\n\n`;
+                bks.forEach((b, i) => {
+                    md += `\n## ${i + 1}. ${b.name}\n\n${b.idea || ''}\n\n- Kết quả kiểm thử: **${b.pass}/${b.total} ca PASS**\n\n\`\`\`js\n${b.code}\n\`\`\`\n\n**Ca kiểm thử (đầu vào → kỳ vọng):**\n`;
+                    (b.tests || []).slice(0, 6).forEach(t => { md += `- \`${JSON.stringify(t.input)}\` → \`${JSON.stringify(t.expected)}\`\n`; });
+                    js += `// ── ${b.name} (${b.pass}/${b.total} pass) ──\n// ${b.idea || ''}\n${b.code}\n\n`;
+                });
+                md += `\n---\n_Tạo bởi Skemi Idea Lab — Phòng thí nghiệm R&D._\n`;
+                return { md, js, topic, date, count: bks.length };
+            }
+            function packageInnovation() {
+                const bks = chron.breakthroughs || [];
+                if (!bks.length) { return; }
+                const art = buildArtifact();
+                // Save to the local Innovation Log (the user's IP record).
+                try {
+                    const log = JSON.parse((window.loadUserData && window.loadUserData('skemi_innovation_log')) || '[]');
+                    log.unshift({ topic: art.topic, date: art.date, count: art.count, md: art.md, ts: Date.now() });
+                    window.saveUserData && window.saveUserData('skemi_innovation_log', JSON.stringify(log.slice(0, 30)));
+                } catch (e) {}
+                const dl = (name, text, mime) => { try { const blob = new Blob([text], { type: mime }); const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 1500); } catch (e) {} };
+                const slug = (art.topic || 'innovation').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'innovation';
+                const out = $('chronPackOut');
+                out.innerHTML = `<div class="lab-card" style="border-color:color-mix(in srgb,var(--lab-a) 45%,transparent)">`
+                    + `<h4>📦 Hồ sơ Phát minh — sẵn sàng dùng (${art.count} hướng đã kiểm chứng)</h4>`
+                    + `<p style="font-size:.84rem;color:var(--text2,#9aa0aa);margin:0 0 10px">Đóng gói gồm code đã chạy đúng 100% ca kiểm thử + hướng dẫn dùng. Tải về để áp dụng ngay vào dự án của bạn — đã lưu vào "Sổ phát minh".</p>`
+                    + `<div style="display:flex;gap:10px;flex-wrap:wrap">`
+                    + `<button id="dlJs" class="lab-run" style="background:linear-gradient(135deg,var(--lab-a),var(--lab-b));color:#04140d">⬇️ Tải code (.js)</button>`
+                    + `<button id="dlMd" class="lab-run" style="background:var(--bg2,rgba(255,255,255,.08));color:var(--text,#fff)">⬇️ Tải tài liệu (.md)</button>`
+                    + `<button id="viewLog" class="lab-wb-btn">📚 Sổ phát minh</button></div>`
+                    + `<details style="margin-top:10px"><summary style="cursor:pointer;font-size:.85rem;font-weight:700">Xem trước nội dung</summary>`
+                    + `<pre style="font-size:.76rem;white-space:pre-wrap;max-height:260px;overflow:auto;background:#0b0c14;padding:12px;border-radius:10px;margin-top:8px">${esc(art.md.slice(0, 2200))}</pre></details></div>`;
+                $('dlJs').onclick = () => dl(`skemi-rnd-${slug}.js`, art.js, 'text/javascript');
+                $('dlMd').onclick = () => dl(`skemi-rnd-${slug}.md`, art.md, 'text/markdown');
+                $('viewLog').onclick = () => showInnovationLog();
+                chronLog(`📦 Đã đóng gói ${art.count} hướng đột phá thành Hồ sơ Phát minh — tải về dùng ngay được.`, 'ok');
+            }
+            function showInnovationLog() {
+                let log = []; try { log = JSON.parse((window.loadUserData && window.loadUserData('skemi_innovation_log')) || '[]'); } catch (e) {}
+                const out = $('chronPackOut');
+                if (!log.length) { out.innerHTML = '<div class="lab-card"><b>Sổ phát minh trống.</b> Đóng gói một thành tựu để lưu vào đây.</div>'; return; }
+                out.innerHTML = `<div class="lab-card"><h4>📚 Sổ phát minh (${log.length})</h4>`
+                    + log.map((e, i) => `<div style="padding:9px 0;border-top:1px solid var(--border,rgba(255,255,255,.08))"><b style="font-size:.88rem">${esc(e.topic || '—')}</b> <span style="font-size:.74rem;color:var(--text2,#9aa0aa)">· ${esc(e.date || '')} · ${e.count || 0} hướng</span> <button class="lab-wb-btn" data-li="${i}" style="padding:4px 10px;font-size:.74rem;margin-left:6px">Xem</button></div>`).join('')
+                    + `</div>`;
+                out.querySelectorAll('[data-li]').forEach(b => b.addEventListener('click', () => {
+                    const e = log[+b.dataset.li]; if (!e) return;
+                    out.querySelector('.lab-card').insertAdjacentHTML('beforeend', `<pre style="font-size:.76rem;white-space:pre-wrap;max-height:300px;overflow:auto;background:#0b0c14;padding:12px;border-radius:10px;margin-top:10px">${esc(e.md || '')}</pre>`);
+                }));
+            }
+            $('chronPackage') && $('chronPackage').addEventListener('click', packageInnovation);
+
+            // Reflect Legion connection state in the chronicle header.
+            (function () {
+                try {
+                    const on = window.SkemiLegion && window.SkemiLegion.active && window.SkemiLegion.active();
+                    if (on) { $('chronConn').textContent = '🛡️ Đã kết nối Legion — nghiên cứu nhiều tác tử'; $('chronSquad').style.display = 'inline-flex'; }
+                } catch (e) {}
+            })();
+            // Restore a prior R&D timeline (persisted) so the long-term project resumes.
+            restoreChron();
+
+            // ── Whiteboard ý tưởng (kéo-thả + nối, tự lưu localStorage) ─────────
+            const board = $('labBoard'), wbSvg = $('wbSvg'), wbEmpty = $('wbEmpty');
+            let wb = { nodes: [], links: [] };
+            try { wb = JSON.parse((window.loadUserData && window.loadUserData('skemi_lab_board')) || 'null') || wb; } catch (e) {}
+            let wbConnect = false, wbFrom = null, wbDrag = null, wbOff = { x: 0, y: 0 }, wbUid = Date.now();
+            const wbSave = () => { try { window.saveUserData && window.saveUserData('skemi_lab_board', JSON.stringify(wb)); } catch (e) {} };
+            const wbC = (n) => ({ x: (n.x || 0) + 92, y: (n.y || 0) + 26 });
+            function wbLines() {
+                wbSvg.innerHTML = '';
+                wb.links.forEach((l) => {
+                    const a = wb.nodes.find(n => n.id === l.a), b = wb.nodes.find(n => n.id === l.b);
+                    if (!a || !b) return;
+                    const ca = wbC(a), cb = wbC(b);
+                    const ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    ln.setAttribute('x1', ca.x); ln.setAttribute('y1', ca.y); ln.setAttribute('x2', cb.x); ln.setAttribute('y2', cb.y);
+                    ln.setAttribute('stroke', 'var(--lab-b)'); ln.setAttribute('stroke-width', '2'); ln.setAttribute('opacity', '.55');
+                    wbSvg.appendChild(ln);
+                });
+            }
+            function wbRender() {
+                board.querySelectorAll('.lab-node').forEach(n => n.remove());
+                wb.nodes.forEach((nd) => {
+                    const el = document.createElement('div');
+                    el.className = 'lab-node'; el.style.left = (nd.x || 20) + 'px'; el.style.top = (nd.y || 20) + 'px'; el.dataset.id = nd.id;
+                    el.innerHTML = '<div class="lab-node-bar"><span class="lab-node-grip">⠿</span><button class="lab-node-x" title="' + LS('del') + '">×</button></div><div class="lab-node-txt" contenteditable="true">' + esc(nd.text || '') + '</div><button class="lab-node-link" title="' + LS('connect') + '">🔗</button>';
+                    board.appendChild(el);
+                });
+                wbLines();
+                wbEmpty.style.display = wb.nodes.length ? 'none' : 'flex';
+            }
+            function wbAdd(text) {
+                const id = 'n' + (wbUid++);
+                wb.nodes.push({ id, x: 30 + (wb.nodes.length % 5) * 34 + Math.random() * 14, y: 26 + Math.floor(wb.nodes.length / 5) * 96 + Math.random() * 14, text: text || 'Ý tưởng mới…' });
+                wbSave(); wbRender();
+            }
+            board.addEventListener('pointerdown', (e) => {
+                const node = e.target.closest('.lab-node'); if (!node) return;
+                const id = node.dataset.id;
+                if (e.target.classList.contains('lab-node-x')) { wb.nodes = wb.nodes.filter(n => n.id !== id); wb.links = wb.links.filter(l => l.a !== id && l.b !== id); wbSave(); wbRender(); return; }
+                const wantsConnect = e.target.classList.contains('lab-node-link') || (wbConnect && !e.target.classList.contains('lab-node-txt'));
+                if (wantsConnect) {
+                    if (!wbFrom) { wbFrom = id; node.classList.add('sel'); }
+                    else if (wbFrom !== id) {
+                        if (!wb.links.some(l => (l.a === wbFrom && l.b === id) || (l.a === id && l.b === wbFrom))) wb.links.push({ a: wbFrom, b: id });
+                        wbFrom = null; wbConnect = false; $('wbConnect').classList.remove('active'); board.classList.remove('connect'); wbSave(); wbRender();
+                    }
+                    return;
+                }
+                if (e.target.closest('.lab-node-bar')) {
+                    wbDrag = wb.nodes.find(n => n.id === id);
+                    const r = board.getBoundingClientRect();
+                    wbOff = { x: e.clientX - r.left - (wbDrag.x || 0), y: e.clientY - r.top - (wbDrag.y || 0) };
+                    node.style.zIndex = 20;
+                }
+            });
+            window.addEventListener('pointermove', (e) => {
+                if (!wbDrag) return;
+                const r = board.getBoundingClientRect();
+                wbDrag.x = Math.max(0, Math.min(r.width - 184, e.clientX - r.left - wbOff.x));
+                wbDrag.y = Math.max(0, Math.min(r.height - 56, e.clientY - r.top - wbOff.y));
+                const el = board.querySelector('.lab-node[data-id="' + wbDrag.id + '"]');
+                if (el) { el.style.left = wbDrag.x + 'px'; el.style.top = wbDrag.y + 'px'; }
+                wbLines();
+            });
+            window.addEventListener('pointerup', () => { if (wbDrag) { wbSave(); wbDrag = null; } });
+            board.addEventListener('input', (e) => { if (e.target.classList.contains('lab-node-txt')) { const n = wb.nodes.find(x => x.id === e.target.closest('.lab-node').dataset.id); if (n) { n.text = e.target.textContent; wbSave(); } } });
+            $('wbAdd').addEventListener('click', () => wbAdd());
+            $('wbConnect').addEventListener('click', () => { wbConnect = !wbConnect; wbFrom = null; $('wbConnect').classList.toggle('active', wbConnect); board.classList.toggle('connect', wbConnect); board.querySelectorAll('.sel').forEach(n => n.classList.remove('sel')); });
+            $('wbClear').addEventListener('click', () => { if (confirm(LS('clearConfirm'))) { wb = { nodes: [], links: [] }; wbSave(); wbRender(); } });
+
+            // ── Bản đồ tri thức (Search) → bảng trắng Lab ──────────────────────
+            // The map Search built from its deep-research becomes the Lab whiteboard,
+            // which then feeds the R&D research as context (mapContext). This is the
+            // "bản đồ tri thức kết nối với phòng lab" link the user asked for.
+            function readSearchMap() { try { return JSON.parse(localStorage.getItem('skemi_search_map') || 'null'); } catch (e) { return null; } }
+            function importSearchMap(silent) {
+                const m = readSearchMap(); if (!m || !Array.isArray(m.nodes) || !m.nodes.length) return false;
+                const idmap = {};
+                // Lay the map out as a readable grid on the board.
+                wb.nodes = m.nodes.slice(0, 24).map((n, i) => {
+                    const id = 'n' + (wbUid++); idmap[n.id] = id;
+                    return { id, x: 24 + (i % 5) * 210 + Math.random() * 10, y: 22 + Math.floor(i / 5) * 110 + Math.random() * 8,
+                             text: (n.label || '') + (n.body ? ' — ' + n.body.slice(0, 90) : '') };
+                });
+                wb.links = (m.edges || []).filter(e => idmap[e.source] && idmap[e.target]).map(e => ({ a: idmap[e.source], b: idmap[e.target] }));
+                wbSave(); wbRender();
+                if (!silent) { try { $('labBoard').scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} }
+                return true;
+            }
+            (function setupSearchMap() {
+                const m = readSearchMap();
+                const btn = $('wbImport'); if (!btn) return;
+                if (m && Array.isArray(m.nodes) && m.nodes.length) {
+                    btn.style.display = 'inline-flex';
+                    btn.textContent = `📥 Nạp bản đồ từ Search (${Math.min(24, m.nodes.length)} nút)`;
+                    btn.addEventListener('click', () => importSearchMap(false));
+                    // Auto-hydrate when the board is EMPTY and the map is fresh (<1 day):
+                    // arriving from Search lands you with the knowledge map ready to assemble.
+                    const fresh = (Date.now() - (m.ts || 0)) < 86400000;
+                    if (fresh && (!wb.nodes || !wb.nodes.length)) importSearchMap(true);
+                }
+            })();
+
+            wbRender();
+            renderHistory();
+
+            // Re-render JS-painted chrome when language switches.
+            window.addEventListener('languageChanged', () => {
+                const ab = $('analyzeBtn'); if (ab && !ab.disabled) ab.innerHTML = LS('analyze');
+                renderHistory(); wbRender();
+            });
+
+            // Deep-link from Search ("Thực nghiệm ở Lab"): ?idea=… only PREFILLS the
+            // input — it does NOT auto-analyze. The user decides when to run (they hated
+            // the lab auto-firing the moment they arrived).
+            try {
+                const seeded = new URLSearchParams(location.search).get('idea');
+                if (seeded && seeded.trim()) {
+                    const inp = $('ideaInput');
+                    inp.value = seeded.trim();
+                    inp.focus();
+                    try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) {}
+                }
+            } catch (e) {}
+        })();
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script type="module" src="./Js/Galaxy.js"></script>
+    <script src="./Js/i18n-packs.js?v=20260601b"></script>
+    <script src="./Js/entitlements.js?v=20260701d"></script>
+    <script type="module" src="./Js/User_navbar.js?v=20260702b"></script>
+    <script type="module" src="./Js/LanguageManager.js?v=20260701e"></script>
+    <script src="./Js/GlobalStatus.js?v=20260704a"></script>
+    <script src="./Js/LegionSectionConfig.js?v=20260705a"></script>
+</body>
+</html>

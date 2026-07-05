@@ -1,0 +1,41 @@
+
+# Skemi per-machine secrets / local DB (never commit)
+.skemi_jwt_secret
+skemi_auth.db
+
+# ── Secrets / keys ──────────────────────────────────────────────
+ssl.key
+ssl.crt
+*.pem
+.env
+.env.*
+
+# ── Local databases ─────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Python ──────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+venv/
+venv_new/
+.venv/
+env/
+
+# ── Node ────────────────────────────────────────────────────────
+node_modules/
+
+# ── Logs / runtime output ───────────────────────────────────────
+*.log
+server_output.txt
+*.out.log
+
+# ── Screenshots / captures / archives ───────────────────────────
+skemi_capture_*.png
+skemi_phantom_capture.png
+*.zip
+
+# ── Vendored ffmpeg build (not app source) ──────────────────────
+ffmpeg-8.0/

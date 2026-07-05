@@ -1,0 +1,563 @@
+﻿<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/Css/design-tokens.css?v=20260701b">
+    <link rel="stylesheet" href="/Css/Motion.css?v=20260607k">
+    <script defer src="/Js/motion.js?v=20260531a"></script>
+        <script src="/Js/Auth.js?v=20260510"></script>
+        <script src="/Js/UserDataManager.js?v=20260531b"></script>
+        <script src="/Js/Preferences.js?v=20260621a"></script>
+        <script src="/Js/UI.js?v=20260510"></script>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Skemi - AI Studio</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;900&display=swap"
+    rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+    <script id="tailwind-config">
+    tailwind.config = {
+    darkMode: "class",
+    theme: {
+    extend: {
+    colors: {
+    "primary": "#ec5b13",
+    "background-light": "#f8f6f6",
+    "background-dark": "#0a0504",
+    "accent-pink": "#ff2d75",
+    "accent-purple": "#9d4edd",
+    },
+    fontFamily: {
+    "display": ["Public Sans", "sans-serif"]
+    },
+    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+    },
+    },
+    }
+    </script>
+    <style>
+    body {
+    font-family: "Public Sans", sans-serif;
+    background-color: #020101;
+    overflow-x: hidden;
+    }
+    .nebula-gradient {
+    background:
+    radial-gradient(circle at 20% 30%, rgba(255, 45, 117, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(157, 78, 221, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(236, 91, 19, 0.05) 0%, transparent 60%),
+    #020101;
+    background-size: 200% 200%;
+    animation: nebula-move 15s ease-in-out infinite alternate;
+    position: relative;
+    }
+    @keyframes nebula-move {
+    0% {
+    background-position: 0% 0%;
+    }
+    100% {
+    background-position: 100% 100%;
+    }
+    }
+    .star-field {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 200%;
+    background-image:
+    radial-gradient(1px 1px at 25px 35px, #fff, rgba(0, 0, 0, 0)),
+    radial-gradient(1.5px 1.5px at 50px 80px, #fff, rgba(0, 0, 0, 0)),
+    radial-gradient(1px 1px at 100px 150px, #fff, rgba(0, 0, 0, 0)),
+    radial-gradient(2px 2px at 150px 50px, #fff, rgba(0, 0, 0, 0)),
+    radial-gradient(1px 1px at 200px 250px, #fff, rgba(0, 0, 0, 0));
+    background-repeat: repeat;
+    background-size: 300px 300px;
+    opacity: 0.4;
+    animation: stars-scroll 120s linear infinite;
+    z-index: 0;
+    pointer-events: none;
+    }
+    @keyframes stars-scroll {
+    from {
+    transform: translateY(0);
+    }
+    to {
+    transform: translateY(-50%);
+    }
+    }
+    .shooting-star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #fff;
+    border-radius: 50%;
+    animation: shooting 5s linear infinite;
+    filter: drop-shadow(0 0 6px white);
+    opacity: 0;
+    z-index: 0;
+    }
+    .shooting-star::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.8), transparent);
+    left: 0;
+    opacity: 0.8;
+    }
+    @keyframes shooting {
+    0% {
+    transform: translate(300px, -300px) rotate(-45deg);
+    opacity: 1;
+    }
+    20% {
+    transform: translate(-800px, 800px) rotate(-45deg);
+    opacity: 0;
+    }
+    100% {
+    transform: translate(-800px, 800px) rotate(-45deg);
+    opacity: 0;
+    }
+    }
+    .star-1 {
+    top: 10%;
+    right: 20%;
+    animation-delay: 0s;
+    animation-duration: 4s;
+    }
+    .star-2 {
+    top: 20%;
+    right: 40%;
+    animation-delay: 1.5s;
+    animation-duration: 5s;
+    }
+    .star-3 {
+    top: 5%;
+    right: 10%;
+    animation-delay: 3s;
+    animation-duration: 6s;
+    }
+    .glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transform: translateY(-5px);
+    }
+    .earth-sphere {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC49RWxJIJKoh7Zeyv2GcwMMh-B4en5WSPHBZcJga6qQH4BqkQ3DQwMpAtCgBfjX2HcqgkoIiKcvqfZ27MeIFMw1RCD7JJJa1hRYMr6m2lbcXQlXXY3iWrZlWllg_C5yRAshetm7tbFsvqvWRAAbxdBM8NWCAEJBV4hHNX9g1aGcna6DInSSzAEqN2G0xgLDHPx8heE4RBo-7GL9GSJmBZqv6_jMPm8IZ6P-zwznxEoTBdVY5FV3_J1QPzAtFaXdohbUA0LYSj1Ew') repeat-x;
+    background-size: 200% 100%;
+    box-shadow: inset -20px -20px 50px rgba(0, 0, 0, 0.8), inset 20px 20px 50px rgba(157, 78, 221, 0.3), 0 0 60px rgba(157, 78, 221, 0.4);
+    animation: rotate-earth-custom 30s linear infinite;
+    position: relative;
+    }
+    @keyframes rotate-earth-custom {
+    from {
+    background-position: 0 0;
+    }
+    to {
+    background-position: 200% 0;
+    }
+    }
+    .earth-glow {
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+    }
+    .floating {
+    animation: float 8s ease-in-out infinite;
+    }
+    @keyframes float {
+    0%,
+    100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.6;
+    }
+    50% {
+    transform: translate(15px, -25px) scale(1.15);
+    opacity: 0.8;
+    }
+    }
+    .glow-button {
+    box-shadow: 0 0 20px rgba(236, 91, 19, 0.3);
+    transition: all 0.3s ease;
+    }
+    .glow-button:hover {
+    box-shadow: 0 0 35px rgba(236, 91, 19, 0.5);
+    }
+    .logo-spin {
+    animation: logo-rotate 10s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(255, 45, 117, 0.8));
+    }
+    @keyframes logo-rotate {
+    0% {
+    transform: rotate(0deg) scale(1);
+    }
+    50% {
+    transform: rotate(180deg) scale(1.1);
+    }
+    100% {
+    transform: rotate(360deg) scale(1);
+    }
+    }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 overflow-x-hidden">
+    <div class="relative flex min-h-screen w-full flex-col nebula-gradient">
+        <div class="star-field"></div>
+        <div class="shooting-star star-1"></div>
+        <div class="shooting-star star-2"></div>
+        <div class="shooting-star star-3"></div>
+        <header
+            class="fixed top-0 z-50 w-full border-b border-white/5 bg-background-dark/30 backdrop-blur-xl px-6 md:px-20 py-4 transition-all duration-500">
+            <div class="max-w-[1200px] mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="text-accent-pink flex items-center justify-center"><span
+                            class="material-symbols-outlined text-4xl text-accent-pink drop-shadow-[0_0_8px_rgba(255,45,117,0.8)] logo-spin"
+                            style="font-variation-settings: 'FILL' 1">star</span></div>
+                    <h2 class="text-white text-2xl font-black leading-tight tracking-tighter">SKEMI</h2>
+                </div>
+                <nav class="hidden md:flex items-center gap-10">
+                    <a class="text-slate-300 hover:text-primary text-sm font-medium transition-colors"
+                        href="Home.html">Học Tập</a>
+                    <a class="text-slate-300 hover:text-primary text-sm font-medium transition-colors"
+                        href="Quiz.html">Quiz</a>
+                    <a class="text-slate-300 hover:text-primary text-sm font-medium transition-colors"
+                        href="/Chat.html">Cộng Đồng</a>
+                    <a class="text-slate-300 hover:text-primary text-sm font-medium transition-colors"
+                        href="#pricing">Subscription</a>
+                </nav>
+                <div class="flex items-center gap-4" id="auth-nav-container">
+                    <a href="Login.html" id="mainActionLink" class="hidden sm:flex">
+                        <button id="mainActionBtn"
+                            class="min-w-[100px] cursor-pointer items-center justify-center rounded-full h-10 px-6 bg-primary text-white text-sm font-bold transition-transform hover:scale-105 active:scale-95 glow-button">
+                            Tham Gia Ngay
+                        </button>
+                    </a>
+                    <button class="md:hidden text-white"><span class="material-symbols-outlined">menu</span></button>
+                </div>
+            </div>
+        </header>
+        <main class="flex-1 pt-24">
+            <div class="relative w-full max-w-[1400px] mx-auto px-6 py-12 lg:py-24">
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="z-10 flex flex-col gap-8 order-2 lg:order-1">
+                        <div
+                            class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest w-fit">
+                            <span class="relative flex h-2 w-2">
+                                <span
+                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                            </span>
+                            Skemi Hub
+                        </div>
+                        <h1 class="text-white text-4xl md:text-6xl font-black leading-[1.75] tracking-tight">Học Tập
+                            Theo
+                            Cách Của Bạn Với <span
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent-pink to-accent-purple">Skemi</span>
+                        </h1>
+                        <p class="text-slate-400 text-lg md:text-xl leading-relaxed max-w-[540px]">Chỉ cần tải lên file
+                            hoặc hình ảnh, AI của chúng tôi sẽ tự động phân tích và tạo Mindmap, minh hoạ, Roadmap cùng
+                            bài tập được thiết kế riêng cho độ tuổi của bạn. Kết nối và cùng nhau học tập thông qua
+                            phòng chat và hệ thống Quiz hấp dẫn!</p>
+                        <div class="flex flex-wrap gap-4">
+                            <a href="Register.html">
+                                <button
+                                    class="flex min-w-[160px] items-center justify-center gap-2 rounded-xl h-14 px-8 bg-primary text-white text-base font-bold shadow-[0_0_20px_rgba(236,91,19,0.4)] hover:bg-primary/90 transition-all glow-button">
+                                    <span>Đăng Ký Tài Khoản</span>
+                                    <span class="material-symbols-outlined">rocket_launch</span>
+                                </button>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="relative aspect-square lg:order-2 flex items-center justify-center parallax-target">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-tr from-accent-pink/30 to-accent-purple/30 rounded-full blur-[120px] opacity-40">
+                        </div>
+                        <div class="relative w-full h-full flex items-center justify-center">
+                            <div class="w-64 h-64 md:w-96 md:h-96 relative">
+                                <div class="earth-sphere" style="animation: rotate-earth-custom 30s linear infinite;">
+                                    <div class="earth-glow"></div>
+                                </div>
+                                <!-- Atmospheric particles -->
+                                <div class="absolute -top-10 -right-10 size-6 bg-primary rounded-full blur-lg opacity-60 floating"
+                                    style="animation-delay: 0s"></div>
+                                <div class="absolute top-1/2 -left-16 size-4 bg-accent-pink rounded-full blur-md opacity-40 floating"
+                                    style="animation-delay: 2s"></div>
+                                <div class="absolute bottom-4 -right-20 size-8 bg-accent-purple rounded-full blur-xl opacity-50 floating"
+                                    style="animation-delay: 4s"></div>
+                                <!-- Orbit Ring -->
+                                <div
+                                    class="absolute inset-0 border border-white/5 rounded-full scale-[1.3] rotate-[15deg]">
+                                </div>
+                                <div
+                                    class="absolute inset-0 border border-white/5 rounded-full scale-[1.6] -rotate-[10deg]">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Grid -->
+            <section id="features" class="py-24 px-6 md:px-20 max-w-[1200px] mx-auto">
+                <div class="flex flex-col gap-4 mb-16 text-center lg:text-left">
+                    <h2 class="text-white text-3xl md:text-5xl font-bold tracking-tight">Tính Năng Cốt Lõi</h2>
+                    <p class="text-slate-400 text-lg max-w-[720px]">Cá nhân hoá từ mức độ hiểu biết tới hệ thống giao
+                        lưu mạng xã hội.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    <div
+                        class="glass-card p-8 rounded-2xl flex flex-col gap-6 group hover:border-primary/50 transition-all">
+                        <div class="size-14 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-3xl">psychology</span>
+                        </div>
+                        <div>
+                            <h3 class="text-white text-xl font-bold mb-2">Tạo Học Liệu Tự Động</h3>
+                            <p class="text-slate-400 leading-relaxed text-sm">Upload tài liệu (ảnh/file), hệ thống tự
+                                động sinh ra Mindmap, Roadmap học tập và hình ảnh minh hoạ được cá nhân hóa theo thông
+                                tin tuổi của người dùng (Học sinh, người đi làm, hoặc người lớn tuổi).</p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="glass-card p-8 rounded-2xl flex flex-col gap-6 group hover:border-accent-purple/50 transition-all">
+                        <div
+                            class="size-14 rounded-xl bg-accent-purple/20 flex items-center justify-center text-accent-purple">
+                            <span class="material-symbols-outlined text-3xl">emoji_events</span>
+                        </div>
+                        <div>
+                            <h3 class="text-white text-xl font-bold mb-2">Private & Public Quiz</h3>
+                            <p class="text-slate-400 leading-relaxed text-sm">Tạo phòng Quiz riêng tư mời bạn bè tham
+                                gia. Hàng tháng có Public Quiz lớn với các bộ đề dựa trên độ tuổi, đem lại hàng ngàn
+                                phần thưởng dưới dạng Prompts và lượt upload tài liệu cho top 3.</p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="glass-card p-8 rounded-2xl flex flex-col gap-6 group hover:border-accent-pink/50 transition-all">
+                        <div
+                            class="size-14 rounded-xl bg-accent-pink/20 flex items-center justify-center text-accent-pink">
+                            <span class="material-symbols-outlined text-3xl">quick_reference_all</span>
+                        </div>
+                        <div>
+                            <h3 class="text-white text-xl font-bold mb-2">Phòng Chat Công Nghệ</h3>
+                            <p class="text-slate-400 leading-relaxed text-sm">Ứng dụng nhắn tin tích hợp: Gọi điện, trao
+                                đổi học thuật, kết nối bạn bè và rủ nhau chơi Quiz dễ dàng. Có thể thêm Chatbot AI vào
+                                phòng chat nhóm (Hội thoại nhóm tự động xoá khi đóng trình duyệt để bảo vệ riêng tư và
+                                tiết kiệm tài nguyên).</p>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Stats/Metrics Section -->
+            <section id="pricing" class="py-24 border-y border-white/5 nebula-gradient">
+                <div class="max-w-[1200px] mx-auto px-6">
+                    <div class="text-center mb-16">
+                        <h2 class="text-white text-3xl md:text-5xl font-bold tracking-tight mb-4">Các Gói Skemi
+                            Subscription</h2>
+                        <p class="text-slate-400">Chọn giải pháp phù hợp với tốc độ học tập của bạn.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Free -->
+                        <div class="glass-card p-8 rounded-3xl border-white/10 flex flex-col">
+                            <h3 class="text-white text-2xl font-bold mb-2">Free</h3>
+                            <p class="text-slate-400 text-sm mb-6 pb-6 border-b border-white/10">Trải nghiệm cơ bản
+                                nhưng vô hạn phần thưởng từ việc tham gia Quiz</p>
+                            <div class="text-3xl font-bold text-white mb-6">0đ <span
+                                    class="text-lg text-slate-500 font-normal">/tháng</span></div>
+                            <ul class="space-y-4 text-slate-300 text-sm mb-8 flex-1">
+                                <li class="flex items-center gap-3"><span
+                                        class="material-symbols-outlined text-primary text-lg">check_circle</span> 10
+                                    Prompts (Hồi sau mỗi 6 giờ)</li>
+                                <li class="flex items-center gap-3"><span
+                                        class="material-symbols-outlined text-primary text-lg">check_circle</span> 3
+                                    lượt upload tài liệu/ảnh</li>
+                                <li class="flex items-center gap-3"><span
+                                        class="material-symbols-outlined text-primary text-lg">check_circle</span> 3
+                                    lượt tạo phòng Quiz Private</li>
+                                <li class="flex items-center gap-3"><span
+                                        class="material-symbols-outlined text-primary text-lg">check_circle</span> Nhắn
+                                    tin 1-1, Nhắn tin nhóm (Reset khi tắt web)</li>
+                            </ul>
+                            <a href="Home.html">
+                                <button
+                                    class="w-full rounded-xl h-12 border border-white/20 text-white font-bold hover:bg-white/10 transition-all">Đang
+                                    Dùng</button>
+                            </a>
+                        </div>
+
+                        <!-- Pro -->
+                        <div
+                            class="glass-card p-8 rounded-3xl border-primary/50 flex flex-col relative transform md:-translate-y-4">
+                            <div
+                                class="absolute top-0 right-8 -translate-y-1/2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
+                                Phổ Biến Nhất</div>
+                            <h3 class="text-primary text-2xl font-bold mb-2">Pro</h3>
+                            <p class="text-slate-400 text-sm mb-6 pb-6 border-b border-white/10">Tăng tốc độ bằng quyền
+                                ưu tiên xử lý AI, tạo ra ảnh và roadmap nhanh hơn.</p>
+                            <div class="text-3xl font-bold text-white mb-6">~79.000đ <span
+                                    class="text-lg text-slate-500 font-normal">/tháng</span></div>
+                            <ul class="space-y-4 text-slate-300 text-sm mb-8 flex-1">
+                                <li class="flex items-center gap-3"><span
+                                        class="material-symbols-outlined text-primary text-lg">check_circle</span> 80
+                                    Prompts (Hồi sau mỗi 6 giờ)</li>
+                                <li class="flex items-center gap-3"><span
+                                        class="material-symbols-outlined text-primary text-lg">check_circle</span> 25
+                                    lượt upload tài liệu lớn</li>
+                                <li class="flex items-center gap-3"><span
+                                        class="material-symbols-outlined text-primary text-lg">check_circle</span> 15
+                                    lượt tạo phòng Quiz Private</li>
+                                <li class="flex items-center gap-3"><span
+                                        class="material-symbols-outlined text-primary text-lg">check_circle</span> Quyền
+                                    xử lý AI Ưu Tiên (Hàng chờ ngắn hơn)</li>
+                            </ul>
+                            <button
+                                class="w-full rounded-xl h-12 bg-primary text-white font-bold hover:bg-primary/90 transition-all glow-button"
+                                onclick="window.location.href='Login.html'">Nâng
+                                Cấp Pro</button>
+                        </div>
+
+                        <!-- Advanced -->
+                        <div class="glass-card p-8 rounded-3xl border-accent-purple/30 flex flex-col">
+                            <h3 class="text-accent-purple text-2xl font-bold mb-2">Advanced</h3>
+                            <p class="text-slate-400 text-sm mb-6 pb-6 border-b border-white/10">Loại bỏ giới hạn, tối
+                                đa năng suất để dẫn đầu trong các kì Public Quiz.</p>
+                            <div class="text-3xl font-bold text-white mb-6">~189.000đ <span
+                                    class="text-lg text-slate-500 font-normal">/tháng</span></div>
+                            <ul class="space-y-4 text-slate-300 text-sm mb-8 flex-1">
+                                <li class="flex items-center gap-3"><span
+                                        class="material-symbols-outlined text-accent-purple text-lg">check_circle</span>
+                                    Không giới hạn Prompts (Fair Use)</li>
+                                <li class="flex items-center gap-3"><span
+                                        class="material-symbols-outlined text-accent-purple text-lg">check_circle</span>
+                                    Upload tài liệu & tạo phòng Quiz không giới hạn</li>
+                                <li class="flex items-center gap-3"><span
+                                        class="material-symbols-outlined text-accent-purple text-lg">check_circle</span>
+                                    Ưu Tiên Tuyệt Đối trong máy chủ AI VRAM</li>
+                                <li class="flex items-center gap-3"><span
+                                        class="material-symbols-outlined text-accent-purple text-lg">check_circle</span>
+                                    Trải nghiệm sớm các tính năng Beta</li>
+                            </ul>
+                            <button
+                                class="w-full rounded-xl h-12 bg-white/10 text-white font-bold hover:bg-white/20 transition-all"
+                                onclick="window.location.href='Login.html'">Chọn
+                                Advanced</button>
+                        </div>
+                    </div>
+
+                    <div class="mt-16 max-w-[800px] mx-auto glass-card p-8 rounded-2xl border-accent-purple/20">
+                        <h3 class="text-accent-purple text-xl font-bold mb-4 flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">emoji_events</span> Cơ Chế Phần Thưởng Khi Tham Gia
+                            Quiz
+                        </h3>
+                        <div class="text-sm text-slate-300 text-center mb-6">Đua top trong Private Quiz & Public Quiz
+                            đem lại cực kỳ nhiều lợi ích cho tài khoản Free của bạn!</div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                            <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                                <p class="text-yellow-500 font-bold mb-1 text-lg">Hạng 1</p>
+                                <p class="text-slate-200">+10 Prompts</p>
+                                <p class="text-slate-400 text-xs mt-1">+3 upload tài liệu</p>
+                            </div>
+                            <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                                <p class="text-slate-300 font-bold mb-1 text-lg">Hạng 2</p>
+                                <p class="text-slate-200">+5 Prompts</p>
+                                <p class="text-slate-400 text-xs mt-1">+2 upload tài liệu</p>
+                            </div>
+                            <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                                <p class="text-amber-700 font-bold mb-1 text-lg">Hạng 3</p>
+                                <p class="text-slate-200">+3 Prompts</p>
+                                <p class="text-slate-400 text-xs mt-1">+1 upload tài liệu</p>
+                            </div>
+                        </div>
+                        <div class="text-center mt-4 text-xs text-slate-500 italic">* Public Quiz hàng tháng còn đem lại
+                            phần thưởng nhân hệ số lớn hơn nữa dành cho bạn!</div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- CTA Section -->
+            <section class="py-24 px-6 md:px-20">
+                <div
+                    class="max-w-[1000px] mx-auto glass-card rounded-[2rem] p-12 md:p-20 relative overflow-hidden text-center">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] -mr-32 -mt-32"></div>
+                    <div class="absolute bottom-0 left-0 w-64 h-64 bg-accent-purple/20 blur-[100px] -ml-32 -mb-32">
+                    </div>
+                    <div class="relative z-10 flex flex-col items-center gap-6">
+                        <h2 class="text-white text-4xl md:text-6xl font-black tracking-tight">Sẵn sàng gia nhập cộng
+                            đồng Skemi?</h2>
+                        <p class="text-slate-300 text-lg md:text-xl max-w-[600px]">Hãy trải nghiệm việc học tập, kết
+                            nối, xây dựng câu hỏi một cách thông minh với sự hỗ trợ đắc lực từ trí tuệ nhân tạo.</p>
+                        <div class="mt-4 flex flex-col sm:flex-row gap-4 w-full justify-center">
+                            <a href="Register.html">
+                                <button
+                                    class="flex min-w-[200px] items-center justify-center rounded-xl h-14 px-8 bg-primary text-white text-lg font-bold shadow-lg hover:bg-primary/90 transition-all glow-button">Tạo
+                                    Tài Khoản Free</button>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <footer class="border-t border-white/10 py-12 px-6 md:px-20 bg-background-dark">
+            <div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="flex items-center gap-3">
+                    <div class="text-accent-pink flex items-center justify-center"><span
+                            class="material-symbols-outlined text-4xl text-accent-pink drop-shadow-[0_0_8px_rgba(255,45,117,0.8)] logo-spin"
+                            style="font-variation-settings: 'FILL' 1">star</span></div>
+                    <h2 class="text-white text-xl font-black tracking-tighter uppercase">SKEMI</h2>
+                </div>
+                <div class="flex gap-8">
+                    <a class="text-slate-500 hover:text-white transition-colors" href="#"><span
+                            class="material-symbols-outlined">public</span></a>
+                    <a class="text-slate-500 hover:text-white transition-colors" href="#"><span
+                            class="material-symbols-outlined">share</span></a>
+                    <a class="text-slate-500 hover:text-white transition-colors" href="#"><span
+                            class="material-symbols-outlined">forum</span></a>
+                </div>
+                <p class="text-slate-500 text-sm">© 2024 Skemi Universe. Mọi quyền được bảo lưu.</p>
+            </div>
+        </footer>
+    </div>
+    <script type="module">
+
+
+        const mainActionBtn = document.getElementById('mainActionBtn');
+        const mainActionLink = document.getElementById('mainActionLink');
+
+        if (mainActionBtn && mainActionLink) {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    mainActionBtn.innerText = 'Vào Studio';
+                    mainActionLink.href = 'Home.html';
+                } else {
+                    mainActionBtn.innerText = 'Tham Gia Ngay';
+                    mainActionLink.href = 'Login.html';
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

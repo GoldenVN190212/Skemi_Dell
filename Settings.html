@@ -1,0 +1,2936 @@
+﻿<!DOCTYPE html>
+
+<html lang="vi">
+
+
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/Css/design-tokens.css?v=20260701b">
+    <link rel="stylesheet" href="/Css/Motion.css?v=20260607k">
+    <script defer src="/Js/motion.js?v=20260531a"></script>
+        <script src="/Js/guest-storage-guard.js?v=20260527"></script>
+        <script src="/Js/account-storage.js?v=20260527"></script>
+        <script type="module" src="/Js/Auth.js?v=20260527"></script>
+        <script type="module" src="/Js/UserScopedStorage.js?v=20260527"></script>
+        <script type="module" src="/Js/CloudSync.js?v=20260702b"></script>
+        <script src="/Js/UserDataManager.js?v=20260531b"></script>
+        <script src="/Js/Preferences.js?v=20260621a"></script>
+        <script src="/Js/UI.js?v=20260510"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Skemi Cai dat - Quan ly tai khoan, ngon ngu, giao diện, bao mat và goi dich vu.">
+    <title>Cài đặt - Skemi</title>
+    <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9733;</text></svg>">
+    <link rel="stylesheet" href="./Css/Global.css?v=20260629c">
+    <link rel="stylesheet" href="./Css/Polish.css?v=20260630d" />
+    <link rel="stylesheet" href="./Css/AIChat.css?v=20260409c" />
+    <script src="./Js/preferences.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+    :root {
+    --settings-sidebar-width: 240px;
+    }
+    .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+    }
+    .stats-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: transform 0.2s;
+    }
+    .stats-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--brand-primary);
+    }
+    .stats-icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    }
+    .stats-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 4px;
+    }
+    .stats-label {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    }
+    .chart-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 24px;
+    min-height: 0;
+    overflow: hidden;
+    }
+    .chart-frame {
+    position: relative;
+    width: 100%;
+    height: 320px;
+    }
+    .chart-frame.chart-frame-compact {
+    height: 280px;
+    }
+    .chart-frame canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    }
+    .chart-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    }
+    .activity-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+    }
+    .settings-layout {
+    display: flex;
+    max-width: 1240px;
+    margin: 32px auto;
+    background: var(--bg-glass);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    height: calc(100vh - 120px);
+    box-shadow: var(--shadow-xl);
+    }
+    .settings-tabs {
+    width: var(--settings-sidebar-width);
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-light);
+    padding: 24px 0 94px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    flex-shrink: 0;
+    }
+    .tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-align: left;
+    padding: 13px 20px;
+    cursor: pointer;
+    border-radius: 0;
+    min-height: 50px;
+    white-space: nowrap;
+    }
+    .tab-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    }
+    .tab-btn.active {
+    color: var(--brand-primary);
+    background: var(--brand-light);
+    box-shadow: inset 4px 0 0 var(--brand-primary);
+    }
+    .settings-content {
+    flex: 1;
+    padding: 28px;
+    overflow-y: auto;
+    }
+    .settings-logout-wrap {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    }
+    .tab-panel {
+    display: none;
+    }
+    .tab-panel.active {
+    display: block;
+    }
+    .settings-group {
+    margin-bottom: 24px;
+    }
+    .settings-group h2 {
+    margin-bottom: 12px;
+    font-size: 1.25rem;
+    }
+    .settings-help {
+    margin-bottom: 14px;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    }
+    .settings-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 14px;
+    }
+    .profile-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    }
+    .profile-avatar {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--brand-gradient);
+    color: #fff;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    }
+    .label {
+    display: block;
+    font-size: 0.86rem;
+    color: var(--text-secondary);
+    margin-bottom: 7px;
+    }
+    .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    }
+    .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+    }
+    .theme-card {
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--bg-tertiary);
+    transition: 0.2s;
+    }
+    .theme-card:hover {
+    transform: translateY(-2px);
+    }
+    .theme-card.active {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px var(--brand-light);
+    }
+    .preview-box {
+    height: 78px;
+    }
+    .p-light {
+    background: #f8fafc;
+    }
+    .p-dark {
+    background: #0f172a;
+    }
+    .p-galaxy {
+    background:
+    radial-gradient(circle at 30% 30%, rgba(255, 119, 200, 0.42), transparent 34%),
+    radial-gradient(circle at 72% 26%, rgba(210, 107, 255, 0.36), transparent 30%),
+    linear-gradient(135deg, #12071d 0%, #1b0c2b 46%, #2d1241 100%);
+    }
+    .theme-card span {
+    display: block;
+    text-align: center;
+    font-weight: 700;
+    padding: 10px;
+    font-size: 0.88rem;
+    }
+    .toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+    }
+    .toggle-row:last-child {
+    border-bottom: none;
+    }
+    .switch {
+    position: relative;
+    width: 48px;
+    height: 28px;
+    display: inline-block;
+    }
+    .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    }
+    .slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: var(--border-medium);
+    transition: .2s;
+    border-radius: 999px;
+    }
+    .slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    top: 4px;
+    background: #fff;
+    transition: .2s;
+    border-radius: 50%;
+    }
+    .switch input:checked+.slider {
+    background: var(--brand-primary);
+    }
+    .switch input:checked+.slider:before {
+    transform: translateX(20px);
+    }
+    .plan-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+    }
+    .plan-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 430px;
+    }
+    .plan-card.highlight {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px var(--brand-light);
+    }
+    .plan-price {
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1;
+    }
+    .plan-price span {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    }
+    .plan-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    color: var(--text-secondary);
+    display: grid;
+    gap: 7px;
+    font-size: 0.9rem;
+    flex: 1;
+    }
+    .plan-card .btn {
+    width: 100%;
+    min-height: 50px;
+    margin-top: auto;
+    }
+    .danger-zone {
+    border-color: hsla(0, 84%, 60%, 0.26);
+    background: hsla(0, 84%, 60%, 0.05);
+    }
+    /* Floating Save Bar */
+    .save-bar {
+    position: fixed;
+    bottom: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--brand-primary);
+    box-shadow: 0 0 24px rgba(236, 91, 19, 0.35);
+    border-radius: var(--radius-xl);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: bottom 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    min-width: 320px;
+    }
+    .save-bar.visible {
+    bottom: 24px;
+    }
+    .save-bar p {
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0;
+    }
+    .save-bar .btn {
+    min-height: 40px;
+    }
+    @media (max-width: 960px) {
+    .settings-layout {
+    flex-direction: column;
+    margin: 0;
+    border-radius: 0;
+    height: auto;
+    min-height: calc(100vh - 72px);
+    }
+    .settings-tabs {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-light);
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0;
+    position: static;
+    }
+    .tab-btn {
+    white-space: nowrap;
+    box-shadow: none;
+    }
+    .tab-btn.active {
+    box-shadow: inset 0 -3px 0 var(--brand-primary);
+    }
+    .settings-logout-wrap {
+    position: static;
+    width: auto;
+    margin: 0 12px;
+    align-self: center;
+    }
+    .grid-2 {
+    grid-template-columns: 1fr;
+    }
+    .chart-frame,
+    .chart-frame.chart-frame-compact {
+    height: 260px;
+    }
+    }
+    .auth-guard-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+    radial-gradient(circle at 16% 20%, rgba(94, 160, 255, 0.18), transparent 24%),
+    radial-gradient(circle at 84% 18%, rgba(244, 114, 182, 0.2), transparent 24%),
+    rgba(4, 8, 20, 0.66);
+    backdrop-filter: blur(20px);
+    z-index: 1200;
+    }
+    .auth-guard-overlay[hidden] {
+    display: none !important;
+    }
+    body.auth-pending .settings-layout,
+    body.auth-pending .navbar-actions {
+    opacity: 0;
+    pointer-events: none;
+    user-select: none;
+    }
+    body.guest-mode .auth-guard-overlay:not([hidden]) {
+    display: flex;
+    }
+    body.guest-mode .settings-layout {
+    filter: blur(10px) saturate(0.72);
+    transform: scale(0.985);
+    pointer-events: none;
+    user-select: none;
+    }
+    body.guest-mode .navbar-actions {
+    visibility: hidden;
+    pointer-events: none;
+    }
+    .auth-guard-card {
+    width: min(560px, 100%);
+    padding: 32px;
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(145deg, rgba(13, 20, 38, 0.96), rgba(29, 11, 44, 0.94));
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.36);
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+    /* Card is intentionally dark in every theme — force light text inside so
+       the title and CTAs stay legible in light mode (where --text-primary is
+       dark navy and would otherwise blend into the gradient). */
+    color: #f5f7ff;
+    }
+    .auth-guard-card .auth-guard-title,
+    .auth-guard-card h1,
+    .auth-guard-card h2,
+    .auth-guard-card h3 {
+    color: #ffffff;
+    }
+    .auth-guard-card .auth-guard-text,
+    .auth-guard-card p,
+    .auth-guard-card .auth-guard-point,
+    .auth-guard-card small {
+    color: rgba(245, 247, 255, 0.86);
+    }
+    .auth-guard-card .btn,
+    .auth-guard-card a.btn {
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.32);
+    }
+    .auth-guard-card .btn.btn-primary {
+    background: linear-gradient(135deg, hsl(240, 90%, 62%) 0%, hsl(268, 85%, 65%) 100%);
+    border: none;
+    }
+    .auth-guard-card .btn.btn-outline {
+    background: rgba(255, 255, 255, 0.08);
+    }
+    .auth-guard-card .btn.btn-outline:hover {
+    background: rgba(255, 255, 255, 0.18);
+    }
+    .auth-guard-card::before {
+    content: "";
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    right: -80px;
+    top: -80px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(244, 114, 182, 0.28), transparent 68%);
+    pointer-events: none;
+    }
+    .auth-guard-card::after {
+    content: "";
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    left: -60px;
+    bottom: -70px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(94, 160, 255, 0.24), transparent 70%);
+    pointer-events: none;
+    }
+    .auth-guard-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.06);
+    /* The card is intentionally dark in every theme, so the badge must use light
+       text — var(--text-secondary) goes dark slate in light mode and fails contrast. */
+    color: rgba(245, 247, 255, 0.82);
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+    }
+    .auth-guard-title {
+    font-size: clamp(2rem, 3vw, 2.8rem);
+    line-height: 1.04;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+    }
+    .auth-guard-text {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    max-width: 48ch;
+    position: relative;
+    z-index: 1;
+    }
+    .auth-guard-points {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+    }
+    .auth-guard-point {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    }
+    .auth-guard-point::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #60a5fa, #f472b6);
+    box-shadow: 0 0 18px rgba(96, 165, 250, 0.4);
+    flex: 0 0 auto;
+    }
+    .auth-guard-actions {
+    display: flex;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+    }
+    .auth-guard-actions .btn {
+    min-width: 160px;
+    }
+    .settings-layout {
+    background: linear-gradient(180deg, rgba(13, 19, 36, 0.9), rgba(11, 17, 31, 0.88));
+    box-shadow: 0 28px 80px rgba(3, 8, 20, 0.34);
+    }
+    .settings-tabs {
+    background: linear-gradient(180deg, rgba(8, 12, 23, 0.98), rgba(11, 17, 31, 0.96));
+    }
+    .tab-btn {
+    border-radius: 16px;
+    margin: 0 10px;
+    width: calc(100% - 20px);
+    transition: transform 0.22s ease, background 0.22s ease, color 0.22s ease, box-shadow 0.22s ease;
+    }
+    .tab-btn:hover {
+    transform: translateX(4px);
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+    }
+    .tab-btn.active {
+    color: #fff;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(244, 114, 182, 0.16));
+    box-shadow: inset 4px 0 0 var(--brand-primary), 0 14px 30px rgba(14, 18, 34, 0.24);
+    }
+    .settings-content {
+    background: linear-gradient(180deg, rgba(20, 28, 50, 0.9), rgba(16, 22, 40, 0.88));
+    }
+    .settings-group h2,
+    .settings-card strong,
+    .theme-card span,
+    .chart-title,
+    .stats-value {
+    color: var(--text-primary);
+    }
+    .settings-help,
+    .stats-label,
+    .toggle-row p,
+    .label,
+    #user-email {
+    color: var(--text-secondary) !important;
+    }
+    .settings-card,
+    .chart-container,
+    .stats-card {
+    background: linear-gradient(180deg, rgba(10, 15, 29, 0.96), rgba(13, 20, 37, 0.92));
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 18px 40px rgba(2, 8, 22, 0.22);
+    }
+    .theme-card {
+    transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+    }
+    .theme-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(168, 85, 247, 0.4);
+    box-shadow: 0 18px 36px rgba(2, 8, 22, 0.28);
+    }
+    .theme-card.active {
+    box-shadow: inset 0 0 0 2px rgba(168, 85, 247, 0.8), 0 20px 40px rgba(80, 40, 140, 0.22);
+    }
+    body:not(.dark-mode):not(.galaxy-mode) .settings-layout {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(245, 248, 255, 0.92));
+    border-color: rgba(96, 120, 189, 0.12);
+    box-shadow: 0 30px 80px rgba(96, 120, 189, 0.16);
+    }
+    body:not(.dark-mode):not(.galaxy-mode) .settings-tabs {
+    background: linear-gradient(180deg, rgba(248, 250, 255, 0.96), rgba(241, 245, 255, 0.96));
+    }
+    body:not(.dark-mode):not(.galaxy-mode) .settings-content {
+    background: linear-gradient(180deg, rgba(243, 247, 255, 0.98), rgba(237, 242, 255, 0.98));
+    }
+    body:not(.dark-mode):not(.galaxy-mode) .settings-card,
+    body:not(.dark-mode):not(.galaxy-mode) .chart-container,
+    body:not(.dark-mode):not(.galaxy-mode) .stats-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 255, 0.98));
+    border-color: rgba(96, 120, 189, 0.12);
+    box-shadow: 0 18px 36px rgba(96, 120, 189, 0.12);
+    }
+    body:not(.dark-mode):not(.galaxy-mode) .settings-group h2,
+    body:not(.dark-mode):not(.galaxy-mode) .settings-card strong,
+    body:not(.dark-mode):not(.galaxy-mode) .theme-card span,
+    body:not(.dark-mode):not(.galaxy-mode) .chart-title,
+    body:not(.dark-mode):not(.galaxy-mode) .stats-value {
+    color: #13233f;
+    }
+    body:not(.dark-mode):not(.galaxy-mode) .settings-help,
+    body:not(.dark-mode):not(.galaxy-mode) .stats-label,
+    body:not(.dark-mode):not(.galaxy-mode) .toggle-row p,
+    body:not(.dark-mode):not(.galaxy-mode) .label,
+    body:not(.dark-mode):not(.galaxy-mode) #user-email {
+    color: rgba(31, 46, 78, 0.74) !important;
+    }
+    body.settings-page {
+    background:
+    radial-gradient(circle at 12% 12%, rgba(96, 165, 250, 0.16), transparent 20%),
+    radial-gradient(circle at 88% 16%, rgba(244, 114, 182, 0.18), transparent 24%),
+    radial-gradient(circle at 50% 100%, rgba(139, 92, 246, 0.16), transparent 28%),
+    var(--bg-primary);
+    overflow-x: hidden;
+    }
+    body.settings-page::before,
+    body.settings-page::after {
+    content: "";
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(32px);
+    opacity: 0.9;
+    }
+    body.settings-page::before {
+    width: 320px;
+    height: 320px;
+    top: 120px;
+    left: -70px;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.22), transparent 68%);
+    animation: floatAurora 14s ease-in-out infinite;
+    }
+    body.settings-page::after {
+    width: 360px;
+    height: 360px;
+    right: -100px;
+    bottom: 60px;
+    background: radial-gradient(circle, rgba(236, 72, 153, 0.2), transparent 68%);
+    animation: floatAurora 18s ease-in-out infinite reverse;
+    }
+    .main-content-wrapper {
+    position: relative;
+    isolation: isolate;
+    }
+    .main-content-wrapper::before {
+    content: "";
+    position: absolute;
+    inset: 38px 24px 18px;
+    border-radius: 40px;
+    background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    radial-gradient(circle at top right, rgba(244, 114, 182, 0.12), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.12), transparent 26%);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    z-index: -1;
+    }
+    .settings-layout {
+    position: relative;
+    border-radius: 36px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 0 34px 90px rgba(3, 8, 20, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transform-style: preserve-3d;
+    animation: settingsFloat 14s ease-in-out infinite;
+    }
+    .settings-layout::before,
+    .settings-layout::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+    }
+    .settings-layout::before {
+    inset: 0;
+    background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.045), transparent 36%),
+    radial-gradient(circle at top right, rgba(244, 114, 182, 0.14), transparent 24%);
+    }
+    .settings-layout::after {
+    width: 280px;
+    height: 280px;
+    right: -100px;
+    top: -90px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.16), transparent 68%);
+    filter: blur(12px);
+    }
+    .settings-tabs,
+    .settings-content {
+    position: relative;
+    z-index: 1;
+    }
+    .settings-tabs {
+    padding-top: 28px;
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04);
+    }
+    .settings-content {
+    background:
+    linear-gradient(180deg, rgba(20, 28, 50, 0.94), rgba(16, 22, 40, 0.92)),
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 28%);
+    }
+    .settings-group h2 {
+    font-size: clamp(2rem, 3.6vw, 2.7rem);
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+    margin-bottom: 14px;
+    }
+    .settings-help {
+    max-width: 66ch;
+    line-height: 1.72;
+    }
+    .settings-card,
+    .chart-container,
+    .stats-card {
+    border-radius: 24px;
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.28s ease;
+    }
+    .settings-card:hover,
+    .chart-container:hover,
+    .stats-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(244, 114, 182, 0.18);
+    box-shadow: 0 26px 48px rgba(2, 8, 22, 0.28);
+    }
+    .profile-head {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    }
+    .profile-avatar {
+    width: 66px;
+    height: 66px;
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.92), rgba(244, 114, 182, 0.92));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 18px 34px rgba(168, 85, 247, 0.26);
+    }
+    .settings-layout input[type="text"],
+    .settings-layout input[type="search"],
+    .settings-layout input[type="email"],
+    .settings-layout select {
+    min-height: 54px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(8, 12, 22, 0.78);
+    color: var(--text-primary);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+    }
+    .settings-layout input::placeholder {
+    color: var(--text-muted);
+    }
+    .settings-layout input:focus,
+    .settings-layout select:focus {
+    outline: none;
+    border-color: rgba(168, 85, 247, 0.65);
+    box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.14);
+    transform: translateY(-1px);
+    }
+    .settings-layout .btn {
+    min-height: 52px;
+    border-radius: 18px;
+    }
+    .settings-layout .btn-primary {
+    /* Was: purple → pink → orange. The orange (#f97316) stop dropped white-on-bg
+       contrast below 4.5:1 (WCAG AA fail). Switching to a deeper two-stop
+       indigo→pink gives 5.1:1 minimum across the gradient. */
+    background: linear-gradient(135deg, #4338ca 0%, #be185d 100%);
+    box-shadow: 0 18px 34px rgba(67, 56, 202, 0.28);
+    color: #ffffff;
+    }
+    .settings-layout .btn-primary:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 24px 38px rgba(67, 56, 202, 0.36);
+    filter: brightness(1.08);
+    }
+    .settings-layout .btn-outline {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-primary);
+    }
+    .settings-layout .btn-outline:hover {
+    border-color: rgba(244, 114, 182, 0.32);
+    background: rgba(244, 114, 182, 0.08);
+    }
+    .theme-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 22px;
+    transform-style: preserve-3d;
+    transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.34s ease, border-color 0.28s ease;
+    }
+    .theme-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), transparent 36%);
+    pointer-events: none;
+    }
+    .theme-card:hover {
+    transform: translateY(-8px) rotateX(5deg);
+    box-shadow: 0 22px 36px rgba(8, 12, 24, 0.24);
+    }
+    .save-bar {
+    border-radius: 22px;
+    backdrop-filter: blur(18px);
+    box-shadow: 0 22px 48px rgba(7, 12, 25, 0.34);
+    }
+    @keyframes settingsFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+    }
+    @keyframes floatAurora {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(18px, -20px, 0) scale(1.05); }
+    }
+    body.reduce-motion .settings-layout,
+    body.reduce-motion::before,
+    body.reduce-motion::after {
+    animation: none;
+    }
+    .settings-language-control {
+    display: grid;
+    gap: 14px;
+    }
+    .settings-language-label {
+    display: grid;
+    gap: 6px;
+    color: var(--text-primary);
+    font-weight: 800;
+    }
+    .settings-language-label small {
+    color: var(--text-secondary);
+    font-weight: 600;
+    line-height: 1.5;
+    }
+    .settings-language-select-wrap {
+    position: relative;
+    }
+    .settings-language-select-wrap::after {
+    content: "?";
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--brand-primary);
+    font-weight: 900;
+    }
+    #skemiLanguageSelect {
+    width: 100%;
+    min-height: 54px;
+    padding: 0 46px 0 18px;
+    border-radius: 18px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-weight: 800;
+    appearance: none;
+    box-shadow: var(--shadow-sm);
+    }
+    #skemiLanguageSelect:focus {
+    outline: none;
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-primary) 18%, transparent);
+    }
+    /* Custom color picker (Appearance tab) */
+    .sk-colors { display: flex; flex-direction: column; gap: 18px; }
+    .sk-color-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .sk-color-row > label { min-width: 96px; font-weight: 600; color: var(--text-primary); }
+    .sk-color-input { width: 52px; height: 36px; padding: 2px; border: 1px solid var(--border-medium, rgba(128,128,128,.3)); border-radius: 10px; background: var(--bg-secondary, transparent); cursor: pointer; }
+    .sk-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+    .sk-sw { width: 26px; height: 26px; border-radius: 8px; border: 1px solid rgba(128,128,128,.35); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+    .sk-sw:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.25); }
+    .sk-color-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 4px; border-top: 1px solid var(--border-light, rgba(128,128,128,.18)); margin-top: 2px; }
+    .sk-contrast-chip { display: inline-flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--text-secondary); padding: 6px 12px; border-radius: 10px; background: var(--bg-secondary, color-mix(in srgb, var(--text-primary) 6%, transparent)); }
+    .sk-contrast-chip b { font-variant-numeric: tabular-nums; color: var(--text-primary); }
+    .sk-contrast-chip.pass b { color: #16a34a; } .sk-contrast-chip.fail b { color: #dc2626; }
+    .sk-reset-colors { cursor: pointer; border: 1px solid var(--border-medium, rgba(128,128,128,.3)); background: transparent; color: var(--text-secondary); padding: 8px 16px; border-radius: 10px; font-weight: 600; transition: all .15s ease; }
+    .sk-reset-colors:hover { color: var(--text-primary); border-color: var(--brand-primary); }
+
+    /* ========================================================================
+       PREMIUM RESKIN (2026-07) -- flat horizontal tabs w/ underline indicator,
+       matching Settings.dc.html mockup. Purely additive/override: no id/class
+       renamed, .tab-btn/.tab-panel toggle script untouched.
+    ======================================================================== */
+    .settings-layout {
+        flex-direction: column;
+        max-width: 1100px;
+        background: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border: none;
+        box-shadow: none;
+        height: auto;
+        margin: 40px auto 64px;
+    }
+    .settings-tabs {
+        width: auto;
+        flex-direction: row;
+        align-items: center;
+        background: none;
+        border-right: none;
+        border-bottom: 1px solid var(--border-light);
+        padding: 0 0 0;
+        gap: 4px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .settings-tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+        border-radius: 0;
+        padding: 14px 4px;
+        margin-right: 26px;
+        min-height: auto;
+        white-space: nowrap;
+        border-bottom: 2px solid transparent;
+        font-family: var(--font-heading, inherit);
+    }
+    .tab-btn.active {
+        background: none;
+        box-shadow: none;
+        border-bottom-color: var(--brand-primary);
+    }
+    .tab-btn:hover { background: none; }
+    .settings-content { padding: 28px 2px; overflow-y: visible; }
+    .settings-logout-wrap {
+        position: static;
+        width: auto;
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+    .settings-logout-wrap button { width: auto !important; padding: 10px 18px; }
+    @media (max-width: 720px) {
+        .settings-logout-wrap { margin-left: 0; order: 99; width: 100%; }
+    }
+    </style>
+</head>
+
+
+
+<body class="auth-pending settings-page">
+    <div class="auth-guard-overlay" id="authGuard" hidden>
+        <div class="auth-guard-card">
+            <div class="auth-guard-badge">Secure Settings Access</div>
+            <h2 class="auth-guard-title">Đăng nhập để mở toàn bộ Settings</h2>
+            <p class="auth-guard-text">Khu vực này chỉ dành cho tài khoản đã đăng nhập. Sau khi vào tài khoản, bạn mới có thể chỉnh hồ sơ, giao diện, ngôn ngữ, bảo mật và đồng bộ cài đặt trên toàn hệ thống.</p>
+            <div class="auth-guard-points">
+                <div class="auth-guard-point">Đồng bộ hồ sơ và ngôn ngữ theo tài khoản</div>
+                <div class="auth-guard-point">Mở khóa toàn bộ tuỳ chọn giao diện và quyền riêng tư</div>
+                <div class="auth-guard-point">Giữ trải nghiệm nhất quán giữa các trang trong Skemi</div>
+            </div>
+            <div class="auth-guard-actions">
+                <a href="Login.html" class="btn btn-primary">Đăng nhập</a>
+                <a href="Register.html" class="btn btn-outline">Tạo tài khoản</a>
+            </div>
+        </div>
+    </div>
+            
+
+    <nav class="navbar">
+
+        <a href="Home.html" class="logo">
+
+            <span class="logo-mark">&#9733;</span>
+
+            <span class="logo-text">Skemi</span>
+
+        </a>
+
+
+
+        <div class="navbar-shortcuts" aria-label="Điều hướng chính">
+
+            <a href="Home.html" class="nav-shortcut" id="top-studio-link">
+
+                <span>&#127891;</span>
+
+                <span>Studio</span>
+
+            </a>
+
+            <a href="Search.html" class="nav-shortcut" id="top-search-link">
+
+                <span>&#128269;</span>
+
+                <span>Tra cứu</span>
+
+            </a>
+
+            <a href="Quiz.html" class="nav-shortcut" id="top-quiz-link">
+
+                <span>&#128221;</span>
+
+                <span>Quiz</span>
+
+            </a>
+
+            <a href="/Chat.html" class="nav-shortcut" id="top-chat-link">
+
+                <span>&#128172;</span>
+
+                <span>Chat</span>
+
+            </a>
+
+        </div>
+
+
+
+        <div class="navbar-actions">
+
+            <div id="auth-buttons"></div>
+
+        </div>
+
+    </nav>
+
+
+
+    <div class="app-layout">
+
+        <aside class="app-sidebar" id="appSidebar">
+
+            <ul class="sidebar-links">
+
+                <li><a href="Home.html" id="mindmap-link"><span class="icon">&#127891;</span><span
+
+                            data-i18n="nav.dashboard">Studio</span></a></li>
+
+                <li><a href="Search.html" id="search-link"><span class="icon">&#128269;</span><span
+
+                            data-i18n="nav.search">Tra cuu</span></a></li>
+
+                <li><a href="Quiz.html" id="quiz-link"><span class="icon">&#128221;</span><span
+
+                            data-i18n="nav.quiz">Quiz</span></a></li>
+
+                <li><a href="/Chat.html" id="chat-link"><span class="icon">&#128172;</span><span>Chat</span></a></li>
+
+                <li><a href="PromptAgent.html" id="prompt-agent-link"><span class="icon">&#9889;</span><span>Prompt Agent</span></a></li>
+
+                <li><a href="Computer.html" id="computer-link"><span class="icon">&#128421;</span><span>Skemi Control</span></a></li>
+                <li><a href="Remote.html" id="remote-link"><span class="icon">&#128225;</span><span>Điều khiển từ xa</span></a></li>
+
+                <li><a href="Settings.html" class="active" id="settings-link"><span class="icon">&#9881;</span><span
+
+                            data-i18n="nav.settings">Cai dat</span></a></li>
+
+            </ul>
+
+            <div class="sidebar-footer">
+
+                <button class="toggle-sidebar-btn" id="toggleSidebar"><span>◀</span></button>
+
+            </div>
+
+        </aside>
+
+
+
+        <div class="main-content-wrapper">
+
+            <div class="settings-layout">
+
+                <nav class="settings-tabs">
+
+                    <button class="tab-btn active" data-tab="profile">&#128100; <span data-i18n="settings.tabs.0">Hồ sơ</span></button>
+                    <button class="tab-btn" data-tab="statistics">&#128200; <span data-i18n="settings.tabs.1">Thống kê & Thông số</span></button>
+                    <button class="tab-btn" data-tab="language">&#127912; <span data-i18n="settings.tabs.2">Giao diện & Ngôn ngữ</span></button>
+                    <button class="tab-btn" data-tab="notifications">&#128276; <span data-i18n="settings.tabs.3">Thông báo</span></button>
+                    <button class="tab-btn" data-tab="security">&#128274; <span data-i18n="settings.tabs.4">Bảo mật</span></button>
+                    <button class="tab-btn" data-tab="computer">&#128421; <span>Skemi Control</span></button>
+
+
+                    <div class="settings-logout-wrap">
+
+                        <button id="logoutBtn" class="btn btn-outline"
+
+                            style="width: 100%; color: #ef4444; border-color: #ef4444;" data-i18n="auth.logout">Đăng
+
+                            xuất</button>
+
+                    </div>
+
+                </nav>
+
+
+
+                <div class="settings-content">
+
+
+
+                    <!-- PROFILE TAB -->
+
+                    <section class="tab-panel active" id="tab-profile">
+
+                        <div class="settings-group">
+
+                            <h2 data-i18n="settings.accountTitle">Thông tin tài khoản</h2>
+
+                            <p class="settings-help" data-i18n="settings.accountHelp">Thông tin này được dùng để AI điều
+
+                                chỉnh cách trả lời và gợi ý chủ đề quiz phù hợp.</p>
+
+                            <div class="settings-card">
+
+                                <div class="profile-head">
+
+                                    <div id="user-avatar-large" class="profile-avatar">U</div>
+
+                                    <div>
+
+                                        <h3 id="user-display">Người dùng Skemi</h3>
+
+                                        <p id="user-email" style="color: var(--text-secondary); font-size: 0.9rem;">
+
+                                            guest@skemi.ai</p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="settings-card">
+
+                                <div class="grid-2">
+
+                                    <div>
+
+                                        <label class="label" for="ageTag" data-i18n="settings.ageTag">Tag độ
+
+                                            tuổi</label>
+
+                                        <select id="ageTag" class="settings-trackable">
+
+                                            <option value="young" data-i18n="age.young">Học sinh</option>
+
+                                            <option value="middle" selected data-i18n="age.middle">Người lao động
+
+                                            </option>
+
+                                            <option value="senior" data-i18n="age.senior">Người lớn tuổi</option>
+
+                                        </select>
+
+                                    </div>
+
+                                    <div>
+
+                                        <label class="label" for="ageRange" data-i18n="settings.ageRange">Khoảng
+
+                                            tuổi</label>
+
+                                        <input id="ageRange" type="text" placeholder="Ví dụ: 18-35"
+
+                                            class="settings-trackable"
+
+                                            data-i18n-placeholder="settings.ageRangePlaceholder">
+
+                                    </div>
+
+                                </div>
+
+                                <div style="display: flex; gap: 10px; margin-top: 20px;">
+
+                                    <button id="saveProfileBtn" class="btn btn-primary" style="flex: 1;" data-i18n="settings.buttons.saveProfile">Lưu thông tin</button>
+
+                                    <button id="resetProfileBtn" class="btn btn-outline" style="flex: 1;" data-i18n="settings.buttons.resetProfile">Đặt lại</button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- STATISTICS TAB -->
+                    <section class="tab-panel" id="tab-statistics">
+                        <div class="settings-group">
+                            <h2 data-i18n="settings.statistics.title">Tổng quan thông số</h2>
+                            <p class="settings-help" data-i18n="settings.statistics.help">Theo dõi hiệu suất học tập và các hoạt động AI của bạn.</p>
+
+                            <div class="stats-grid">
+                                <div class="stats-card">
+                                    <div class="stats-icon">&#128193;</div>
+                                    <div class="stats-value" id="stats-projects">0</div>
+                                    <div class="stats-label" data-i18n="settings.statistics.cards.projects">Dự án đã tạo</div>
+                                </div>
+                                <div class="stats-card">
+                                    <div class="stats-icon">&#129302;</div>
+                                    <div class="stats-value" id="stats-ai-interactions">0</div>
+                                    <div class="stats-label" data-i18n="settings.statistics.cards.aiInteractions">Tương tác AI</div>
+                                </div>
+                                <div class="stats-card">
+                                    <div class="stats-icon">&#128214;</div>
+                                    <div class="stats-value" id="stats-sources">0</div>
+                                    <div class="stats-label" data-i18n="settings.statistics.cards.savedSources">Nguồn đã lưu</div>
+                                </div>
+                                <div class="stats-card">
+                                    <div class="stats-icon">&#128197;</div>
+                                    <div class="stats-value" id="stats-active-days">0</div>
+                                    <div class="stats-label" data-i18n="settings.statistics.cards.activeDays">Ngày hoạt động</div>
+                                </div>
+                            </div>
+
+                            <div class="chart-container">
+                                <div class="chart-title" data-i18n="settings.statistics.charts.activityTitle">Hoạt động 7 ngày gần đây</div>
+                                <div class="chart-frame">
+                                    <canvas id="activityChart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="grid-2">
+                                <div class="chart-container">
+                                    <div class="chart-title" data-i18n="settings.statistics.charts.focusTitle">Trọng tâm sử dụng</div>
+                                    <div class="chart-frame chart-frame-compact">
+                                        <canvas id="topicChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="chart-container">
+                                    <div class="chart-title" data-i18n="settings.statistics.charts.timeTitle">Khung giờ hoạt động</div>
+                                    <div class="chart-frame chart-frame-compact">
+                                        <canvas id="timeChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+
+
+
+                    <!-- APPEARANCE + LANGUAGE TAB -->
+
+                    <section class="tab-panel" id="tab-language">
+
+                        <div class="settings-group">
+
+                            <h2 data-i18n="settings.appearanceTitle">Giao diện</h2>
+
+                            <p class="settings-help" data-i18n="settings.appearanceHelp">Chọn một giao diện duy nhất để
+
+                                tránh lỗi hiển thị sáng/tối không đồng bộ.</p>
+
+                            <div class="settings-card">
+
+                                <div class="theme-grid">
+
+                                    <div class="theme-card" data-theme="light">
+
+                                        <div class="preview-box p-light"></div>
+
+                                        <span data-i18n="settings.themes.0">Sáng</span>
+
+                                    </div>
+
+                                    <div class="theme-card" data-theme="dark">
+
+                                        <div class="preview-box p-dark"></div>
+
+                                        <span data-i18n="settings.themes.1">Tối</span>
+
+                                    </div>
+
+                                    <div class="theme-card" data-theme="galaxy">
+
+                                        <div class="preview-box p-galaxy"></div>
+
+                                        <span data-i18n="settings.themes.2">Galaxy</span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="settings-group">
+
+                            <h2 data-i18n="settings.customColorTitle">Tùy chỉnh màu</h2>
+
+                            <p class="settings-help" data-i18n="settings.customColorHelp">Chọn màu nền và màu nhấn riêng. Hệ thống tự tính độ tương phản (WCAG AA) và đồng bộ màu chữ, nút trên toàn bộ web.</p>
+
+                            <div class="settings-card sk-colors">
+
+                                <div class="sk-color-row">
+
+                                    <label for="skBgColor" data-i18n="settings.bgColor">Màu nền</label>
+
+                                    <input type="color" id="skBgColor" class="sk-color-input" value="#0a0a0b">
+
+                                    <div class="sk-swatches" data-target="skBgColor">
+
+                                        <button type="button" class="sk-sw" data-c="#0b1020" title="Midnight" style="background:#0b1020"></button>
+
+                                        <button type="button" class="sk-sw" data-c="#1a1024" title="Plum" style="background:#1a1024"></button>
+
+                                        <button type="button" class="sk-sw" data-c="#0e1a14" title="Forest" style="background:#0e1a14"></button>
+
+                                        <button type="button" class="sk-sw" data-c="#f7f9fc" title="Snow" style="background:#f7f9fc"></button>
+
+                                        <button type="button" class="sk-sw" data-c="#f3eefe" title="Lavender" style="background:#f3eefe"></button>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="sk-color-row">
+
+                                    <label for="skAccentColor" data-i18n="settings.accentColor">Màu nhấn</label>
+
+                                    <input type="color" id="skAccentColor" class="sk-color-input" value="#a855f7">
+
+                                    <div class="sk-swatches" data-target="skAccentColor">
+
+                                        <button type="button" class="sk-sw" data-c="#a855f7" title="Violet" style="background:#a855f7"></button>
+
+                                        <button type="button" class="sk-sw" data-c="#22d3ee" title="Cyan" style="background:#22d3ee"></button>
+
+                                        <button type="button" class="sk-sw" data-c="#34d399" title="Emerald" style="background:#34d399"></button>
+
+                                        <button type="button" class="sk-sw" data-c="#fb7185" title="Rose" style="background:#fb7185"></button>
+
+                                        <button type="button" class="sk-sw" data-c="#f59e0b" title="Amber" style="background:#f59e0b"></button>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="sk-color-foot">
+
+                                    <span class="sk-contrast-chip" id="skContrastChip" title="Tỉ lệ tương phản nền/chữ">Aa <b id="skContrastRatio">—</b></span>
+
+                                    <button type="button" class="sk-reset-colors" id="skResetColors" data-i18n="settings.resetColors">Khôi phục mặc định</button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="settings-group">
+
+                            <h2 data-i18n="settings.languageTitle">Ngôn ngữ</h2>
+
+                            <p class="settings-help" data-i18n="settings.languageHelp">Hỗ trợ hơn 100 ngôn ngữ. Toàn bộ
+
+                                giao diện sẽ ưu tiên ngôn ngữ bạn đã chọn. Tên thương hiệu <strong>Skemi</strong> và
+
+                            <strong>Skemi</strong> sẽ không bị dịch.
+
+                            </p>
+
+                            <div class="settings-card" id="language-settings"></div>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- NOTIFICATIONS TAB -->
+
+                    <section class="tab-panel" id="tab-notifications">
+
+                        <div class="settings-group">
+
+                            <h2 data-i18n="settings.notifications.title">Thông báo & Tính năng</h2>
+
+                            <p class="settings-help" data-i18n="settings.notifications.help">Bật hoặc tắt các thông báo và tuỳ chọn giao diện cơ bản của ứng dụng.</p>
+
+                            <div class="settings-card">
+
+                                <div class="toggle-row">
+
+                                    <div>
+
+                                        <strong>Thông báo khi AI hoàn tất việc</strong>
+
+                                        <div style="font-size: 0.88rem; color: var(--text-muted);">Hiện thông báo trên web khi một mục (Tra cứu, Studio, Chat, Legion…) chạy xong công việc — kể cả khi bạn đang ở mục đó.</div>
+
+                                    </div>
+
+                                    <label class="switch"><input id="aiCompleteNotifyToggle" type="checkbox" checked><span class="slider"></span></label>
+
+                                </div>
+
+                                <div class="toggle-row">
+
+                                    <div>
+
+                                        <strong data-i18n="settings.notifications.desktop.title">Thông báo trên trình duyệt</strong>
+
+                                        <div style="font-size: 0.88rem; color: var(--text-muted);" data-i18n="settings.notifications.desktop.desc">Hiện thông báo desktop khi có tin nhắn chat mới hoặc lời mời quiz.</div>
+
+                                    </div>
+
+                                    <label class="switch"><input id="desktopNotifyToggle" type="checkbox"
+
+                                            class="settings-trackable" checked><span class="slider"></span></label>
+
+                                </div>
+
+                                <div class="toggle-row">
+
+                                    <div>
+
+                                        <strong data-i18n="settings.notifications.sound.title">Âm thanh thông báo</strong>
+
+                                        <div style="font-size: 0.88rem; color: var(--text-muted);" data-i18n="settings.notifications.sound.desc">Phát âm báo khi có tin nhắn và lời mời mới.</div>
+
+                                    </div>
+
+                                    <label class="switch"><input id="soundNotifyToggle" type="checkbox"
+
+                                            class="settings-trackable" checked><span class="slider"></span></label>
+
+                                </div>
+
+                                <div class="toggle-row">
+
+                                    <div>
+
+                                        <strong data-i18n="settings.notifications.email.title">Email thông báo</strong>
+
+                                        <div style="font-size: 0.88rem; color: var(--text-muted);" data-i18n="settings.notifications.email.desc">Nhận email tổng hợp về các hoạt động quan trọng.</div>
+
+                                    </div>
+
+                                    <label class="switch"><input id="emailNotifyToggle" type="checkbox"
+
+                                            class="settings-trackable"><span class="slider"></span></label>
+
+                                </div>
+
+                                <div class="toggle-row">
+
+                                    <div>
+
+                                        <strong data-i18n="settings.notifications.startup.title">Gợi ý khi mở trang</strong>
+
+                                        <div style="font-size: 0.88rem; color: var(--text-muted);" data-i18n="settings.notifications.startup.desc">Hiện hướng dẫn nhanh khi vào chat lần đầu trong ngày.</div>
+
+                                    </div>
+
+                                    <label class="switch"><input id="startupTipsToggle" type="checkbox"
+
+                                            class="settings-trackable" checked><span class="slider"></span></label>
+
+                                </div>
+
+                                <div class="toggle-row">
+
+                                    <div>
+
+                                        <strong data-i18n="settings.notifications.compact.title">Chế độ giao diện gọn</strong>
+
+                                        <div style="font-size: 0.88rem; color: var(--text-muted);" data-i18n="settings.notifications.compact.desc">Tối giản hoá giao diện cho màn hình nhỏ.</div>
+
+                                    </div>
+
+                                    <label class="switch"><input id="compactModeToggle" type="checkbox"
+
+                                            class="settings-trackable"><span class="slider"></span></label>
+
+                                </div>
+
+                                <div class="toggle-row">
+
+                                    <div>
+
+                                        <strong data-i18n="settings.notifications.animations.title">Hoạt ảnh giao diện</strong>
+
+                                        <div style="font-size: 0.88rem; color: var(--text-muted);" data-i18n="settings.notifications.animations.desc">Bật hoặc tắt hiệu ứng chuyển cảnh và hoạt ảnh. Tắt để tăng tốc độ.</div>
+
+                                    </div>
+
+                                    <label class="switch"><input id="animationsToggle" type="checkbox"
+
+                                            class="settings-trackable" checked><span class="slider"></span></label>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="settings-group" id="skillsGroup">
+                            <h2>Kỹ năng &amp; Kết nối</h2>
+                            <p class="settings-help">Bật các kỹ năng để liên kết các mục với nhau. Mọi thay đổi lưu vào tài khoản và áp dụng ngay trên toàn web.</p>
+                            <div class="settings-card">
+                                <div class="toggle-row">
+                                    <div>
+                                        <strong>Đội quân AI (Legion) đa tác tử</strong>
+                                        <div style="font-size:0.88rem;color:var(--text-muted);">Khi bật, các mục AI (Tra cứu, Studio, Skemi CLI…) có thể triển khai NHIỀU agent song song thay vì 1, do Legion điều phối.</div>
+                                    </div>
+                                    <label class="switch"><input id="skillMultiAgent" type="checkbox" data-skill="multi_agent"><span class="slider"></span></label>
+                                </div>
+                                <div class="toggle-row" id="skillAgentCountRow">
+                                    <div>
+                                        <strong>Số agent mặc định</strong>
+                                        <div style="font-size:0.88rem;color:var(--text-muted);">Số tác tử Legion triển khai khi một mục cần làm việc song song (1–16).</div>
+                                    </div>
+                                    <input id="skillAgentCount" type="number" min="1" max="16" value="4" data-skill="agent_count"
+                                        style="width:74px;padding:8px 10px;border-radius:10px;border:1px solid var(--border-light);background:var(--bg-tertiary);color:var(--text-primary);font-weight:700;text-align:center;">
+                                </div>
+                                <div class="toggle-row">
+                                    <div>
+                                        <strong>Bộ nhớ chung giữa các mục</strong>
+                                        <div style="font-size:0.88rem;color:var(--text-muted);">Ngữ cảnh và kết quả của mục này được chia sẻ sang mục khác (vd: kết quả Tra cứu tự nạp vào Studio/Lab).</div>
+                                    </div>
+                                    <label class="switch"><input id="skillSharedMemory" type="checkbox" data-skill="shared_memory" checked><span class="slider"></span></label>
+                                </div>
+                                <div class="toggle-row">
+                                    <div>
+                                        <strong>Phòng thí nghiệm khắp nơi</strong>
+                                        <div style="font-size:0.88rem;color:var(--text-muted);">Hiện nút mở Phòng Thí Nghiệm Ý Tưởng để kiểm chứng/sáng tạo từ nhiều mục, không chỉ Tra cứu.</div>
+                                    </div>
+                                    <label class="switch"><input id="skillLabEverywhere" type="checkbox" data-skill="lab_everywhere" checked><span class="slider"></span></label>
+                                </div>
+                                <div class="toggle-row">
+                                    <div>
+                                        <strong>Tự đào sâu khi gặp vấn đề khó</strong>
+                                        <div style="font-size:0.88rem;color:var(--text-muted);">AI tự động chạy nghiên cứu sâu thêm khi câu hỏi vượt mức tự tin, thay vì trả lời cho có.</div>
+                                    </div>
+                                    <label class="switch"><input id="skillAutoDeepen" type="checkbox" data-skill="auto_deepen" checked><span class="slider"></span></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+
+                            <h2 data-i18n="settings.notifications.aiTitle">Hoạt động AI</h2>
+
+                            <p class="settings-help" data-i18n="settings.notifications.aiHelp">Tuỳ chỉnh cách AI của Skemi hoạt động khi bạn dùng chatbot và tạo học liệu.</p>
+
+                            <div class="settings-card">
+
+                                <div class="toggle-row">
+
+                                    <div>
+
+                                        <strong data-i18n="settings.notifications.ephemeral.title">Lưu hội thoại AI tạm thời</strong>
+
+                                        <div style="font-size: 0.88rem; color: var(--text-muted);" data-i18n="settings.notifications.ephemeral.desc">Lưu hội thoại AI theo phiên truy cập hiện tại để tiếp tục nhanh hơn.</div>
+
+                                    </div>
+
+                                    <label class="switch"><input id="ephemeralChatToggle" type="checkbox"
+
+                                            class="settings-trackable" checked><span class="slider"></span></label>
+
+                                </div>
+
+                                <div class="toggle-row">
+
+                                    <div>
+
+                                        <strong data-i18n="settings.notifications.personalize.title">Cá nhân hoá phản hồi AI</strong>
+
+                                        <div style="font-size: 0.88rem; color: var(--text-muted);" data-i18n="settings.notifications.personalize.desc">Cho phép AI dùng thông tin độ tuổi và dữ liệu học tập để tinh chỉnh phản hồi.</div>
+
+                                    </div>
+
+                                    <label class="switch"><input id="aiPersonalizeToggle" type="checkbox"
+
+                                            class="settings-trackable" checked><span class="slider"></span></label>
+
+                                </div>
+
+                                <div class="toggle-row">
+
+                                    <div>
+
+                                        <strong data-i18n="settings.notifications.usage.title">Cảnh báo giới hạn sử dụng</strong>
+
+                                        <div style="font-size: 0.88rem; color: var(--text-muted);" data-i18n="settings.notifications.usage.desc">Thông báo khi các hoạt động AI trong phiên của bạn tiến gần ngưỡng sử dụng.</div>
+
+                                    </div>
+
+                                    <label class="switch"><input id="quotaWarnToggle" type="checkbox"
+
+                                            class="settings-trackable" checked><span class="slider"></span></label>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- SECURITY TAB -->
+
+                    <section class="tab-panel" id="tab-security">
+
+                        <div class="settings-group">
+
+                            <h2 data-i18n="settings.securityTitle">Đăng nhập và bảo mật</h2>
+
+                            <div class="settings-card">
+
+                                <div class="toggle-row">
+
+                                    <div>
+
+                                        <strong data-i18n="settings.verifyLabel">Trạng thái xác thực email</strong>
+
+                                        <div id="verificationStatus"
+
+                                            style="font-size: 0.88rem; color: var(--text-muted);"
+
+                                            data-i18n="settings.verifyChecking">Đang kiểm tra...</div>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="toggle-row">
+
+                                    <div>
+
+                                        <strong data-i18n="settings.warnings.1.title">Cảnh báo bảo mật</strong>
+
+                                        <div style="font-size: 0.88rem; color: var(--text-muted);"
+
+                                            data-i18n="settings.warnings.1.desc">Cảnh báo khi đăng nhập thiết bị lạ.
+
+                                        </div>
+
+                                    </div>
+
+                                    <label class="switch"><input id="securityWarnToggle" type="checkbox"
+
+                                            class="settings-trackable" checked><span class="slider"></span></label>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <div class="settings-card danger-zone">
+
+                                <h3 style="margin-bottom: 8px;" data-i18n="settings.dangerTitle">Vùng nguy hiểm</h3>
+
+                                <p style="margin-bottom: 14px; color: var(--text-secondary);"
+
+                                    data-i18n="settings.dangerDesc">Xoá dữ liệu local (quota cache, lịch sử tạm) trên
+
+                                    trình duyệt này.</p>
+
+                                <button id="clearLocalDataBtn" class="btn btn-outline"
+
+                                    style="color: #ef4444; border-color: #ef4444;" data-i18n="settings.clearLocal">Xoá
+
+                                    dữ liệu local</button>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+
+
+
+
+                    <!-- COMPUTER TAB -->
+                    <section class="tab-panel" id="tab-computer">
+                        <div class="settings-group">
+                            <h2>Cài đặt Skemi Control</h2>
+                            <p class="settings-help">Tuỳ chỉnh cách Jarvis tương tác với máy tính của bạn.</p>
+                            
+                            <div class="settings-card">
+                                <div class="toggle-row">
+                                    <div>
+                                        <strong>Tự động tạo Desktop mới</strong>
+                                        <div style="font-size: 0.88rem; color: var(--text-muted);">
+                                            Tự động tạo Desktop 2 khi chuyển sang chế độ Phantom để cách ly AI.
+                                        </div>
+                                    </div>
+                                    <label class="switch">
+                                        <input id="autoCreateDesktopToggle" type="checkbox" class="settings-trackable">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="toggle-row">
+                                    <div>
+                                        <strong>Ưu tiên mở App thay vì Web</strong>
+                                        <div style="font-size: 0.88rem; color: var(--text-muted);">
+                                            Tìm kiếm và mở ứng dụng có sẵn trên máy trước khi dùng bản Web.
+                                        </div>
+                                    </div>
+                                    <label class="switch">
+                                        <input id="preferAppToggle" type="checkbox" class="settings-trackable" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                </div><!-- /settings-content -->
+
+            </div><!-- /settings-layout -->
+
+        </div><!-- /main-content-wrapper -->
+
+    </div>
+
+
+
+    <div class="save-bar" id="saveBar">
+
+        <p data-i18n="settings.saveBarText">Bạn có thay đổi chưa lưu.</p>
+
+        <button class="btn btn-primary" id="saveChangesBtn" data-i18n="settings.saveChanges">Lưu thay đổi</button>
+
+        <button class="btn btn-outline" id="discardChangesBtn" data-i18n="settings.discardChanges">Huỷ</button>
+
+    </div>
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script type="module" src="./Js/Galaxy.js"></script>
+
+    <!-- 100+ Language Packs - Load before LanguageManager -->
+    <script src="./Js/i18n-lang-meta.js?v=20260527"></script>
+    <script src="./Js/i18n-packs.js?v=20260601b"></script>
+    <script type="module" src="./Js/LanguageManager.js?v=20260701e"></script>
+    <script src="./Js/upgrade-nudge.js?v=20260531a"></script>
+    <script src="./Js/entitlements.js?v=20260701d"></script>
+    <script type="module" src="./Js/User_navbar.js?v=20260702b"></script>
+    <script type="module" src="./Js/AIChat.js?v=20260702a"></script>
+
+
+
+    <script type="module">
+
+        import { db, signOut } from './Js/Firebase_config.js';
+
+        import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
+
+
+
+        const tabs = document.querySelectorAll('.tab-btn');
+        const authGuard = document.getElementById('authGuard');
+        const settingsLayout = document.querySelector('.settings-layout');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        const panels = document.querySelectorAll('.tab-panel');
+
+        const themeCards = document.querySelectorAll('.theme-card');
+
+        let currentAuthUser = null;
+
+        function collectSettingsState() {
+            return {
+                sound_notify: document.getElementById('soundNotifyToggle')?.checked ?? true,
+                email_notify: document.getElementById('emailNotifyToggle')?.checked ?? false,
+                startup_tips: document.getElementById('startupTipsToggle')?.checked ?? true,
+                compact_mode: document.getElementById('compactModeToggle')?.checked ?? false,
+                animations_enabled: document.getElementById('animationsToggle')?.checked ?? true,
+                ai_personalize: document.getElementById('aiPersonalizeToggle')?.checked ?? true,
+                theme: localStorage.getItem('skemi-theme') || 'light',
+                language: localStorage.getItem('skemi_language') || 'vi',
+                auto_create_desktop: document.getElementById('autoCreateDesktopToggle')?.checked ?? false,
+                prefer_app: document.getElementById('preferAppToggle')?.checked ?? true
+            };
+        }
+
+        function announceSettingsChanged(detail = {}) {
+            window.dispatchEvent(new CustomEvent('skemiSettingsChanged', { detail }));
+        }
+
+        async function syncUserProfile(patch = {}) {
+
+            if (!currentAuthUser) return null;
+
+            const current = loadUserData();
+
+            const merged = { ...current, ...patch, theme: localStorage.getItem('skemi-theme') || patch.theme || 'light', language: localStorage.getItem('skemi_language') || patch.language || 'en' };
+
+            await setDoc(doc(db, 'users', currentAuthUser.uid), {
+
+                username: merged.username || currentAuthUser.displayName || currentAuthUser.email?.split('@')[0] || 'Skemi user',
+
+                email: merged.email || currentAuthUser.email || '',
+
+                age_group: merged.age_group || 'middle',
+
+                age_range: merged.age_range || '',
+
+                subscription: merged.subscription || 'free',
+
+                prompts_remaining: Number.isFinite(merged.prompts_remaining) ? merged.prompts_remaining : 10,
+
+                uploads_remaining: Number.isFinite(merged.uploads_remaining) ? merged.uploads_remaining : 3,
+
+                quiz_rooms_remaining: Number.isFinite(merged.quiz_rooms_remaining) ? merged.quiz_rooms_remaining : 3,
+
+                last_prompt_reset: merged.last_prompt_reset || Date.now(),
+
+                email_verified: currentAuthUser.emailVerified,
+
+                theme: merged.theme,
+
+                language: merged.language,
+
+                linked_apps: { skemi: true, skemi_chat: true },
+
+                settings: collectSettingsState()
+
+            }, { merge: true });
+
+            return merged;
+
+        }
+
+
+
+        async function loadRemoteSettings(user) {
+
+            if (!user) return;
+
+            const snap = await getDoc(doc(db, 'users', user.uid));
+
+            if (!snap.exists()) return;
+
+            const data = snap.data();
+
+            if (data.theme) {
+
+                localStorage.setItem('skemi-theme', data.theme);
+
+                localStorage.setItem('chat-theme', data.theme);
+
+            }
+
+            if (data.language) {
+
+                localStorage.setItem('skemi_language', data.language);
+
+                if (window.languageManager && window.languageManager.currentLanguage !== data.language) {
+                    window.languageManager.changeLanguage(data.language);
+                } else if (window.languageManager) {
+                    window.languageManager.applyLanguage();
+                }
+
+            }
+
+            saveUserData(data);
+
+            if (data.age_group) document.getElementById('ageTag').value = data.age_group;
+
+            if (typeof data.age_range === 'string') document.getElementById('ageRange').value = data.age_range;
+
+            if (data.settings) {
+                applyStoredSettingsToControls(data.settings);
+
+            }
+
+            announceSettingsChanged({ source: 'remote-load' });
+
+        }
+
+
+
+        function applyTheme(theme) {
+
+            document.body.classList.remove('dark-mode', 'galaxy-mode');
+            document.body.setAttribute('data-theme', theme);
+            document.documentElement.setAttribute('data-theme', theme);
+
+            if (theme === 'dark') {
+
+                document.body.classList.add('dark-mode');
+
+            }
+
+            if (theme === 'galaxy') {
+
+                document.body.classList.add('galaxy-mode', 'dark-mode');
+
+            }
+
+
+
+            // Update theme toggle icon if it exists
+
+            const themeToggle = document.getElementById('themeToggle');
+
+            if (themeToggle) {
+
+                const themeIcon = themeToggle.querySelector('i') || themeToggle.querySelector('span') || themeToggle;
+
+                const isLight = theme === 'light';
+
+                const isGalaxy = theme === 'galaxy';
+
+
+
+                // Update icon class
+
+                if (themeIcon.tagName === 'I') {
+
+                    themeIcon.className = isLight ? 'fas fa-sun' : (isGalaxy ? 'fas fa-star' : 'fas fa-moon');
+
+                } else {
+
+                    themeIcon.innerText = isLight ? '☀️' : (isGalaxy ? '🌟' : '🌙');
+
+                }
+
+
+
+                // Set explicit colors
+
+                if (isLight) {
+
+                    themeIcon.style.color = '#000';
+
+                    themeIcon.style.textShadow = 'none';
+
+                } else if (isGalaxy) {
+
+                    themeIcon.style.color = '#fff';
+
+                    themeIcon.style.textShadow = '0 0 12px rgba(255, 255, 255, 0.8)';
+
+                } else {
+
+                    themeIcon.style.color = '#fff';
+
+                    themeIcon.style.textShadow = 'none';
+
+                }
+
+            }
+
+        }
+
+
+
+        function setTheme(theme) {
+
+            localStorage.setItem('skemi-theme', theme);
+
+            localStorage.setItem('chat-theme', theme);
+
+            saveUserData({
+                theme,
+                language: localStorage.getItem('skemi_language') || 'vi',
+                settings: {
+                    ...(loadUserData().settings || {}),
+                    ...collectSettingsState(),
+                    theme
+                }
+            });
+
+            applyTheme(theme);
+
+            themeCards.forEach(card => card.classList.toggle('active', card.dataset.theme === theme));
+
+            window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme } }));
+
+            announceSettingsChanged({ source: 'theme', theme });
+
+            void syncUserProfile({ theme });
+
+        }
+
+
+
+        // --- Statistics Initialization ---
+        let activityChart, topicChart, timeChart;
+
+        function readJsonStorage(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key) ?? sessionStorage.getItem(key);
+                if (!raw) return fallback;
+                const parsed = JSON.parse(raw);
+                return parsed ?? fallback;
+            } catch {
+                return fallback;
+            }
+        }
+
+        function toTimestamp(value) {
+            if (typeof value === 'number' && Number.isFinite(value)) return value;
+            if (typeof value === 'string') {
+                const numeric = Number(value);
+                if (Number.isFinite(numeric) && numeric > 0) return numeric;
+                const parsed = Date.parse(value);
+                if (!Number.isNaN(parsed)) return parsed;
+            }
+            return null;
+        }
+
+        function formatMetric(value) {
+            const locale = (window.languageManager?.base || 'vi') === 'vi' ? 'vi-VN' : 'en-US';
+            try {
+                return new Intl.NumberFormat(locale).format(Number(value) || 0);
+            } catch {
+                return String(value ?? 0);
+            }
+        }
+
+        function getChartPalette() {
+            const isDark = document.body.classList.contains('dark-mode') || document.body.classList.contains('galaxy-mode');
+            return isDark
+                ? {
+                    text: 'rgba(241, 245, 249, 0.88)',
+                    grid: 'rgba(148, 163, 184, 0.16)',
+                    accent: '#a855f7',
+                    accentFill: 'rgba(168, 85, 247, 0.28)',
+                    accentSoft: 'rgba(168, 85, 247, 0.14)',
+                    secondary: '#22d3ee',
+                    secondaryFill: 'rgba(34, 211, 238, 0.12)'
+                }
+                : {
+                    text: '#1e293b',
+                    grid: 'rgba(15, 23, 42, 0.12)',
+                    accent: '#7c3aed',
+                    accentFill: 'rgba(124, 58, 237, 0.22)',
+                    accentSoft: 'rgba(124, 58, 237, 0.10)',
+                    secondary: '#0891b2',
+                    secondaryFill: 'rgba(8, 145, 178, 0.12)'
+                };
+        }
+
+        function getLast7DayLabels() {
+            const locale = (window.languageManager?.base || 'vi') === 'vi' ? 'vi-VN' : 'en-US';
+            const base = new Date();
+            base.setHours(0, 0, 0, 0);
+            return Array.from({ length: 7 }, (_, index) => {
+                const day = new Date(base);
+                day.setDate(base.getDate() - 6 + index);
+                return new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(day);
+            });
+        }
+
+        function collectRealStats() {
+            const dayMs = 24 * 60 * 60 * 1000;
+            const now = Date.now();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const projects = readJsonStorage('skemi_studio_projects_v1', []);
+            const chatHistory = readJsonStorage('skemi_ai_chat_history_v2', readJsonStorage('ai_chat_history', {}));
+            const searchHistory = readJsonStorage('skemi_search_history_v1', []);
+            const quizRooms = readJsonStorage('skemi_private_quiz_rooms_v1', []);
+
+            const safeProjects = Array.isArray(projects) ? projects.filter((item) => item && typeof item === 'object') : [];
+            const safeChatMessages = Array.isArray(chatHistory?.messages) ? chatHistory.messages.filter((item) => item && typeof item === 'object') : [];
+            const safeSearchHistory = Array.isArray(searchHistory) ? searchHistory : [];
+            const safeQuizRooms = Array.isArray(quizRooms) ? quizRooms.filter((item) => item && typeof item === 'object') : [];
+
+            const events = [];
+            let savedSources = 0;
+            let notebookMessages = 0;
+            let generatedOutputs = 0;
+
+            const addEvent = (value) => {
+                const timestamp = toTimestamp(value);
+                if (Number.isFinite(timestamp)) events.push(timestamp);
+            };
+
+            safeProjects.forEach((project) => {
+                addEvent(project.createdAt);
+
+                const sources = Array.isArray(project?.notebook?.sources) ? project.notebook.sources : [];
+                const notebookLogs = Array.isArray(project?.notebook?.messages) ? project.notebook.messages : [];
+
+                savedSources += sources.length;
+                notebookMessages += notebookLogs.length;
+
+                notebookLogs.forEach((message) => addEvent(message?.ts || message?.timestamp || message?.createdAt));
+
+                if (project?.workspace?.lastResult) generatedOutputs += 1;
+                if (project?.builder?.lastResult) generatedOutputs += 1;
+            });
+
+            safeChatMessages.forEach((message) => addEvent(message?.timestamp || message?.createdAt));
+            safeQuizRooms.forEach((room) => addEvent(room?.updatedAt || room?.createdAt));
+
+            const activityData = Array(7).fill(0);
+            const activeDays = new Set();
+            const hourBuckets = Array(6).fill(0);
+
+            events.forEach((timestamp) => {
+                if (!Number.isFinite(timestamp)) return;
+                const eventDate = new Date(timestamp);
+                const eventDay = new Date(eventDate);
+                eventDay.setHours(0, 0, 0, 0);
+
+                const diffDays = Math.floor((today.getTime() - eventDay.getTime()) / dayMs);
+                if (diffDays >= 0 && diffDays < 7) {
+                    activityData[6 - diffDays] += 1;
+                    activeDays.add(eventDay.getTime());
+                }
+
+                const hour = eventDate.getHours();
+                const bucket = Math.min(5, Math.floor(hour / 4));
+                hourBuckets[bucket] += 1;
+            });
+
+            return {
+                cards: {
+                    projects: safeProjects.length,
+                    aiInteractions: safeChatMessages.length + notebookMessages,
+                    savedSources,
+                    activeDays: activeDays.size
+                },
+                activityLabels: getLast7DayLabels(),
+                activityData,
+                focusData: [
+                    safeProjects.length,
+                    savedSources,
+                    safeSearchHistory.length,
+                    safeChatMessages.length,
+                    safeQuizRooms.length,
+                    generatedOutputs
+                ],
+                timeData: hourBuckets
+            };
+        }
+
+        function getStatisticsText() {
+            const statsPack = settingsPack().statistics || {};
+            return {
+                labels: {
+                    focus: statsPack.labels?.focus || ['Projects', 'Sources', 'Search', 'AI chat', 'Private quiz', 'Generated output'],
+                    hours: statsPack.labels?.hours || ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00']
+                },
+                datasets: {
+                    activity: statsPack.datasets?.activity || 'Activity',
+                    focus: statsPack.datasets?.focus || 'Usage level',
+                    time: statsPack.datasets?.time || 'Frequency'
+                }
+            };
+        }
+
+        function setChartData(chart, config) {
+            chart.data.labels = config.labels;
+            chart.data.datasets = config.datasets;
+            chart.update();
+        }
+
+        function initStats(force = false) {
+            const statsText = getStatisticsText();
+            const stats = collectRealStats();
+            const palette = getChartPalette();
+
+            const projectsEl = document.getElementById('stats-projects');
+            const aiEl = document.getElementById('stats-ai-interactions');
+            const sourcesEl = document.getElementById('stats-sources');
+            const activeDaysEl = document.getElementById('stats-active-days');
+
+            if (projectsEl) projectsEl.textContent = formatMetric(stats.cards.projects);
+            if (aiEl) aiEl.textContent = formatMetric(stats.cards.aiInteractions);
+            if (sourcesEl) sourcesEl.textContent = formatMetric(stats.cards.savedSources);
+            if (activeDaysEl) activeDaysEl.textContent = formatMetric(stats.cards.activeDays);
+
+            const activityConfig = {
+                labels: stats.activityLabels,
+                datasets: [{
+                    label: statsText.datasets.activity,
+                    data: stats.activityData,
+                    backgroundColor: palette.accentFill,
+                    borderColor: palette.accent,
+                    borderWidth: 1.5,
+                    borderRadius: 12,
+                    maxBarThickness: 42
+                }]
+            };
+
+            const topicConfig = {
+                labels: statsText.labels.focus,
+                datasets: [{
+                    label: statsText.datasets.focus,
+                    data: stats.focusData,
+                    backgroundColor: palette.accentSoft,
+                    borderColor: palette.accent,
+                    pointBackgroundColor: palette.accent,
+                    pointBorderColor: palette.accent,
+                    pointHoverBackgroundColor: '#ffffff',
+                    pointHoverBorderColor: palette.accent
+                }]
+            };
+
+            const timeConfig = {
+                labels: statsText.labels.hours,
+                datasets: [{
+                    label: statsText.datasets.time,
+                    data: stats.timeData,
+                    borderColor: palette.secondary,
+                    tension: 0.35,
+                    fill: true,
+                    backgroundColor: palette.secondaryFill,
+                    pointBackgroundColor: palette.secondary,
+                    pointBorderColor: palette.secondary,
+                    pointRadius: 4
+                }]
+            };
+
+            const ctx1 = document.getElementById('activityChart')?.getContext('2d');
+            const ctx2 = document.getElementById('topicChart')?.getContext('2d');
+            const ctx3 = document.getElementById('timeChart')?.getContext('2d');
+
+            const commonPlugins = {
+                legend: {
+                    display: false,
+                    labels: { color: palette.text }
+                },
+                tooltip: {
+                    displayColors: false
+                }
+            };
+
+            if (ctx1) {
+                if (!activityChart || force) {
+                    if (activityChart && force) activityChart.destroy();
+                    activityChart = new Chart(ctx1, {
+                        type: 'bar',
+                        data: activityConfig,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: commonPlugins,
+                            scales: {
+                                x: {
+                                    ticks: { color: palette.text },
+                                    grid: { display: false }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { color: palette.text, precision: 0 },
+                                    grid: { color: palette.grid }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    setChartData(activityChart, activityConfig);
+                }
+            }
+
+            if (ctx2) {
+                if (!topicChart || force) {
+                    if (topicChart && force) topicChart.destroy();
+                    topicChart = new Chart(ctx2, {
+                        type: 'radar',
+                        data: topicConfig,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: commonPlugins,
+                            scales: {
+                                r: {
+                                    beginAtZero: true,
+                                    angleLines: { color: palette.grid },
+                                    grid: { color: palette.grid },
+                                    pointLabels: { color: palette.text, font: { size: 11 } },
+                                    ticks: { display: false }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    setChartData(topicChart, topicConfig);
+                }
+            }
+
+            if (ctx3) {
+                if (!timeChart || force) {
+                    if (timeChart && force) timeChart.destroy();
+                    timeChart = new Chart(ctx3, {
+                        type: 'line',
+                        data: timeConfig,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: commonPlugins,
+                            scales: {
+                                x: {
+                                    ticks: { color: palette.text },
+                                    grid: { color: palette.grid }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { color: palette.text, precision: 0 },
+                                    grid: { color: palette.grid }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    setChartData(timeChart, timeConfig);
+                }
+            }
+        }
+
+
+
+        tabs.forEach(tab => {
+
+            tab.addEventListener('click', () => {
+
+                const target = tab.dataset.tab;
+
+                tabs.forEach(t => t.classList.remove('active'));
+
+                panels.forEach(p => p.classList.remove('active'));
+
+                tab.classList.add('active');
+
+                document.getElementById(`tab-${target}`).classList.add('active');
+
+                gsap.from(`#tab-${target}`, { x: 14, opacity: 0, duration: 0.22, ease: 'power2.out' });
+
+                
+
+                if (target === 'statistics') {
+
+                    setTimeout(initStats, 300);
+
+                }
+
+            });
+
+        });
+
+
+
+        themeCards.forEach(card => {
+
+            card.addEventListener('click', () => setTheme(card.dataset.theme));
+
+        });
+
+        // ── Custom bg/accent color pickers → SkemiPrefs (auto-contrast palette sync) ──
+        (function initCustomColors() {
+            const $id = (id) => document.getElementById(id);
+            const bgIn = $id('skBgColor'), accIn = $id('skAccentColor'), chip = $id('skContrastChip'), ratioEl = $id('skContrastRatio'), resetBtn = $id('skResetColors');
+            if (!bgIn || !accIn) return;
+            const clean = (v) => (v || '').replace(/^"|"$/g, '').trim();
+            function hexToRgb(h) { h = String(h || '').trim(); let m = /^#?([0-9a-f]{6})$/i.exec(h); if (m) h = m[1]; else { let s = /^#?([0-9a-f]{3})$/i.exec(h); if (s) h = s[1].split('').map(c => c + c).join(''); else return null; } const n = parseInt(h, 16); return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 }; }
+            function lum(c) { const a = [c.r, c.g, c.b].map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2]; }
+            function updateChip() {
+                const bg = hexToRgb(bgIn.value); if (!bg || !chip) return;
+                const bl = lum(bg), cW = 1.05 / (bl + 0.05), cB = (bl + 0.05) / 0.05, r = Math.max(cW, cB);
+                if (ratioEl) ratioEl.textContent = r.toFixed(1) + ':1';
+                chip.classList.toggle('pass', r >= 4.5); chip.classList.toggle('fail', r < 4.5);
+                chip.style.background = bgIn.value; chip.style.color = cW >= cB ? '#f8fafc' : '#0f172a';
+            }
+            try { const sb = clean(localStorage.getItem('skemi_bg_color')); if (sb) bgIn.value = sb; const sa = clean(localStorage.getItem('skemi_accent_color')); if (sa) accIn.value = sa; } catch (e) {}
+            updateChip();
+            bgIn.addEventListener('input', () => { if (window.SkemiPrefs) window.SkemiPrefs.set('bg_color', bgIn.value); updateChip(); });
+            accIn.addEventListener('input', () => { if (window.SkemiPrefs) window.SkemiPrefs.set('accent_color', accIn.value); });
+            document.querySelectorAll('.sk-swatches').forEach((box) => {
+                const inp = $id(box.getAttribute('data-target'));
+                box.querySelectorAll('.sk-sw').forEach((sw) => sw.addEventListener('click', () => { if (inp) { inp.value = sw.getAttribute('data-c'); inp.dispatchEvent(new Event('input')); } }));
+            });
+            if (resetBtn) resetBtn.addEventListener('click', () => {
+                try { localStorage.removeItem('skemi_bg_color'); localStorage.removeItem('skemi_accent_color'); } catch (e) {}
+                try { if (window.SkemiPrefs && window.SkemiPrefs._udm) { window.SkemiPrefs._udm.set('bg_color', null); window.SkemiPrefs._udm.set('accent_color', null); } } catch (e) {}
+                const root = document.documentElement;
+                ['--bg', '--bg-primary', '--accent', '--brand-primary'].forEach(p => { root.style.removeProperty(p); if (document.body) document.body.style.removeProperty(p); });
+                try { if (window.SkemiPrefs && window.SkemiPrefs._applyAutoContrast) window.SkemiPrefs._applyAutoContrast(); } catch (e) {}
+                bgIn.value = '#0a0a0b'; accIn.value = '#a855f7'; updateChip();
+            });
+        })();
+
+
+
+        const savedTheme = localStorage.getItem('skemi-theme') || 'light';
+
+        setTheme(savedTheme);
+
+
+
+        const themeToggle = document.getElementById('themeToggle');
+
+        if (themeToggle) {
+
+            themeToggle.addEventListener('click', () => {
+
+                const current = localStorage.getItem('skemi-theme') || 'light';
+
+                const next = current === 'light' ? 'dark' : 'light';
+
+                setTheme(next);
+
+            });
+
+        }
+
+
+
+        const sidebar = document.getElementById('appSidebar');
+
+        const toggleBtn = document.getElementById('toggleSidebar');
+
+        if (toggleBtn) {
+
+            toggleBtn.addEventListener('click', () => {
+
+                sidebar.classList.toggle('collapsed');
+
+                toggleBtn.querySelector('span').innerText = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+
+            });
+
+        }
+
+
+
+        function loadUserData() {
+
+            try {
+
+                const saved = localStorage.getItem('skemi_user_data');
+
+                return saved ? JSON.parse(saved) : {};
+
+            } catch {
+
+                return {};
+
+            }
+
+        }
+
+
+
+        function saveUserData(patch) {
+
+            const current = loadUserData();
+
+            const next = {
+                ...current,
+                ...patch,
+                settings: {
+                    ...(current.settings || {}),
+                    ...(patch?.settings || {})
+                }
+            };
+
+            localStorage.setItem('skemi_user_data', JSON.stringify(next));
+
+            return next;
+
+        }
+
+        function applyStoredSettingsToControls(settings = {}) {
+            if (typeof settings.quota_warn === 'boolean') document.getElementById('quotaWarnToggle').checked = settings.quota_warn;
+            if (typeof settings.security_warn === 'boolean') document.getElementById('securityWarnToggle').checked = settings.security_warn;
+            if (typeof settings.ephemeral_chat === 'boolean') document.getElementById('ephemeralChatToggle').checked = settings.ephemeral_chat;
+            if (typeof settings.desktop_notify === 'boolean') document.getElementById('desktopNotifyToggle').checked = settings.desktop_notify;
+            if (typeof settings.sound_notify === 'boolean') document.getElementById('soundNotifyToggle').checked = settings.sound_notify;
+            if (typeof settings.email_notify === 'boolean') document.getElementById('emailNotifyToggle').checked = settings.email_notify;
+            if (typeof settings.startup_tips === 'boolean') document.getElementById('startupTipsToggle').checked = settings.startup_tips;
+            if (typeof settings.compact_mode === 'boolean') document.getElementById('compactModeToggle').checked = settings.compact_mode;
+            if (typeof settings.animations_enabled === 'boolean') document.getElementById('animationsToggle').checked = settings.animations_enabled;
+            if (typeof settings.ai_personalize === 'boolean') document.getElementById('aiPersonalizeToggle').checked = settings.ai_personalize;
+            
+            // v1.1.23: Skemi Control toggles
+            if (typeof settings.auto_create_desktop === 'boolean') document.getElementById('autoCreateDesktopToggle').checked = settings.auto_create_desktop;
+            if (typeof settings.prefer_app === 'boolean') document.getElementById('preferAppToggle').checked = settings.prefer_app;
+        }
+
+
+
+        const userData = loadUserData();
+
+        document.getElementById('ageTag').value = userData.age_group || 'middle';
+
+        document.getElementById('ageRange').value = userData.age_range || '';
+        applyStoredSettingsToControls(userData.settings || {});
+
+        const settingsPack = () => window.languageManager?.pack?.settings || {};
+
+        const authPack = () => window.languageManager?.pack?.auth || {};
+
+
+
+        document.getElementById('saveChangesBtn').addEventListener('click', async () => {
+
+            const next = saveUserData({
+
+                age_group: document.getElementById('ageTag').value,
+
+                age_range: document.getElementById('ageRange').value.trim(),
+
+                theme: localStorage.getItem('skemi-theme') || 'light',
+
+                language: localStorage.getItem('skemi_language') || 'vi',
+
+                settings: collectSettingsState()
+
+            });
+
+            await syncUserProfile(next);
+
+            hideSaveBar();
+
+            if (window.showToast) {
+
+                window.showToast(settingsPack().profileSaved || 'Settings saved.', 'success');
+
+            }
+
+        });
+
+
+
+        document.getElementById('discardChangesBtn').addEventListener('click', () => {
+
+            // Reload saved values from localStorage
+
+            const stored = loadUserData();
+
+            document.getElementById('ageTag').value = stored.age_group || 'middle';
+
+            document.getElementById('ageRange').value = stored.age_range || '';
+            applyStoredSettingsToControls(stored.settings || {});
+
+            hideSaveBar();
+
+        });
+
+
+
+        document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
+
+            const next = saveUserData({
+
+                age_group: document.getElementById('ageTag').value,
+
+                age_range: document.getElementById('ageRange').value.trim(),
+
+                theme: localStorage.getItem('skemi-theme') || 'light',
+
+                language: localStorage.getItem('skemi_language') || 'vi',
+
+                settings: collectSettingsState()
+
+            });
+
+            await syncUserProfile(next);
+
+            if (window.showToast) {
+
+                window.showToast(settingsPack().profileSaved || 'Account information saved.', 'success');
+
+            } else {
+
+                alert(settingsPack().profileSaved || 'Account information saved.');
+
+            }
+
+        });
+
+
+
+        document.getElementById('resetProfileBtn')?.addEventListener('click', async () => {
+
+            document.getElementById('ageTag').value = 'middle';
+
+            document.getElementById('ageRange').value = '';
+
+            const next = saveUserData({
+                age_group: 'middle',
+                age_range: '',
+                theme: localStorage.getItem('skemi-theme') || 'light',
+                language: localStorage.getItem('skemi_language') || 'vi',
+                settings: collectSettingsState()
+            });
+
+            await syncUserProfile(next);
+
+        });
+
+
+
+        document.getElementById('clearLocalDataBtn').addEventListener('click', async () => {
+
+            const keepTheme = localStorage.getItem('skemi-theme');
+
+            const keepLang = localStorage.getItem('skemi_language');
+
+            localStorage.clear();
+            try {
+                sessionStorage.clear();
+            } catch {}
+
+            if (keepTheme) localStorage.setItem('skemi-theme', keepTheme);
+
+            if (keepLang) localStorage.setItem('skemi_language', keepLang);
+
+            if (currentAuthUser) await syncUserProfile({ theme: keepTheme || 'light', language: keepLang || 'en' });
+
+            alert(settingsPack().localCleared || 'Local browser data cleared.');
+
+            location.reload();
+
+        });
+
+
+
+        const TRACKED_TOGGLES = ['quotaWarnToggle', 'securityWarnToggle', 'ephemeralChatToggle',
+            'desktopNotifyToggle', 'soundNotifyToggle', 'emailNotifyToggle',
+            'startupTipsToggle', 'compactModeToggle', 'animationsToggle', 'aiPersonalizeToggle',
+            'autoCreateDesktopToggle', 'preferAppToggle'];
+
+
+
+        // --- Floating Save Bar logic (Event Delegation for dynamic support) ---
+
+        const saveBar = document.getElementById('saveBar');
+
+
+
+        function showSaveBar() { saveBar.classList.add('visible'); }
+
+        function hideSaveBar() { saveBar.classList.remove('visible'); }
+
+
+
+        document.addEventListener('change', (e) => {
+
+            if (e.target.classList.contains('settings-trackable')) {
+
+                showSaveBar();
+
+            }
+
+        });
+
+        document.addEventListener('input', (e) => {
+
+            if (e.target.classList.contains('settings-trackable')) {
+
+                showSaveBar();
+
+            }
+
+        });
+
+
+
+
+
+        const applyAuthView = (user) => {
+            const isGuest = !user;
+            document.body.classList.remove('auth-pending');
+            document.body.classList.toggle('guest-mode', isGuest);
+            if (authGuard) authGuard.hidden = !isGuest;
+            if (settingsLayout) settingsLayout.setAttribute('aria-hidden', isGuest ? 'true' : 'false');
+            if (logoutBtn) logoutBtn.style.display = isGuest ? 'none' : '';
+        };
+
+        const renderAuthState = (user) => {
+
+            const display = document.getElementById('user-display');
+
+            const email = document.getElementById('user-email');
+
+            const avatar = document.getElementById('user-avatar-large');
+
+            const verification = document.getElementById('verificationStatus');
+
+
+
+            if (user) {
+
+                const name = user.displayName || user.email?.split('@')[0] || settingsPack().defaultUser || 'Skemi user';
+
+                display.textContent = name;
+
+                email.textContent = user.email || '';
+
+                avatar.textContent = name.charAt(0).toUpperCase();
+
+
+
+                verification.textContent = user.emailVerified
+
+                    ? (settingsPack().verified || 'Email verified.')
+
+                    : (settingsPack().unverified || 'Email not verified. Please verify it to protect your account.');
+
+            } else {
+
+                display.textContent = authPack().guest || 'Guest';
+
+                email.textContent = authPack().sync || 'Log in to sync your data.';
+
+                avatar.textContent = 'G';
+
+                verification.textContent = settingsPack().notLoggedIn || 'Not logged in.';
+
+            }
+
+        };
+
+
+
+        onAuthStateChanged(auth, async (user) => {
+            currentAuthUser = user;
+            applyAuthView(user);
+
+            if (user) {
+
+                await loadRemoteSettings(user);
+
+                const remoteTheme = localStorage.getItem('skemi-theme') || 'light';
+
+                setTheme(remoteTheme);
+
+            }
+
+            renderAuthState(user);
+
+        });
+
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (document.body.classList.contains('auth-pending')) {
+                    const fallbackUser = auth.currentUser || null;
+                    currentAuthUser = fallbackUser;
+                    applyAuthView(fallbackUser);
+                    renderAuthState(fallbackUser);
+                }
+            }, 1200);
+        });
+
+
+
+        window.addEventListener('languageChanged', () => {
+            renderAuthState(currentAuthUser);
+            if (activityChart || topicChart || timeChart || document.getElementById('tab-statistics')?.classList.contains('active')) {
+                requestAnimationFrame(() => initStats(true));
+            }
+            void syncUserProfile({ language: localStorage.getItem('skemi_language') || 'en' });
+        });
+
+        window.addEventListener('themeChanged', () => {
+            if (activityChart || topicChart || timeChart || document.getElementById('tab-statistics')?.classList.contains('active')) {
+                requestAnimationFrame(() => initStats(true));
+            }
+        });
+
+
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+
+            try {
+
+                if (auth.currentUser) {
+
+                    await signOut(auth);
+
+                }
+
+            } catch (error) {
+
+                console.error('Sign out error', error);
+
+            }
+
+            window.location.href = 'Login.html';
+
+        });
+
+    </script>
+    <script src="./Js/Skills.js?v=20260624d"></script>
+    <script>
+        // Wire the "Kỹ năng & Kết nối" toggles to the SkemiSkills registry: restore
+        // saved state on load, persist + broadcast on every change (applies live to
+        // every other section — no reload).
+        (function () {
+            function syncAgentCountRow() {
+                const on = document.getElementById('skillMultiAgent')?.checked;
+                const row = document.getElementById('skillAgentCountRow');
+                if (row) row.style.opacity = on ? '1' : '.5';
+                const inp = document.getElementById('skillAgentCount');
+                if (inp) inp.disabled = !on;
+            }
+            function restore() {
+                if (!window.SkemiSkills) return;
+                const s = window.SkemiSkills.all();
+                document.querySelectorAll('[data-skill]').forEach((el) => {
+                    const k = el.getAttribute('data-skill');
+                    if (el.type === 'checkbox') el.checked = !!s[k];
+                    else el.value = s[k];
+                });
+                syncAgentCountRow();
+            }
+            function bind() {
+                document.querySelectorAll('[data-skill]').forEach((el) => {
+                    el.addEventListener('change', () => {
+                        const k = el.getAttribute('data-skill');
+                        const v = el.type === 'checkbox' ? el.checked
+                                : (el.type === 'number' ? Math.max(1, Math.min(16, parseInt(el.value, 10) || 4)) : el.value);
+                        if (el.type === 'number') el.value = v;
+                        window.SkemiSkills?.set(k, v);
+                        if (k === 'multi_agent') syncAgentCountRow();
+                    });
+                });
+            }
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { restore(); bind(); }, { once: true });
+            else { restore(); bind(); }
+        })();
+    </script>
+    <!-- Master switch for AI-completion notifications (GlobalStatus.js reads this key). -->
+    <script>
+        (function () {
+            function wire() {
+                var el = document.getElementById('aiCompleteNotifyToggle');
+                if (!el) return;
+                try { el.checked = localStorage.getItem('skemi_notifications_enabled') !== '0'; } catch (e) {}
+                el.addEventListener('change', function () {
+                    try {
+                        localStorage.setItem('skemi_notifications_enabled', el.checked ? '1' : '0');
+                        localStorage.setItem('skemi_notify_prompted', '1');
+                    } catch (e) {}
+                });
+            }
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire, { once: true });
+            else wire();
+        })();
+    </script>
+    <script src="./Js/GlobalStatus.js?v=20260704a"></script>
+</body>
+
+
+
+</html>

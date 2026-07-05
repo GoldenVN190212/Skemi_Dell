@@ -1,153 +1,454 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="/Css/design-tokens.css?v=20260701b">
+    <link rel="stylesheet" href="/Css/Motion.css?v=20260607k">
+    <script defer src="/Js/motion.js?v=20260531a"></script>
+        <!-- Sync guard runs before any module — wipes stale user data if no Firebase session. -->
+        <script src="/Js/guest-storage-guard.js?v=20260527"></script>
+        <!-- Per-account namespacing — feature scripts use loadUserData()/saveUserData() to scope by Firebase uid. -->
+        <script src="/Js/account-storage.js?v=20260527"></script>
+        <script type="module" src="/Js/Auth.js?v=20260527"></script>
+        <script type="module" src="/Js/UserScopedStorage.js?v=20260527"></script>
+        <script type="module" src="/Js/CloudSync.js?v=20260702b"></script>
+        <script src="/Js/UserDataManager.js?v=20260531b"></script>
+        <script src="/Js/Preferences.js?v=20260621a"></script>
+        <script src="/Js/UI.js?v=20260510"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skemi - AI Mindmap Learning</title>
-    <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="./Css/Home.css" />
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <meta name="description"
+    content="Skemi Studio - M&ocirc;i tr&#432;&#7901;ng s&aacute;ng t&#7841;o n&#7909;i dung AI chuy&ecirc;n nghi&#7873; p.">
+    <title>Skemi Studio</title>
+    <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9733;</text></svg>">
+    <link rel="stylesheet" href="./Css/Global.css?v=20260629c" />
+    <link rel="stylesheet" href="./Css/Polish.css?v=20260630d" />
+    <link rel="stylesheet" href="./Css/AIChat.css?v=20260409c" />
+    <link rel="stylesheet" href="./Css/Studio2.css?v=20260608d" />
+    <script src="./Js/preferences.js"></script>
 </head>
 
 <body>
-    <nav id="navbar" class="navbar">
-        <div class="logo">Skemi</div>
-        <ul class="nav-links">
-            <li><a href="Home.html" class="active">🏠 Home</a></li>
-            <li><a href="Chart.html">📚 Chart</a></li>
-            <li><a href="Chatbot.html">🤖 Chatbot</a></li>
-            <li><a href="Chat.html">Chat</a></li>
-        </ul>
-        <div id="auth-buttons"></div>
-        <button id="logoutBtn" type="button">🚪 Logout</button>
+    <nav class="navbar">
+        <a href="Home.html" class="logo">
+            <span class="logo-mark">★</span>
+            <span class="logo-text">Skemi</span>
+        </a>
+        <div class="navbar-shortcuts" aria-label="&#272;i&#7873;u h&#432;&#7899;ng ch&iacute;nh">
+            <a href="Home.html" class="nav-shortcut active">
+                <span>&#127891;</span>
+                <span>Studio</span>
+            </a>
+            <a href="Search.html" class="nav-shortcut">
+                <span>&#128269;</span>
+                <span>Tra c&#7913;u</span>
+            </a>
+            <a href="Quiz.html" class="nav-shortcut">
+                <span>&#128221;</span>
+                <span>Quiz</span>
+            </a>
+            <a href="/Chat.html" class="nav-shortcut">
+                <span>&#128172;</span>
+                <span>Chat</span>
+            </a>
+        </div>
+        <div class="navbar-actions">
+            <div id="auth-buttons"></div>
+        </div>
     </nav>
 
-    <header>
-        <h1>Skemi - AI Mindmap</h1>
-        <p>Học thông minh cùng AI tạo Mindmap và công cụ thủ công</p>
-    </header>
-
-    <div class="container-wrapper">
-        <aside class="sidebar">
-            <nav class="sidebar-nav">
-                <h2>📁 Quản lý Mindmap</h2>
-                
-                <section class="templates">
-                    <h3>💡 Mẫu (Templates)</h3>
-                    <ul id="template-list" class="list-unstyled">
-                        <li data-template-id="1">Sơ đồ Tư duy Cổ điển</li>
-                        <li data-template-id="2">Sơ đồ Hình cây</li>
-                        <li data-template-id="3">Sơ đồ Dòng thời gian</li>
-                    </ul>
-                    <button class="btn-full">Xem tất cả mẫu</button>
-                </section>
-
-                <hr>
-
-                <section class="projects">
-                    <h3>💾 Dự án của bạn</h3>
-                    <ul id="project-list" class="list-unstyled">
-                        <li id="loading-project-msg">Đang tải dữ liệu...</li>
-                    </ul>
-                    <button class="btn-full">Quản lý Dự án</button>
-                </section>
-            </nav>
+    <div class="app-layout">
+        <aside class="app-sidebar" id="appSidebar">
+            <ul class="sidebar-links">
+                <li>
+                    <a href="Home.html" class="active" id="mindmap-link">
+                        <span class="icon">&#127891;</span>
+                        <span>Studio</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="Search.html" id="search-link">
+                        <span class="icon">&#128269;</span>
+                        <span>Tra c&#7913;u</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="Quiz.html" id="quiz-link">
+                        <span class="icon">&#128221;</span>
+                        <span>Quiz</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/Chat.html" id="chat-link">
+                        <span class="icon">&#128172;</span>
+                        <span>Chat</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="PromptAgent.html" id="prompt-agent-link">
+                        <span class="icon">&#9889;</span>
+                        <span>Prompt Agent</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="Computer.html" id="computer-link">
+                        <span class="icon">&#128421;</span>
+                        <span>Skemi Control</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="Remote.html" id="remote-link">
+                        <span class="icon">&#128225;</span>
+                        <span>&#272;i&#7873;u khi&#7875;n t&#7915; xa</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="Settings.html" id="settings-link">
+                        <span class="icon">&#9881;</span>
+                        <span>C&agrave;i &#273;&#7863;t</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button class="toggle-sidebar-btn" id="toggleSidebar" title="Thu g&#7901;n menu">
+                    <span>◀</span>
+                </button>
+            </div>
         </aside>
 
-        <main class="main-content">
-            
-            <section class="mode-selector">
-                <h2>Chọn Chế độ</h2>
-                <div class="mode-buttons">
-                    <button id="mode-ai" class="mode-btn active">🧠 AI Tạo Mindmap</button>
-                    <button id="mode-manual" class="mode-btn">✍️ Vẽ Thủ công</button>
+        <div class="main-content-wrapper">
+            <main class="studio-page">
+
+                <!-- PROJECT HUB (Notebook Library Hub) -->
+                <section id="projectHub" class="project-hub">
+                    <div class="hub-header">
+                        <div class="header-content">
+                            <h2
+                                style="font-family: var(--font-stack, 'Google Sans', sans-serif); letter-spacing: -0.5px;">
+                                Sổ ghi chú gần đây</h2>
+                        </div>
+                    </div>
+
+                    <div id="projectHubStatus" class="project-status"></div>
+
+                    <div id="createProjectArea" class="create-project-v2 hidden">
+                        <input type="text" id="projectHubName" placeholder="Tên sổ ghi chú mới..."
+                            class="modern-textarea-v2">
+                        <div class="create-actions">
+                            <button id="cancelCreateBtn" class="btn btn-secondary">Hủy</button>
+                            <button id="confirmCreateBtn" class="btn btn-primary">Tạo ngay</button>
+                        </div>
+                    </div>
+
+                    <div id="projectList" class="project-list">
+                        <!-- Create Notebook Card prepended here dynamically -->
+                    </div>
+                </section>
+
+                <!-- WORKBENCH (Shown when a project is active) -->
+                <div id="studioWorkbench" class="workbench-container hidden">
+                    <!-- COLUMN 1: LIBRARY (SOURCES) -->
+                    <aside class="column-library">
+                        <div class="glass-panel">
+                            <div class="panel-header" style="justify-content: flex-start; gap: 10px;">
+                                <h3 style="text-transform: none; font-size: 1.2rem; font-weight: 500;">Nguồn</h3>
+                            </div>
+
+                            <div class="library-search-box">
+                                <button class="btn-add-source-notebooklm" id="openSourceModalBtn">
+                                    <span class="icon">&#65291;</span> Thêm nguồn
+                                </button>
+
+                                <div class="search-container-notebooklm">
+                                    <div class="search-input-wrap">
+                                        <span class="search-icon">&#128269;</span>
+                                        <input type="text" id="libSearchInput"
+                                            placeholder="Tìm nguồn mới trên web" class="modern-input">
+                                    </div>
+                                    <div class="search-actions-notebooklm">
+                                        <div class="search-filters">
+                                            <button id="btnLibDeepSearchToggle" class="filter-btn"><span
+                                                    class="icon">&#10024;</span> Nghiên cứu sâu</button>
+                                        </div>
+                                        <button id="btnLibSearch" class="btn-lib-action" title="Tra cứu">
+                                            <span class="icon">&#8594;</span>
+                                            <div class="spinner hidden"></div>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="source-progress">
+                                <div id="selectAllSourcesRow" class="progress-info"
+                                    style="justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: 500;">
+                                    <span>Chọn tất cả nguồn</span>
+                                    <input type="checkbox" id="selectAllSources" checked
+                                        style="width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--border-medium); margin: 0;">
+                                </div>
+                            </div>
+
+                            <div class="panel-content">
+                                <ul id="notebookSourceList" class="source-list"></ul>
+                                <div id="noSourcesPlaceholder" class="empty-placeholder">
+                                    <p>Ch&#432;a c&oacute; ngu&#7891;n n&agrave;o. H&atilde;y th&ecirc;m ngu&#7891;n
+                                        ho&#7863;c t&igrave;m ki&#7871;m &#273;&#7875; AI c&oacute; d&#7919; li&#7879;u
+                                        ph&acirc;n t&iacute;ch.</p>
+                                </div>
+                            </div>
+
+                            <div class="panel-footer">
+                                <button class="btn btn-outline btn-full" id="backToProjectsBtn">&#8592; Studio
+                                    Hub</button>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- COLUMN 2: FORGE (Chat) -->
+                    <main class="column-forge">
+                        <div class="glass-panel chat-interface">
+                            <!-- Notebook Guide Removed -->
+
+                            <div class="panel-header"
+                                style="justify-content: center; position: absolute; width: 100%; top: 0; background: transparent; border: none; z-index: 5;">
+                                <div class="ai-status-pill">Skemi AI đang sẵn sàng</div>
+                            </div>
+
+                            <div class="panel-content chat-messages" id="notebookMessages">
+                                <!-- Messages will appear here -->
+                            </div>
+
+                            <div class="floating-input-wrap">
+                                <div class="input-main notebooklm-input">
+                                    <textarea id="notebookInput" class="modern-input-field"
+                                        placeholder="Hỏi AI hoặc nhập yêu cầu để tạo..."></textarea>
+                                    <button id="notebookSendBtn" class="btn-chat-send">
+                                        <span class="send-icon"></span>
+                                        <div class="spinner hidden"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+
+                    <!-- COLUMN 3: ALCHEMIST -->
+                    <aside class="column-alchemist alchemist-notebooklm">
+                        <div class="glass-panel">
+                            <div class="panel-header" style="justify-content: flex-start; gap: 10px;">
+                                <h3 style="text-transform: none; font-size: 1.2rem; font-weight: 500;">Studio</h3>
+                                <span class="panel-window-icon">&#10064;</span>
+                            </div>
+
+                            <div class="panel-content" style="padding: 16px;">
+                                <div id="panel-workspace" class="studio-pane active">
+                                    <div class="synthesis-hub">
+                                        <div class="action-grid-notebooklm">
+                                            <div class="action-pill color-blue" data-action="podcast">
+                                                <span class="action-icon">&#127897;</span>
+                                                <span class="action-label">Tổng quan bằng âm thanh</span>
+                                                <div class="action-edit-btn">&#9998;</div>
+                                            </div>
+                                            <div class="action-pill color-yellow" data-action="presentation">
+                                                <span class="action-icon">&#128187;</span>
+                                                <span class="action-label">Bản trình bày</span>
+                                                <div class="action-edit-btn">&#9998;</div>
+                                            </div>
+                                            <div class="action-pill color-green" data-action="video">
+                                                <span class="action-icon">&#128250;</span>
+                                                <span class="action-label">Tổng quan bằng video</span>
+                                            </div>
+                                            <div class="action-pill color-purple" data-action="mindmap">
+                                                <span class="action-icon">&#129504;</span>
+                                                <span class="action-label">Bản đồ tư duy</span>
+                                            </div>
+                                            <div class="action-pill color-orange" data-action="report">
+                                                <span class="action-icon">&#128196;</span>
+                                                <span class="action-label">Báo cáo</span>
+                                            </div>
+                                            <div class="action-pill color-red" data-action="flashcard">
+                                                <span class="action-icon">&#128218;</span>
+                                                <span class="action-label">Thẻ ghi nhớ</span>
+                                                <div class="action-edit-btn">&#9998;</div>
+                                            </div>
+                                            <div class="action-pill color-teal" data-action="quiz">
+                                                <span class="action-icon">&#128221;</span>
+                                                <span class="action-label">Bài kiểm tra</span>
+                                                <div class="action-edit-btn">&#9998;</div>
+                                            </div>
+                                            <div class="action-pill color-pink" data-action="infographic">
+                                                <span class="action-icon">&#128202;</span>
+                                                <span class="action-label">Bản đồ họa thông tin</span>
+                                                <div class="action-edit-btn">&#9998;</div>
+                                            </div>
+                                            <div class="action-pill color-indigo" data-action="dashboard">
+                                                <span class="action-icon">&#128200;</span>
+                                                <span class="action-label">Bảng dữ liệu</span>
+                                                <div class="action-edit-btn">&#9998;</div>
+                                            </div>
+                                            <div class="action-pill color-orange" data-action="comic">
+                                                <span class="action-icon">&#128064;</span>
+                                                <span class="action-label">Truyện tranh</span>
+                                                <div class="action-edit-btn">&#9998;</div>
+                                            </div>
+                                            <div class="action-pill color-blue" data-action="book">
+                                                <span class="action-icon">&#128214;</span>
+                                                <span class="action-label">Sách</span>
+                                                <div class="action-edit-btn">&#9998;</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Output viewport Minimal -->
+                                        <div id="studioPreview" class="output-viewport-minimal hidden mt-6"></div>
+
+                                        <!-- Note Item Container -->
+                                        <div class="generated-note-list mt-6" id="generatedNoteList">
+                                            <!-- Dynamically added notes will appear here -->
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-8 text-center">
+                                        <button class="btn-create-note-notebooklm" id="createNoteBtn">
+                                            <span class="icon">&#128221;</span> Thêm ghi chú
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- PANEL: BUILDER -->
+                                <div id="panel-builder" class="studio-pane">
+                                    <div class="builder-hub p-4">
+                                        <div class="form-group mb-4">
+                                            <label>T&ecirc;n nh&aacute;nh ch&iacute;nh</label>
+                                            <input type="text" id="builderTitle" class="glass-input"
+                                                placeholder="V&iacute; d&#7909;: L&#7883;ch s&#7917; Vi&#7873;t Nam...">
+                                        </div>
+                                        <div class="form-group mb-4">
+                                            <label>Ch&#7911; &#273;&#7873; hi&#7873;n th&#7883;</label>
+                                            <select id="builderType" class="glass-input">
+                                                <option value="mindmap">Mindmap</option>
+                                                <option value="report">Report</option>
+                                                <option value="chart">Chart</option>
+                                            </select>
+                                        </div>
+                                        <div class="builder-actions pt-4 border-top">
+                                            <button class="btn btn-primary w-100 mb-2" id="builderRenderBtn">Th&#7921;c
+                                                thi Builder</button>
+                                            <p class="text-xs text-muted">D&ugrave;ng Builder &#273;&#7875; c&#7845;u
+                                                tr&uacute;c l&#7841;i d&#7921; &aacute;n theo c&aacute;c nh&aacute;nh
+                                                l&#7899;n.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
                 </div>
-            </section>
-            
-            <div id="mindmap-workspace">
-                <section id="ai-mode" class="mindmap-tool active">
-                    <h2>📚 AI Phân tích & Tạo Mindmap</h2>
-                    
-                    <div class="input-mode-selector">
-                        <button id="input-mode-text" class="input-mode-btn active">✍️ Text-to-Mindmap</button>
-                        <button id="input-mode-file" class="input-mode-btn">📂 File/Image-to-Mindmap</button>
-                    </div>
-                    <div id="text-input-area" class="input-area">
-                        <textarea id="textPrompt" placeholder="Nhập yêu cầu (vd: Phác thảo Mindmap về 'Các giai đoạn của Phát triển Web Frontend', dùng cho bài thuyết trình...)" rows="6"></textarea>
-                        <button id="generateTextBtn" class="import-button">🚀 Tạo Mindmap từ Văn bản</button>
-                    </div>
-                    <div id="file-upload-area" class="input-area hidden">
-                        <input type="file" id="fileInput" accept="
-                            .txt,.pdf,.png,.jpg,.jpeg,.webp,
-                            .doc,.docx,
-                            .ppt,.pptx,
-                            .xls,.xlsx,
-                            .mp3,.wav,.m4a,.ogg,
-                            .mp4,.mov,.avi,.mkv
-                        " hidden /> 
+            </main>
+        </div>
+    </div>
 
-                        <div id="dropArea" class="upload-box">
-                            <div class="icon">☁️</div>
-                            <p>Kéo thả hình ảnh/tài liệu (.pdf, .docx, .png, .jpg, .mp4, .mp3...)</p>
-                            <p class="small-text">hoặc nhấn <strong>Ctrl+V</strong> để dán ảnh</p>
-                            
-                            <button id="browseBtn" class="browse-btn">📂 Chọn file từ máy</button>
-                        </div>
-
-                        <div class="main-buttons">
-                            <button id="importBtn" class="import-button" disabled>🚀 Phân tích & Tạo Mindmap</button>
-                            <button id="clearBtn" class="clear-button" disabled>🗑️ Xóa File đang chọn</button> 
-                        </div>
-                    </div>
-                    <div class="summary-detail-buttons ai-control-btns">
-                        <button id="summaryBtn" disabled>📝 Tóm tắt</button>
-                        <button id="detailBtn" disabled>🔍 Chi tiết</button>
-                    </div>
-                    
-                    <div class="info-panel">
-                        <div id="summaryContainer" class="info-content">
-                            <h3>📝 Tóm tắt ý chính</h3>
-                        </div>
-                        <div id="detailContainer" class="info-content hidden">
-                            <h3>🔍 Chi tiết nội dung trích xuất</h3>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="manual-mode" class="mindmap-tool hidden">
-                    <h2>✍️ Công cụ Vẽ Mindmap Thủ công</h2>
-                    <div class="manual-tools">
-                        <button id="addNodeBtn">➕ Thêm Node</button>
-                        <button id="connectNodesBtn">🔗 Nối Nodes</button>
-                        <button id="editNodeBtn">✏️ Sửa Node</button>
-                        <button id="saveManualBtn">💾 Lưu Dự án</button>
-                    </div>
-                    <p class="instruction-text">Sử dụng các công cụ trên để vẽ Mindmap theo ý muốn.</p>
-                </section>
-
-                <section class="mindmap-display">
-                    <h2>🧠 Sơ đồ Tư duy</h2>
-                    
-                    <canvas id="mindmapCanvas" width="800" height="600"></canvas>
-                </section>
+    <!-- MODALS -->
+    <div id="sourceDetailOverlay" class="source-detail-overlay hidden">
+        <div class="source-detail-container">
+            <div class="source-detail-header">
+                <h3 id="sourceDetailTitle">Tên nguồn</h3>
+                <button id="btnCloseSourceDetail" class="btn-close-source-detail">&times;</button>
             </div>
-            
-            <section class="actions">
-                <button id="completeBtn">✅ Hoàn thành bài học</button>
-            </section>
-        </main>
-    </div> 
-    
-    <footer>
-        <p>© 2025 Skemi AI Learning</p>
-    </footer>
-    <script type="text/javascript" src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
-    <script type="module" src="./Js/Home.js"></script>
-    <script type="module" src="./Js/User_navbar.js"></script>
+            <div class="source-detail-content">
+                <div class="source-summary-box">
+                    <div class="summary-tag">
+                        <span class="icon">✨</span> Hướng dẫn về nguồn
+                    </div>
+                    <div id="sourceDetailSummary" class="summary-text">
+                        AI đang tóm tắt nguồn này cho bạn...
+                    </div>
+                </div>
+                <div class="full-content-area">
+                    <h4 id="sourceDetailContentTitle">Nội dung gốc</h4>
+                    <div id="sourceDetailFullText"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results Staging Modal -->
+    <div id="searchStagingOverlay" class="search-staging-overlay hidden">
+        <div class="search-staging-container">
+            <div class="staging-header">
+                <h3>🔍 Kết quả tìm kiếm mới</h3>
+                <button id="btnCloseStaging" class="btn-close-staging">&times;</button>
+            </div>
+            <div class="staging-content">
+                <p class="staging-hint">Chọn những nguồn bạn muốn thêm vào sổ ghi chú này.</p>
+                <div id="stagingList" class="staging-list"></div>
+
+                <div class="staging-loading hidden" id="stagingLoading">
+                    <div class="shimmer-card"></div>
+                    <div class="shimmer-card"></div>
+                </div>
+            </div>
+            <div class="staging-footer">
+                <button id="btnCancelStaging" class="btn btn-secondary">Bỏ qua</button>
+                <button id="btnConfirmStaging" class="btn btn-primary disabled">Thêm vào Notebook (<span
+                        id="stagingCount">0</span>)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sourceModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Th&ecirc;m ngu&#7891;n m&#7899;i</h2>
+                <button class="modal-close" id="closeSourceModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="source-methods-grid">
+                    <div class="method-card" onclick="document.getElementById('notebookFileInput').click()">
+                        <span class="method-icon">&#128196;</span>
+                        <span class="method-name">T&#7841;i t&#7873; p l&ecirc;n</span>
+                        <input type="file" id="notebookFileInput" class="hidden" multiple>
+                    </div>
+                    <div class="method-card" id="methodPaste">
+                        <span class="method-icon">&#128221;</span>
+                        <span class="method-name">V&#259;n b&#7843;n sao ch&eacute;p</span>
+                    </div>
+                    <div class="method-card" id="methodUrl">
+                        <span class="method-icon">&#128279;</span>
+                        <span class="method-name">URL Trang web</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script type="module" src="./Js/Galaxy.js"></script>
+    <!-- 52+ Language Packs - Load before LanguageManager -->
+    <script src="./Js/i18n-packs.js?v=20260601b"></script>
+    <script src="./Js/upgrade-nudge.js?v=20260531a"></script>
+    <script src="./Js/entitlements.js?v=20260701d"></script>
+    <script type="module" src="./Js/User_navbar.js?v=20260702b"></script>
+    <script type="module" src="./Js/LanguageManager.js?v=20260701e"></script>
+    <script type="module" src="./Js/Home.js?v=20260702b"></script>
+    <script type="module" src="./Js/AIChat.js?v=20260702a"></script>
+    <script src="./Js/GlobalStatus.js?v=20260704a"></script>
+    <script src="./Js/LegionSectionConfig.js?v=20260705a"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Apply saved theme
+            const savedTheme = localStorage.getItem('skemi-theme') || 'galaxy';
+            document.body.className = `${savedTheme}-mode`;
+
+            const toggleBtn = document.getElementById('toggleSidebar');
+            if (toggleBtn) {
+                const sidebar = document.getElementById('appSidebar');
+                toggleBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('collapsed');
+                    const span = toggleBtn.querySelector('span');
+                    if (span) span.innerText = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

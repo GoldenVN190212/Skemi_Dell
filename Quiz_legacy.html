@@ -1,0 +1,1036 @@
+﻿<!DOCTYPE html>
+
+<html lang="vi">
+
+
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/Css/design-tokens.css?v=20260701b">
+    <link rel="stylesheet" href="/Css/Motion.css?v=20260607k">
+    <script defer src="/Js/motion.js?v=20260531a"></script>
+        <script src="/Js/guest-storage-guard.js?v=20260527"></script>
+        <script src="/Js/account-storage.js?v=20260527"></script>
+        <script type="module" src="/Js/Auth.js?v=20260527"></script>
+        <script type="module" src="/Js/UserScopedStorage.js?v=20260527"></script>
+        <script type="module" src="/Js/CloudSync.js?v=20260702b"></script>
+        <script src="/Js/UserDataManager.js?v=20260531b"></script>
+        <script src="/Js/Preferences.js?v=20260621a"></script>
+        <script src="/Js/UI.js?v=20260510"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Skemi Quiz - phong quiz private, quiz cong khai hang thang và bang quota nguoi dung.">
+    <title>Skemi Quiz</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9733;</text></svg>">
+    <link rel="stylesheet" href="./Css/Global.css?v=20260629c">
+    <link rel="stylesheet" href="./Css/Polish.css?v=20260630d" />
+    <link rel="stylesheet" href="./Css/Features.css">
+    <link rel="stylesheet" href="./Css/AIChat.css?v=20260409c" />
+    <script src="./Js/preferences.js"></script>
+    <style>
+    .quiz-page {
+    padding: 28px;
+    }
+    .quiz-layout {
+    max-width: 1380px;
+    margin: 0 auto;
+    }
+    .quiz-hero {
+    position: relative;
+    overflow: hidden;
+    background:
+    radial-gradient(circle at top right, rgba(56, 189, 248, 0.2), transparent 30%),
+    radial-gradient(circle at left bottom, rgba(99, 102, 241, 0.22), transparent 34%),
+    linear-gradient(135deg, rgba(10, 16, 30, 0.96), rgba(16, 24, 40, 0.88));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 30px;
+    padding: 34px;
+    margin-bottom: 24px;
+    box-shadow: 0 28px 70px rgba(5, 10, 20, 0.35);
+    }
+    .quiz-hero::after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+    }
+    .quiz-hero-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.95fr);
+    gap: 18px;
+    align-items: stretch;
+    }
+    .quiz-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+    background: rgba(99, 102, 241, 0.14);
+    border: 1px solid rgba(129, 140, 248, 0.22);
+    color: #c7d2fe;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    }
+    .quiz-kicker::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #60a5fa;
+    box-shadow: 0 0 0 6px rgba(96, 165, 250, 0.12);
+    }
+    .quiz-hero h1 {
+    font-size: clamp(2.2rem, 4vw, 3.4rem);
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+    margin-bottom: 12px;
+    color: #f8fbff;
+    }
+    .quiz-hero-copy > p {
+    max-width: 720px;
+    color: rgba(226, 232, 240, 0.78);
+    margin-bottom: 20px;
+    font-size: 1rem;
+    line-height: 1.65;
+    }
+    .quiz-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    }
+    .quiz-pill {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    color: #e2e8f0;
+    font-size: 0.84rem;
+    font-weight: 600;
+    }
+    .quiz-hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    }
+    .quiz-stat {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.56);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    min-height: 94px;
+    }
+    .quiz-stat strong {
+    display: block;
+    font-size: 1.35rem;
+    line-height: 1;
+    color: #ffffff;
+    margin-bottom: 8px;
+    }
+    .quiz-stat span {
+    display: block;
+    color: rgba(226, 232, 240, 0.62);
+    font-size: 0.82rem;
+    line-height: 1.45;
+    }
+    .quiz-hero-card {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.72));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    }
+    .quiz-card-label {
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #93c5fd;
+    font-weight: 700;
+    }
+    .quiz-hero-card h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #f8fbff;
+    }
+    .monthly-topics {
+    display: grid;
+    gap: 12px;
+    }
+    .topic-card {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(2, 6, 23, 0.42);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+    .topic-card h4 {
+    margin: 0 0 6px;
+    color: #ffffff;
+    font-size: 0.98rem;
+    }
+    .topic-card p {
+    margin: 0;
+    color: rgba(226, 232, 240, 0.62);
+    font-size: 0.84rem;
+    line-height: 1.45;
+    }
+    .quiz-main-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 26px;
+    padding: 30px;
+    box-shadow: 0 24px 64px rgba(10, 14, 24, 0.2);
+    }
+    .quiz-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 18px;
+    margin-bottom: 22px;
+    }
+    .quiz-section-head h2 {
+    font-size: 1.65rem;
+    margin-bottom: 8px;
+    letter-spacing: -0.03em;
+    }
+    .quiz-summary {
+    color: var(--text-secondary);
+    max-width: 620px;
+    line-height: 1.6;
+    }
+    .quiz-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    }
+    .arena-launch-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin: 8px 0 20px;
+    }
+    .arena-launch-card {
+    position: relative;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 22px;
+    padding: 18px;
+    background:
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.18), transparent 36%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.78));
+    display: grid;
+    gap: 10px;
+    overflow: hidden;
+    }
+    .arena-launch-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.06), transparent 40%);
+    pointer-events: none;
+    }
+    .arena-launch-card h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #fff;
+    letter-spacing: -0.02em;
+    }
+    .arena-launch-card p {
+    margin: 0;
+    color: rgba(226, 232, 240, 0.62);
+    font-size: 0.84rem;
+    line-height: 1.5;
+    min-height: 40px;
+    }
+    .arena-launch-card .btn {
+    width: 100%;
+    }
+    .quiz-intro,
+    .quiz-note {
+    color: rgba(226, 232, 240, 0.64);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    }
+    @media (max-width: 1100px) {
+    .quiz-hero-grid {
+    grid-template-columns: 1fr;
+    }
+    .quiz-hero-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    }
+    @media (max-width: 980px) {
+    .quiz-page {
+    padding: 20px;
+    }
+    .quiz-section-head {
+    flex-direction: column;
+    align-items: flex-start;
+    }
+    .arena-launch-grid,
+    .quiz-hero-stats {
+    grid-template-columns: 1fr;
+    }
+    }
+    @media (max-width: 640px) {
+    .quiz-page {
+    padding: 16px;
+    }
+    .quiz-hero,
+    .quiz-main-card {
+    padding: 22px;
+    }
+    }
+    /* Setup area is hidden until "Tạo phòng riêng" / "Quiz công khai" is clicked,
+       then slides in — keeps the Quiz landing clean & professional. */
+    #quiz-section { margin-top: 22px; }
+    #quiz-section.quiz-reveal { animation: quizReveal 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    @keyframes quizReveal {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+    }
+    .quiz-setup-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin-bottom: 18px; padding-bottom: 14px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+    }
+    .quiz-setup-title {
+    font-weight: 700; font-size: 0.95rem; color: #e2e8f0; letter-spacing: -0.01em;
+    }
+    .quiz-setup-close {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px; cursor: pointer;
+    font-size: 0.82rem; font-weight: 600;
+    background: rgba(148, 163, 184, 0.12); color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    transition: all 0.18s ease;
+    }
+    .quiz-setup-close:hover { background: rgba(244, 63, 94, 0.18); border-color: rgba(244, 63, 94, 0.4); color: #fecaca; }
+    </style>
+</head>
+
+
+
+<body>
+
+    <nav class="navbar">
+
+        <a href="Home.html" class="logo">
+
+            <span class="logo-mark">&#9733;</span>
+
+            <span class="logo-text">Skemi</span>
+
+        </a>
+
+
+
+        <div class="navbar-shortcuts" aria-label="Điều hướng chính">
+
+            <a href="Home.html" class="nav-shortcut" id="top-studio-link">
+
+                <span>&#127891;</span>
+
+                <span>Studio</span>
+
+            </a>
+
+            <a href="Search.html" class="nav-shortcut" id="top-search-link">
+
+                <span>&#128269;</span>
+
+                <span>Tra cứu</span>
+
+            </a>
+
+            <a href="Quiz.html" class="nav-shortcut active" id="top-quiz-link">
+
+                <span>&#128221;</span>
+
+                <span>Quiz</span>
+
+            </a>
+
+            <a href="/Chat.html" class="nav-shortcut" id="top-chat-link">
+
+                <span>&#128172;</span>
+
+                <span>Chat</span>
+
+            </a>
+
+        </div>
+
+
+
+        <div class="navbar-actions">
+
+            <div id="auth-buttons"></div>
+
+        </div>
+
+    </nav>
+
+
+
+    <div class="app-layout">
+
+        <aside class="app-sidebar" id="appSidebar">
+
+            <ul class="sidebar-links">
+
+                <li>
+
+                    <a href="Home.html" id="mindmap-link">
+
+                        <span class="icon">&#127891;</span>
+
+                        <span>Studio</span>
+
+                    </a>
+
+                </li>
+
+                <li>
+
+                    <a href="Search.html" id="search-link">
+
+                        <span class="icon">&#128269;</span>
+
+                        <span>Tra cuu</span>
+
+                    </a>
+
+                </li>
+
+                <li>
+
+                    <a href="Quiz.html" id="quiz-link" class="active">
+
+                        <span class="icon">&#128221;</span>
+
+                        <span>Quiz</span>
+
+                    </a>
+
+                </li>
+
+                <li>
+
+                    <a href="/Chat.html" id="chat-link">
+
+                        <span class="icon">&#128172;</span>
+
+                        <span>Chat</span>
+
+                    </a>
+
+                </li>
+                <li>
+
+                    <a href="PromptAgent.html" id="prompt-agent-link">
+
+                        <span class="icon">&#9889;</span>
+
+                        <span>Prompt Agent</span>
+
+                    </a>
+
+                </li>
+                <li>
+
+                    <a href="Computer.html" id="computer-link">
+
+                        <span class="icon">&#128421;</span>
+
+                        <span>Skemi Control</span>
+
+                    </a>
+
+                </li>
+
+                <li>
+
+                    <a href="Remote.html" id="remote-link">
+
+                        <span class="icon">&#128225;</span>
+
+                        <span>Điều khiển từ xa</span>
+
+                    </a>
+
+                </li>
+
+                <li>
+
+                    <a href="Settings.html" id="settings-link">
+
+                        <span class="icon">&#9881;</span>
+
+                        <span>Cai dat</span>
+
+                    </a>
+
+                </li>
+
+            </ul>
+
+
+
+            <div class="sidebar-footer">
+
+                <button class="toggle-sidebar-btn" id="toggleSidebar" title="Thu gọn menu">
+
+                    <span>&#9664;</span>
+
+                </button>
+
+            </div>
+
+        </aside>
+
+
+
+        <div class="main-content-wrapper">
+
+            <main class="quiz-page">
+
+                <div class="quiz-layout">
+
+                                        <section class="quiz-hero">
+                        <span class="quiz-kicker">Quiz Arena</span>
+                        <h1>Thi đấu &amp; ôn luyện, có xếp hạng</h1>
+                        <p>Tạo phòng riêng hoặc vào arena công khai — leo bảng xếp hạng và nhận thưởng quota, tất cả gọn trong một nơi.</p>
+                        <div class="quiz-pills">
+                            <span class="quiz-pill">🔒 Phòng riêng</span>
+                            <span class="quiz-pill">🌐 Arena công khai</span>
+                            <span class="quiz-pill">🏆 Bảng xếp hạng</span>
+                            <span class="quiz-pill">🎁 Thưởng quota</span>
+                        </div>
+                    </section>
+                    <section class="quiz-main-card">
+
+                        <div class="quiz-section-head">
+
+                            <div>
+
+                                <h2>Chọn chế độ thi</h2>
+
+                                <p class="quiz-summary">Tạo phòng riêng hoặc nhảy vào một arena có sẵn bên dưới.</p>
+
+                            </div>
+
+
+
+                            <div class="quiz-actions">
+
+                                <button class="btn btn-primary" id="createQuizBtn">＋ Tạo phòng riêng</button>
+
+                                <button class="btn btn-secondary" id="browsePublicBtn">🌐 Quiz công khai</button>
+
+                                <a class="btn btn-outline" href="Settings.html">Xem gói dịch vụ</a>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="arena-launch-grid">
+
+                            <article class="arena-launch-card">
+
+                                <h3>VORTEX Arena</h3>
+
+                                <p>Ra quyết định nhanh, chấm theo độ rõ và độ chắc.</p>
+
+                                <button class="btn btn-outline" type="button" data-arena-launch="vortex">Khởi tạo VORTEX</button>
+
+                            </article>
+
+                            <article class="arena-launch-card">
+
+                                <h3>STRIFE Arena</h3>
+
+                                <p>Đấu 1v1 theo nhiều hiệp, rõ nhịp và dễ theo dõi.</p>
+
+                                <button class="btn btn-outline" type="button" data-arena-launch="strife">Khởi tạo STRIFE</button>
+
+                            </article>
+
+                            <article class="arena-launch-card">
+
+                                <h3>CORE Arena</h3>
+
+                                <p>Sắp xếp lại logic và cấu trúc dưới áp lực thời gian.</p>
+
+                                <button class="btn btn-outline" type="button" data-arena-launch="core">Khởi tạo CORE</button>
+
+                            </article>
+
+                        </div>
+
+
+
+                        <section class="feature-section quiz-section active hidden" id="quiz-section">
+
+                            <div class="quiz-setup-bar">
+                                <span class="quiz-setup-title">Khu vực soạn &amp; tham gia quiz</span>
+                                <button type="button" class="quiz-setup-close" id="collapseQuizBtn">✕ Đóng</button>
+                            </div>
+
+                            <div class="user-quota quiz-quota-overview" data-no-runtime-translate="1"></div>
+
+
+
+                            <div class="quiz-tabs">
+
+                                <button class="quiz-tab active" data-tab="private">Quiz private</button>
+
+                                <button class="quiz-tab" data-tab="public">Quiz công khai</button>
+
+                            </div>
+
+
+
+                            <div class="quiz-content active" id="private-quiz">
+
+                                <div class="quiz-private-layout">
+
+                                    <section class="quiz-builder-card">
+
+                                        <span class="section-eyebrow" id="privateBuilderEyebrow">Trình tạo phòng private</span>
+
+                                        <div class="quiz-builder-head">
+
+                                            <div>
+
+                                                <h3 id="privateBuilderTitle">Tạo phòng quiz private</h3>
+
+                                                <p id="privateBuilderDesc">Tạo phòng riêng, nhập từng câu hỏi thủ công và lưu lại để mời người khác tham gia.</p>
+
+                                            </div>
+
+                                        </div>
+
+
+
+                                        <div class="quiz-form-grid">
+
+                                            <label class="form-field">
+
+                                                <span id="privateRoomTitleLabel">Tên phòng</span>
+
+                                                <input type="text" id="privateRoomTitle" placeholder="Ví dụ: Ôn tập Hóa học lớp 8">
+
+                                            </label>
+
+
+
+                                            <label class="form-field">
+
+                                                <span id="privateRoomAudienceLabel">Nhóm tuổi phù hợp</span>
+
+                                                <select id="privateRoomAudience">
+
+                                                    <option value="young">Học sinh</option>
+
+                                                    <option value="middle">Người lao động</option>
+
+                                                    <option value="senior">Người lớn tuổi</option>
+
+                                                </select>
+
+                                            </label>
+
+
+
+                                            <label class="form-field form-field-full">
+
+                                                <span id="privateRoomSummaryLabel">Mô tả ngắn</span>
+
+                                                <textarea id="privateRoomSummary" rows="3" placeholder="Mục tiêu của phòng quiz này là gì?"></textarea>
+
+                                            </label>
+
+                                        </div>
+
+
+
+                                        <div class="question-editor-card">
+
+                                            <span class="section-eyebrow" id="questionBuilderEyebrow">Trình tạo câu hỏi</span>
+
+                                            <h4 id="questionBuilderTitle">Nhập từng câu hỏi thủ công</h4>
+
+                                            <p id="questionBuilderDesc">Mỗi câu hỏi gồm nội dung, 4 đáp án, đáp án đúng và giải thích ngắn.</p>
+
+
+
+                                            <label class="form-field form-field-full">
+
+                                                <span id="questionTextLabel">Câu hỏi</span>
+
+                                                <textarea id="quizQuestionText" rows="3" placeholder="Nhập nội dung câu hỏi"></textarea>
+
+                                            </label>
+
+
+
+                                            <div class="question-options-grid">
+
+                                                <label class="form-field">
+
+                                                    <span>A</span>
+
+                                                    <input type="text" id="quizOptionA" placeholder="Đáp án A">
+
+                                                </label>
+
+                                                <label class="form-field">
+
+                                                    <span>B</span>
+
+                                                    <input type="text" id="quizOptionB" placeholder="Đáp án B">
+
+                                                </label>
+
+                                                <label class="form-field">
+
+                                                    <span>C</span>
+
+                                                    <input type="text" id="quizOptionC" placeholder="Đáp án C">
+
+                                                </label>
+
+                                                <label class="form-field">
+
+                                                    <span>D</span>
+
+                                                    <input type="text" id="quizOptionD" placeholder="Đáp án D">
+
+                                                </label>
+
+                                            </div>
+
+
+
+                                            <div class="quiz-form-grid">
+
+                                                <label class="form-field">
+
+                                                    <span id="questionAnswerLabel">Đáp án đúng</span>
+
+                                                    <select id="quizCorrectAnswer">
+
+                                                        <option value="0">A</option>
+
+                                                        <option value="1">B</option>
+
+                                                        <option value="2">C</option>
+
+                                                        <option value="3">D</option>
+
+                                                    </select>
+
+                                                </label>
+
+
+
+                                                <label class="form-field">
+
+                                                    <span id="questionExplainLabel">Giải thích ngắn</span>
+
+                                                    <textarea id="quizQuestionExplain" rows="3" placeholder="Giải thích vì sao đáp án này đúng"></textarea>
+
+                                                </label>
+
+                                            </div>
+
+
+
+                                            <div class="quiz-inline-actions">
+
+                                                <button class="btn btn-secondary" id="addQuizQuestionBtn">Thêm câu hỏi</button>
+
+                                                <button class="btn btn-outline" id="resetQuestionEditorBtn">Xóa khung câu hỏi</button>
+
+                                            </div>
+
+                                        </div>
+
+
+
+                                        <div class="draft-question-section">
+
+                                            <div class="draft-question-head">
+
+                                                <h4 id="draftQuestionsTitle">Danh sách câu hỏi trong phòng</h4>
+
+                                                <span class="draft-question-count" id="draftQuestionCount">0 câu hỏi</span>
+
+                                            </div>
+
+                                            <div class="draft-questions" id="draftQuestions" data-no-runtime-translate="1"></div>
+
+                                        </div>
+
+
+
+                                        <div class="quiz-builder-actions">
+
+                                            <button class="btn btn-outline" id="resetPrivateQuizBtn">Làm mới phòng</button>
+
+                                            <button class="btn btn-primary" id="savePrivateQuizBtn">Lưu phòng private</button>
+
+                                        </div>
+
+                                    </section>
+
+
+
+                                    <section class="quiz-rooms-card">
+
+                                        <span class="section-eyebrow" id="privateRoomsEyebrow">Phòng đã lưu</span>
+
+                                        <h3 id="privateRoomsTitle">Phòng private đã tạo</h3>
+
+                                        <p id="privateRoomsDesc">Tất cả câu hỏi bạn tự nhập sẽ được lưu ở đây để mở lại, sửa tiếp hoặc mời người khác.</p>
+
+                                        <div class="quiz-room-grid private-room-list" id="privateQuizGrid" data-no-runtime-translate="1"></div>
+
+                                    </section>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <div class="quiz-content" id="public-quiz">
+
+                                <div class="public-quiz-shell">
+
+                                    <div class="public-quiz-head">
+
+                                        <h3 id="publicQuizTitle">Quiz công khai theo tháng</h3>
+
+                                        <p id="publicQuizDesc">Mỗi tháng có 3 chủ đề public theo 3 nhóm tuổi khác nhau. Người chơi có thể nhận thêm prompt và lượt upload nếu đạt thứ hạng cao.</p>
+
+                                    </div>
+
+                                    <div class="quiz-room-grid" id="publicQuizGrid" data-no-runtime-translate="1"></div>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    </section>
+
+                </div>
+
+            </main>
+
+        </div>
+
+    </div>
+
+
+
+    <script type="module" src="./Js/Galaxy.js"></script>
+
+    <script>
+
+        (function () {
+
+            const THEME_KEY = 'skemi-theme';
+
+            const allowed = new Set(['light', 'dark', 'galaxy']);
+
+
+
+            function applyTheme(theme) {
+
+                document.body.classList.remove('dark-mode', 'galaxy-mode');
+
+                if (theme === 'dark') {
+
+                    document.body.classList.add('dark-mode');
+
+                }
+
+                if (theme === 'galaxy') {
+
+                    document.body.classList.add('galaxy-mode', 'dark-mode');
+
+                }
+
+                
+
+                const themeToggle = document.getElementById('themeToggle');
+
+                if (themeToggle) {
+
+                    const iconSun = themeToggle.querySelector('.icon-sun');
+
+                    const iconMoon = themeToggle.querySelector('.icon-moon');
+
+                    
+
+                    if (iconSun && iconMoon) {
+
+                        if (theme === 'light') {
+
+                            iconSun.style.opacity = '1'; iconSun.style.transform = 'translateY(0)';
+
+                            iconMoon.style.opacity = '0'; iconMoon.style.transform = 'translateY(-20px)';
+
+                            themeToggle.style.color = '#000';
+
+                        } else if (theme === 'galaxy') {
+
+                            iconSun.innerHTML = '★'; iconSun.style.opacity = '1'; iconSun.style.transform = 'translateY(0)';
+
+                            iconMoon.style.opacity = '0'; iconMoon.style.transform = 'translateY(-20px)';
+
+                            themeToggle.style.color = '#fff';
+
+                            themeToggle.style.textShadow = '0 0 10px #fff';
+
+                        } else {
+
+                            iconSun.style.opacity = '0'; iconSun.style.transform = 'translateY(20px)';
+
+                            iconMoon.style.opacity = '1'; iconMoon.style.transform = 'translateY(0)';
+
+                            themeToggle.style.color = '#fff';
+
+                            themeToggle.style.textShadow = 'none';
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+
+
+            const saved = localStorage.getItem(THEME_KEY);
+
+            applyTheme(allowed.has(saved) ? saved : 'light');
+
+
+
+            document.addEventListener('DOMContentLoaded', () => {
+
+                const themeToggle = document.getElementById('themeToggle');
+
+                const THEME_ORDER = ["light", "dark", "galaxy"];
+
+                
+
+                themeToggle?.addEventListener('click', () => {
+
+                    const current = localStorage.getItem(THEME_KEY) || 'light';
+
+                    let idx = THEME_ORDER.indexOf(current);
+
+                    const next = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
+
+                    localStorage.setItem(THEME_KEY, next);
+
+                    applyTheme(next);
+
+                });
+
+
+
+                const sidebar = document.getElementById('appSidebar');
+
+                const toggleBtn = document.getElementById('toggleSidebar');
+
+                toggleBtn?.addEventListener('click', () => {
+
+                    sidebar.classList.toggle('collapsed');
+
+                    const arrow = toggleBtn.querySelector('span');
+
+                    if (arrow) {
+
+                        arrow.innerText = sidebar.classList.contains('collapsed') ? '>' : '<';
+
+                    }
+
+                });
+
+            });
+
+        })();
+
+    </script>
+
+
+
+    <script src="./Js/i18n-lang-meta.js?v=20260527"></script>
+    <script src="./Js/i18n-packs.js?v=20260601b"></script>
+    <script type="module" src="./Js/LanguageManager.js?v=20260701e"></script>
+
+    <script src="./Js/upgrade-nudge.js?v=20260531a"></script>
+    <script src="./Js/entitlements.js?v=20260701d"></script>
+    <script type="module" src="./Js/User_navbar.js?v=20260702b"></script>
+
+    <script type="module" src="./Js/Features.js"></script>
+    <script type="module" src="./Js/AIChat.js?v=20260702a"></script>
+    <script src="./Js/GlobalStatus.js"></script>
+
+    <!-- Reveal/collapse the quiz setup area on demand (independent of Features.js
+         init/auth state) so the landing stays clean until the user opts in. -->
+    <script>
+    (function () {
+        function switchTab(tab) {
+            document.querySelectorAll('.quiz-tab').forEach(function (t) { t.classList.toggle('active', t.dataset.tab === tab); });
+            document.querySelectorAll('.quiz-content').forEach(function (c) { c.classList.toggle('active', c.id === tab + '-quiz'); });
+        }
+        function reveal(tab) {
+            var sec = document.getElementById('quiz-section');
+            if (sec) { sec.classList.remove('hidden'); sec.classList.remove('quiz-reveal'); void sec.offsetWidth; sec.classList.add('quiz-reveal'); }
+            switchTab(tab);
+            setTimeout(function () {
+                if (tab === 'private') { var r = document.getElementById('privateRoomTitle'); if (r) { r.scrollIntoView({ behavior: 'smooth', block: 'center' }); try { r.focus(); } catch (e) {} } }
+                else if (sec) { sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+            }, 100);
+        }
+        function bind() {
+            var c = document.getElementById('createQuizBtn'); if (c) c.addEventListener('click', function () { reveal('private'); });
+            var p = document.getElementById('browsePublicBtn'); if (p) p.addEventListener('click', function () { reveal('public'); });
+            var x = document.getElementById('collapseQuizBtn'); if (x) x.addEventListener('click', function () {
+                var s = document.getElementById('quiz-section'); if (s) { s.classList.add('hidden'); s.classList.remove('quiz-reveal'); }
+                var top = document.querySelector('.quiz-main-card'); if (top) top.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+            // Gamification "Đấu Trường AI" is merged into Quiz: these cards open the themed arena.
+            document.querySelectorAll('[data-arena-launch]').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    var g = b.getAttribute('data-arena-launch') || '';
+                    window.location.href = 'Arena.html' + (g ? ('#' + g) : '');
+                });
+            });
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
+    })();
+    </script>
+</body>
+
+
+
+</html>

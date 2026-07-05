@@ -1,0 +1,353 @@
+/* ========================================================================
+   SKEMI DESIGN TOKENS — Unified design system
+   Defines all CSS variables used across the app.
+   Themes: light (default), dark, galaxy.
+   WCAG AA target: text contrast >= 4.5:1, UI components >= 3:1.
+======================================================================== */
+
+/* Premium type — loaded once here so EVERY page gets Outfit (headings) +
+   Inter (body). --font-heading / --font-body below reference these. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap');
+
+:root {
+    /* Brand HSL channels (used by Global.css to build colors).
+       Tuned toward the "Iris violet" (#6E62FF) accent from the 2026-07
+       design refresh — same hue family as the old indigo, shifted a few
+       degrees warmer + punchier. */
+    --brand-primary-h: 246;
+    --brand-primary-s: 90%;
+    --brand-primary-l: 60%;
+    --brand-secondary-h: 268;
+    --brand-secondary-s: 80%;
+    --brand-secondary-l: 62%;
+    --brand-tertiary-h: 285;
+    --brand-tertiary-s: 72%;
+    --brand-tertiary-l: 62%;
+
+    /* Convenience direct values — brand-primary lightness was 60% → white text
+       on .btn-primary fell to 4.01 contrast (borderline below WCAG AA 4.5).
+       Drop to 50% to ensure 5.0+ ratio. Matches the dark-mode fix at 64%. */
+    --brand-primary: hsl(246, 90%, 50%);
+    --brand-secondary: hsl(268, 80%, 55%);
+    --brand-tertiary: hsl(285, 72%, 56%);
+    --brand-gradient: linear-gradient(135deg, hsl(246, 90%, 50%) 0%, hsl(268, 80%, 55%) 100%);
+    --brand-premium-gradient: linear-gradient(135deg, hsl(246, 90%, 50%) 0%, hsl(268, 80%, 55%) 50%, hsl(285, 72%, 56%) 100%);
+    --brand-light: hsla(246, 90%, 60%, 0.12);
+    --brand-gradient-soft: linear-gradient(135deg, hsla(246, 90%, 60%, 0.08) 0%, hsla(268, 80%, 60%, 0.08) 100%);
+
+    /* Backgrounds */
+    --bg-primary: #f7f9fc;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #eef2ff;
+    --bg-glass: rgba(255, 255, 255, 0.85);
+    --bg-glass-hover: rgba(99, 102, 241, 0.06);
+
+    /* Text — guaranteed contrast on light surfaces */
+    --text-primary: #0f172a;     /* 15.79:1 on white */
+    --text-secondary: #334155;   /* 9.03:1  on white */
+    --text-muted: #475569;       /* 6.93:1  on white */
+    --text-inverse: #ffffff;
+    --text-on-brand: #ffffff;
+
+    /* Borders */
+    --border-light: rgba(15, 23, 42, 0.10);
+    --border-medium: rgba(15, 23, 42, 0.18);
+    --border-strong: rgba(15, 23, 42, 0.28);
+    --border-brand: hsl(240, 84%, 60%);
+
+    /* Accents */
+    --accent-cyan: #06b6d4;
+    --accent-emerald: #10b981;
+    --accent-rose: #f43f5e;
+    --accent-amber: #f59e0b;
+    --accent-danger: #dc2626;
+    --accent-success: #16a34a;
+    --accent-warning: #d97706;
+    --accent-info: #2563eb;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.08);
+    --shadow-lg: 0 24px 50px rgba(15, 23, 42, 0.12);
+    --shadow-xl: 0 28px 70px rgba(15, 23, 42, 0.16);
+    --shadow-glow: 0 0 30px hsla(240, 84%, 60%, 0.35);
+
+    /* Radii */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-xl: 32px;
+    --radius-full: 9999px;
+
+    /* Transitions */
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    --transition-slow: 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+
+    /* Glass */
+    --glass-blur: blur(20px);
+    --glass-saturate: saturate(160%);
+
+    /* Fonts */
+    --font-heading: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* Legacy alias — older code used var(--font-stack); point it at the heading font
+       so it resolves to the loaded Outfit instead of the unavailable 'Google Sans'. */
+    --font-stack: var(--font-heading);
+
+    /* Theme references used by Global.css body.dark-mode */
+    --dark-bg: hsl(222, 47%, 8%);
+    --dark-surface: hsl(222, 47%, 13%);
+    --dark-text: hsl(210, 40%, 96%);
+
+    /* ───────── Legacy short aliases (used by Computer.css, Phantom.js, older code) ─────────
+       These exist so any old `var(--text)` / `var(--bg)` reference still resolves
+       to a sensible value. They follow the same theme as the rest. */
+    --text:   #0f172a;
+    --text2:  #475569;
+    --text3:  #94a3b8;
+    --bg:     #f7f9fc;
+    --bg2:    #ffffff;
+    --bg3:    #eef2ff;
+    --bg4:    #e0e7ff;
+    --border: rgba(15, 23, 42, 0.10);
+    --border2: rgba(15, 23, 42, 0.18);
+    /* Use the darker info blue in light mode so white text on --accent
+       keeps contrast >= 4.5:1 (5.22:1). The brighter #5b9cf6 is used in
+       dark/galaxy themes where the surrounding background is dark. */
+    --accent: #2563eb;
+    --green:  #16a34a;
+    --amber:  #d97706;
+    --red:    #dc2626;
+}
+
+/* ========================================================================
+   DARK THEME
+======================================================================== */
+/* Mirror dark/galaxy theme variables onto :root so they resolve correctly inside
+   :visited link rules. Chromium's :visited privacy hardening locks var()
+   resolution to the :root cascade — vars defined only on body.* render visited
+   nav links in the light --text-secondary value (#334155) regardless of theme.
+   Preferences.js writes data-theme="dark|galaxy|light" onto <html> on load and
+   theme change, so :root[data-theme="..."] is always live at the :root layer.
+   The html:has() fallback covers raw <body class="dark-mode"> bootstrapping in
+   pages that set the class before Preferences.js runs.
+   Keep these blocks in sync with the body.dark-mode / body.galaxy-mode bodies. */
+:root[data-theme="dark"],
+html:has(body.dark-mode) {
+    --text:   #e8e8ea; --text2:  #9898a0; --text3:  #5a5a65;
+    --bg:     #0a0a0b; --bg2:    #111113; --bg3:    #18181b; --bg4:    #1e1e22;
+    --border: #2a2a2f; --border2: #333338;
+    --accent: #6e79ff; --green:  #4ade80; --amber:  #f59e0b; --red:    #f87171;
+    --bg-primary: hsl(222, 47%, 8%); --bg-secondary: hsl(222, 47%, 13%);
+    --bg-tertiary: hsl(222, 47%, 18%); --bg-glass: hsla(222, 47%, 13%, 0.85);
+    --bg-glass-hover: hsla(246, 90%, 65%, 0.12);
+    --text-primary: hsl(210, 40%, 96%); --text-secondary: hsl(215, 20%, 80%);
+    --text-muted: hsl(215, 18%, 65%); --text-inverse: #0f172a;
+    --border-light: hsla(215, 20%, 80%, 0.12); --border-medium: hsla(215, 20%, 80%, 0.22);
+    --border-strong: hsla(215, 20%, 80%, 0.36);
+    --brand-primary: hsl(246, 95%, 64%); --brand-secondary: hsl(268, 85%, 65%);
+    --brand-tertiary: hsl(285, 80%, 66%);
+    --brand-gradient: linear-gradient(135deg, hsl(246, 95%, 64%) 0%, hsl(268, 85%, 65%) 100%);
+    --brand-premium-gradient: linear-gradient(135deg, hsl(246, 95%, 64%) 0%, hsl(268, 85%, 65%) 50%, hsl(285, 80%, 66%) 100%);
+    --brand-light: hsla(246, 95%, 70%, 0.18);
+}
+
+:root[data-theme="galaxy"],
+html:has(body.galaxy-mode) {
+    --text:   #f9ecff; --text2:  rgba(249, 236, 255, 0.78); --text3:  rgba(235, 214, 255, 0.55);
+    --bg:     #08030f; --bg2:    #12071d; --bg3:    #1b0c2b; --bg4:    #2a1340;
+    --border: rgba(255, 176, 235, 0.18); --border2: rgba(255, 176, 235, 0.28);
+    --accent: #f472b6; --green:  #4ade80; --amber:  #fbbf24; --red:    #fb7185;
+    --bg-primary: #08030f; --bg-secondary: #12071d; --bg-tertiary: #1b0c2b;
+    --bg-glass: rgba(18, 7, 29, 0.82); --bg-glass-hover: rgba(244, 114, 182, 0.10);
+    --text-primary: #f9ecff; --text-secondary: hsl(290, 50%, 88%);
+    --text-muted: hsl(285, 35%, 75%); --text-inverse: #0f172a;
+    --border-light: rgba(255, 176, 235, 0.16); --border-medium: rgba(255, 176, 235, 0.26);
+    --border-strong: rgba(255, 176, 235, 0.42);
+    --brand-primary: #f472b6; --brand-secondary: #a855f7; --brand-tertiary: #8b5cf6;
+    --brand-light: rgba(244, 114, 182, 0.18);
+    --brand-gradient: linear-gradient(135deg, #f472b6 0%, #a855f7 45%, #8b5cf6 100%);
+    --brand-premium-gradient: linear-gradient(135deg, #f472b6 0%, #a855f7 45%, #8b5cf6 100%);
+    --brand-gradient-soft: linear-gradient(135deg, rgba(244, 114, 182, 0.16) 0%, rgba(139, 92, 246, 0.12) 100%);
+}
+
+body.dark-mode {
+    /* Legacy aliases — dark palette */
+    --text:   #e8e8ea;
+    --text2:  #9898a0;
+    --text3:  #5a5a65;
+    --bg:     #0a0a0b;
+    --bg2:    #111113;
+    --bg3:    #18181b;
+    --bg4:    #1e1e22;
+    --border: #2a2a2f;
+    --border2: #333338;
+    --accent: #6e79ff;
+    --green:  #4ade80;
+    --amber:  #f59e0b;
+    --red:    #f87171;
+
+    --bg-primary: hsl(222, 47%, 8%);
+    --bg-secondary: hsl(222, 47%, 13%);
+    --bg-tertiary: hsl(222, 47%, 18%);
+    --bg-glass: hsla(222, 47%, 13%, 0.85);
+    --bg-glass-hover: hsla(246, 90%, 65%, 0.12);
+
+    --text-primary: hsl(210, 40%, 96%);    /* 15.46:1 on bg-primary */
+    --text-secondary: hsl(215, 20%, 80%);  /* 10.16:1 */
+    --text-muted: hsl(215, 18%, 65%);      /* 6.27:1 */
+    --text-inverse: #0f172a;
+
+    --border-light: hsla(215, 20%, 80%, 0.12);
+    --border-medium: hsla(215, 20%, 80%, 0.22);
+    --border-strong: hsla(215, 20%, 80%, 0.36);
+
+    /* Dark-mode brand lightness lowered to 64% so white text on .btn-primary
+       keeps WCAG AA (>=4.5:1) instead of the borderline 4.01 at 70%. Hue
+       tuned toward the "Iris violet" (#6E62FF) 2026-07 design refresh. */
+    --brand-primary: hsl(246, 95%, 64%);
+    --brand-secondary: hsl(268, 85%, 65%);
+    --brand-tertiary: hsl(285, 80%, 66%);
+    --brand-gradient: linear-gradient(135deg, hsl(246, 95%, 64%) 0%, hsl(268, 85%, 65%) 100%);
+    --brand-premium-gradient: linear-gradient(135deg, hsl(246, 95%, 64%) 0%, hsl(268, 85%, 65%) 50%, hsl(285, 80%, 66%) 100%);
+    --brand-light: hsla(246, 95%, 70%, 0.18);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 24px 50px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 28px 70px rgba(0, 0, 0, 0.7);
+}
+
+/* ========================================================================
+   GALAXY THEME
+======================================================================== */
+body.galaxy-mode {
+    /* Legacy aliases — galaxy palette */
+    --text:   #f9ecff;
+    --text2:  rgba(249, 236, 255, 0.78);
+    --text3:  rgba(235, 214, 255, 0.55);
+    --bg:     #08030f;
+    --bg2:    #12071d;
+    --bg3:    #1b0c2b;
+    --bg4:    #2a1340;
+    --border: rgba(255, 176, 235, 0.18);
+    --border2: rgba(255, 176, 235, 0.28);
+    --accent: #f472b6;
+    --green:  #4ade80;
+    --amber:  #fbbf24;
+    --red:    #fb7185;
+
+    --bg-primary: #08030f;
+    --bg-secondary: #12071d;
+    --bg-tertiary: #1b0c2b;
+    --bg-glass: rgba(18, 7, 29, 0.82);
+    --bg-glass-hover: rgba(244, 114, 182, 0.10);
+
+    --text-primary: #f9ecff;       /* 16.20:1 on bg-primary */
+    --text-secondary: hsl(290, 50%, 88%);  /* 12.10:1 */
+    --text-muted: hsl(285, 35%, 75%);      /* 7.40:1 */
+    --text-inverse: #0f172a;
+
+    --border-light: rgba(255, 176, 235, 0.16);
+    --border-medium: rgba(255, 176, 235, 0.26);
+    --border-strong: rgba(255, 176, 235, 0.42);
+
+    --brand-primary: #f472b6;
+    --brand-secondary: #a855f7;
+    --brand-tertiary: #8b5cf6;
+    --brand-light: rgba(244, 114, 182, 0.18);
+    --brand-gradient: linear-gradient(135deg, #f472b6 0%, #a855f7 45%, #8b5cf6 100%);
+    --brand-premium-gradient: linear-gradient(135deg, #f472b6 0%, #a855f7 45%, #8b5cf6 100%);
+    --brand-gradient-soft: linear-gradient(135deg, rgba(244, 114, 182, 0.16) 0%, rgba(139, 92, 246, 0.12) 100%);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.55);
+    --shadow-lg: 0 24px 50px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 28px 70px rgba(0, 0, 0, 0.7);
+
+    background:
+        radial-gradient(circle at top left, rgba(255, 119, 200, 0.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(143, 117, 255, 0.16), transparent 24%),
+        linear-gradient(180deg, #08030f 0%, #12071d 48%, #1b0c2b 100%);
+    background-color: #08030f;
+    transition: background var(--transition-slow), background-color var(--transition-slow);
+}
+
+/* ========================================================================
+   CUSTOM ACCENT COLOR (set via JS from Settings)
+======================================================================== */
+body[data-accent="blue"]   { --brand-primary-h: 220; --brand-secondary-h: 240; }
+body[data-accent="purple"] { --brand-primary-h: 268; --brand-secondary-h: 290; }
+body[data-accent="pink"]   { --brand-primary-h: 330; --brand-secondary-h: 350; }
+body[data-accent="orange"] { --brand-primary-h:  20; --brand-secondary-h:  40; }
+body[data-accent="green"]  { --brand-primary-h: 150; --brand-secondary-h: 170; }
+body[data-accent="teal"]   { --brand-primary-h: 180; --brand-secondary-h: 200; }
+
+body[data-accent]:not(.galaxy-mode) {
+    --brand-primary: hsl(var(--brand-primary-h), var(--brand-primary-s), var(--brand-primary-l));
+    --brand-secondary: hsl(var(--brand-secondary-h), var(--brand-secondary-s), var(--brand-secondary-l));
+    --brand-gradient: linear-gradient(135deg,
+        hsl(var(--brand-primary-h), var(--brand-primary-s), var(--brand-primary-l)) 0%,
+        hsl(var(--brand-secondary-h), var(--brand-secondary-s), var(--brand-secondary-l)) 100%);
+    --brand-premium-gradient: linear-gradient(135deg,
+        hsl(var(--brand-primary-h), var(--brand-primary-s), var(--brand-primary-l)) 0%,
+        hsl(var(--brand-secondary-h), var(--brand-secondary-s), var(--brand-secondary-l)) 50%,
+        hsl(var(--brand-tertiary-h), var(--brand-tertiary-s), var(--brand-tertiary-l)) 100%);
+    --brand-light: hsla(var(--brand-primary-h), var(--brand-primary-s), var(--brand-primary-l), 0.14);
+}
+
+/* ========================================================================
+   GLOBAL DEFAULTS — reset and base typography
+======================================================================== */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: var(--brand-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Ensure buttons always have readable contrast */
+button {
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-medium);
+    cursor: pointer;
+}
+button:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+}
+
+/* Inputs */
+input, textarea, select {
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    font-family: inherit;
+}
+input::placeholder, textarea::placeholder { color: var(--text-muted); }
+
+/* Helper class */
+.hidden { display: none !important; }
+.sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}

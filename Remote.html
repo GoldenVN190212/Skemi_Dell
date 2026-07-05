@@ -1,0 +1,910 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/Css/design-tokens.css?v=20260701b">
+    <link rel="stylesheet" href="/Css/Motion.css?v=20260607k">
+    <script defer src="/Js/motion.js?v=20260531a"></script>
+    <script src="/Js/guest-storage-guard.js?v=20260527"></script>
+    <script src="/Js/account-storage.js?v=20260527"></script>
+    <script type="module" src="/Js/Auth.js?v=20260527"></script>
+    <script type="module" src="/Js/UserScopedStorage.js?v=20260527"></script>
+    <script type="module" src="/Js/CloudSync.js?v=20260702b"></script>
+    <script src="/Js/UserDataManager.js?v=20260531b"></script>
+    <script src="/Js/Preferences.js?v=20260621a"></script>
+    <script src="/Js/UI.js?v=20260510"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Skemi Điều khiển từ xa — kết nối và điều khiển thiết bị từ xa bằng ID và mật khẩu.">
+    <title>Skemi Remote</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>★</text></svg>">
+    <link rel="stylesheet" href="./Css/Global.css?v=20260629c" />
+    <link rel="stylesheet" href="./Css/Polish.css?v=20260630d" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    /* ===================================================================
+       SKEMI REMOTE — TeamViewer-style remote control (self-contained).
+       Theme-aware: every value derives from design-tokens.css?v=20260701b variables,
+       so it follows light / dark / galaxy + the custom accent color.
+    =================================================================== */
+    .rmt-page { padding: 28px clamp(16px, 4vw, 48px) 64px; max-width: 1320px; margin: 0 auto; }
+
+    /* ---- Header ---- */
+    .rmt-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 22px; }
+    .rmt-header-text { min-width: 0; }
+    .rmt-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--brand-primary); margin-bottom: 10px; }
+    .rmt-eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-emerald); animation: skemiGlowPulse 2.4s ease-in-out infinite; }
+    .rmt-title { font-family: var(--font-heading); font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 800; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text-primary); line-height: 1.1; }
+    .rmt-subtitle { color: var(--text-muted); font-size: .98rem; margin: 0; max-width: 60ch; }
+    .rmt-header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .rmt-status-pill { display: inline-flex; align-items: center; gap: 9px; padding: 9px 15px; border-radius: var(--radius-full); background: var(--bg-glass); border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); font-weight: 600; font-size: .86rem; color: var(--text-secondary); backdrop-filter: var(--glass-blur); }
+    .rmt-status-pill .pill-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent-emerald); }
+    .rmt-status-pill b { color: var(--text-primary); font-weight: 800; }
+
+    .rmt-btn { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; padding: 11px 18px; border-radius: var(--radius-md); font-weight: 700; font-size: .9rem; border: 1px solid var(--border-medium); background: var(--bg-secondary); color: var(--text-primary); transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast), filter var(--transition-fast); white-space: nowrap; }
+    .rmt-btn:hover { transform: translateY(-1px); border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+    .rmt-btn.primary { background: var(--brand-gradient); color: #fff; border: none; box-shadow: var(--shadow-md); position: relative; overflow: hidden; isolation: isolate; }
+    .rmt-btn.primary:hover { filter: brightness(1.05); box-shadow: var(--shadow-lg); }
+    .rmt-btn.ghost { background: transparent; }
+    .rmt-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* ---- Access row: this-device identity + connect ---- */
+    .rmt-access { display: grid; grid-template-columns: 1.05fr 1fr; gap: 18px; margin-bottom: 20px; }
+    @media (max-width: 860px) { .rmt-access { grid-template-columns: 1fr; } }
+    .rmt-access-card { padding: 18px 20px; border-radius: var(--radius-lg); background: var(--bg-secondary); border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); }
+    .rmt-access-head { display: flex; align-items: center; gap: 10px; font-family: var(--font-heading); font-weight: 700; font-size: 1rem; color: var(--text-primary); margin-bottom: 4px; }
+    .rmt-access-head i { color: var(--brand-primary); }
+    .rmt-access-sub { margin: 0 0 14px; color: var(--text-muted); font-size: .84rem; line-height: 1.5; }
+    .rmt-id-row { display: flex; gap: 14px; flex-wrap: wrap; }
+    .rmt-id-field { flex: 1 1 150px; min-width: 0; }
+    .rmt-id-field label { display: block; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .rmt-id-value { display: flex; align-items: center; gap: 6px; background: var(--bg-primary); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 7px 8px 7px 14px; }
+    .rmt-id-value span { font-family: var(--font-heading); font-weight: 800; font-size: 1.02rem; letter-spacing: .01em; color: var(--text-primary); flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rmt-id-field:first-child { flex: 1.45 1 168px; }   /* the ID (formatted 9 digits) needs more room than the 6-char password */
+    .rmt-share-row { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+    .rmt-share-row .rmt-btn.is-on { background: var(--accent-emerald); color: #06281c; border-color: transparent; }
+    .rmt-share-state { font-size: .82rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 7px; }
+    .rmt-share-state.live { color: var(--accent-emerald); font-weight: 600; }
+    .rmt-share-state .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+    .rmt-copy { width: 32px; height: 32px; flex: 0 0 auto; border-radius: 8px; border: 1px solid var(--border-light); background: var(--bg-tertiary); color: var(--text-secondary); cursor: pointer; display: grid; place-items: center; transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast); }
+    .rmt-copy:hover { color: var(--brand-primary); border-color: var(--border-medium); transform: translateY(-1px); }
+    .rmt-connect-form { display: flex; gap: 10px; flex-wrap: wrap; }
+    .rmt-input { flex: 1 1 130px; min-width: 0; padding: 11px 14px; border-radius: var(--radius-md); font-size: .92rem; background: var(--bg-primary); border: 1px solid var(--border-medium); color: var(--text-primary); }
+    .rmt-input:focus { outline: none; border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--brand-light); }
+    .rmt-connect-form .rmt-btn { flex: 0 0 auto; }
+
+    /* ---- Info banner ---- */
+    .rmt-banner { display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; margin-bottom: 20px; border-radius: var(--radius-md); background: var(--brand-gradient-soft); border: 1px solid var(--border-light); color: var(--text-secondary); font-size: .86rem; line-height: 1.5; }
+    .rmt-banner .bi { color: var(--brand-primary); font-size: 1.05rem; margin-top: 1px; }
+    .rmt-banner button { margin-left: auto; flex: 0 0 auto; background: transparent; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.1rem; line-height: 1; padding: 2px 4px; border-radius: 6px; }
+    .rmt-banner button:hover { color: var(--text-primary); background: var(--bg-glass-hover); }
+
+    /* ---- Toolbar ---- */
+    .rmt-toolbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--border-light); }
+    .rmt-seg { display: inline-flex; padding: 4px; gap: 4px; border-radius: var(--radius-full); background: var(--bg-tertiary); border: 1px solid var(--border-light); }
+    .rmt-seg button { border: none; background: transparent; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: .84rem; padding: 7px 15px; border-radius: var(--radius-full); display: inline-flex; align-items: center; gap: 7px; transition: color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast); }
+    .rmt-seg button:hover { color: var(--text-primary); }
+    .rmt-seg button.active { color: #fff; background: var(--brand-gradient); box-shadow: var(--shadow-sm); }
+    .rmt-seg.subtle button.active { color: var(--text-primary); background: var(--bg-secondary); box-shadow: var(--shadow-sm); }
+    .rmt-toolbar-label { font-size: .76rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); margin-right: -6px; }
+    .rmt-toolbar-spacer { flex: 1 1 auto; }
+
+    /* ---- Grid ---- */
+    .rmt-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+    .rmt-grid.focus { grid-template-columns: 1fr; }
+    .rmt-grid.focus .rmt-device:not(.is-active) { display: none; }
+    .rmt-device { border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-secondary); border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; }
+    .rmt-device.is-active { box-shadow: var(--shadow-lg); border-color: var(--border-medium); }
+
+    /* screen preview */
+    .rmt-screen { position: relative; aspect-ratio: 16 / 10; cursor: zoom-in; overflow: hidden;
+        background: radial-gradient(120% 90% at 20% 0%, hsla(var(--wall, 240), 70%, 55%, .55), transparent 55%),
+                    radial-gradient(120% 100% at 100% 100%, hsla(calc(var(--wall, 240) + 40), 70%, 50%, .45), transparent 50%),
+                    linear-gradient(160deg, #11131c 0%, #0b0c14 100%); }
+    .rmt-screen.is-offline { cursor: default; filter: grayscale(.7) brightness(.8); }
+    .rmt-win { position: absolute; left: 12%; top: 16%; right: 12%; bottom: 20%; border-radius: 10px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.18); box-shadow: 0 14px 30px rgba(0,0,0,.35); overflow: hidden; backdrop-filter: blur(6px); }
+    .rmt-win-bar { height: 22px; display: flex; align-items: center; gap: 6px; padding: 0 10px; background: rgba(0,0,0,.22); }
+    .rmt-win-bar i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+    .rmt-win-bar i:nth-child(1) { background: #ff5f57; } .rmt-win-bar i:nth-child(2) { background: #febc2e; } .rmt-win-bar i:nth-child(3) { background: #28c840; }
+    .rmt-win-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .rmt-win-body span { height: 7px; border-radius: 4px; background: rgba(255,255,255,.28); }
+    .rmt-win-body span:nth-child(1) { width: 62%; } .rmt-win-body span:nth-child(2) { width: 90%; background: rgba(255,255,255,.16); } .rmt-win-body span:nth-child(3) { width: 75%; background: rgba(255,255,255,.16); } .rmt-win-body span:nth-child(4) { width: 45%; background: hsla(var(--wall,240),80%,72%,.7); }
+    .rmt-taskbar { position: absolute; left: 0; right: 0; bottom: 0; height: 12%; background: rgba(0,0,0,.30); display: flex; align-items: center; gap: 8px; padding: 0 12px; }
+    .rmt-taskbar b { width: 16px; height: 16px; border-radius: 5px; background: rgba(255,255,255,.25); display: inline-block; }
+    .rmt-taskbar b:first-child { background: hsla(var(--wall,240),80%,70%,.85); }
+    .rmt-screen-top { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; z-index: 2; }
+    .rmt-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: var(--radius-full); font-size: .72rem; font-weight: 700; backdrop-filter: blur(8px); background: rgba(0,0,0,.42); color: #fff; border: 1px solid rgba(255,255,255,.14); }
+    .rmt-chip .s-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .s-online { background: var(--accent-emerald); box-shadow: 0 0 8px var(--accent-emerald); }
+    .s-offline { background: #94a3b8; }
+    .s-connecting { background: var(--accent-amber); animation: skemiFadeIn .8s ease-in-out infinite alternate; }
+    .rmt-screen-veil { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; gap: 10px; opacity: 0; background: linear-gradient(180deg, rgba(8,9,14,.1), rgba(8,9,14,.55)); transition: opacity var(--transition-fast); }
+    .rmt-screen:hover .rmt-screen-veil { opacity: 1; }
+    .rmt-veil-btn { width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.14); color: #fff; cursor: pointer; font-size: 1rem; display: inline-flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); transition: transform var(--transition-fast), background var(--transition-fast); }
+    .rmt-veil-btn:hover { transform: scale(1.08); background: rgba(255,255,255,.26); }
+    .rmt-veil-btn.go { background: var(--brand-gradient); border: none; box-shadow: var(--shadow-md); }
+    .rmt-offline-state { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #cbd5e1; z-index: 2; }
+    .rmt-offline-state .oi { font-size: 1.6rem; opacity: .7; }
+    .rmt-offline-state span { font-size: .82rem; font-weight: 600; }
+    .rmt-live-cursor { position: absolute; width: 16px; height: 16px; z-index: 4; pointer-events: none; transform: translate(-2px,-2px); filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); animation: skemiFloat 5s ease-in-out infinite; }
+    .rmt-connecting-state { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 3; color: #e2e8f0; }
+    .rmt-connecting-state .skemi-spinner { width: 30px; height: 30px; border-width: 3px; }
+    .rmt-connecting-state span { font-size: .82rem; font-weight: 600; }
+
+    .rmt-device-bar { display: flex; align-items: center; gap: 12px; padding: 13px 15px; }
+    .rmt-os { width: 38px; height: 38px; flex: 0 0 auto; border-radius: 11px; display: grid; place-items: center; font-size: 1.05rem; color: var(--text-primary); background: var(--bg-tertiary); border: 1px solid var(--border-light); }
+    .rmt-meta { min-width: 0; flex: 1 1 auto; }
+    .rmt-name { font-weight: 700; color: var(--text-primary); font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rmt-sub { font-size: .78rem; color: var(--text-muted); display: flex; align-items: center; gap: 7px; }
+    .rmt-sub .s-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .rmt-row-actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+    .rmt-icon-btn { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; cursor: pointer; background: var(--bg-tertiary); border: 1px solid var(--border-light); color: var(--text-secondary); transition: color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast), border-color var(--transition-fast); }
+    .rmt-icon-btn:hover { color: var(--text-primary); border-color: var(--border-medium); transform: translateY(-1px); }
+    .rmt-icon-btn.danger:hover { color: #fff; background: var(--accent-danger); border-color: transparent; }
+
+    /* empty state */
+    .rmt-empty { grid-column: 1 / -1; text-align: center; padding: 56px 20px; color: var(--text-muted); border: 1.5px dashed var(--border-medium); border-radius: var(--radius-lg); background: var(--bg-glass); }
+    .rmt-empty .ei { font-size: 2.6rem; margin-bottom: 12px; opacity: .55; color: var(--brand-primary); }
+    .rmt-empty h3 { color: var(--text-primary); margin: 0 0 6px; font-family: var(--font-heading); }
+    .rmt-empty p { margin: 0 auto; max-width: 46ch; }
+
+    /* ---- Modal (zoom / control) ---- */
+    .rmt-modal-root { position: fixed; inset: 0; z-index: 1000; display: none; }
+    /* Center via flexbox — NOT transform: the scale-in animation animates `transform`
+       and would clobber a translate(-50%,-50%), pushing the modal off-screen. */
+    .rmt-modal-root.open { display: flex; align-items: center; justify-content: center; padding: 18px; }
+    .rmt-backdrop { position: absolute; inset: 0; background: rgba(8,9,14,.62); backdrop-filter: blur(6px); animation: skemiFadeIn .25s var(--transition-normal) both; }
+    .rmt-modal { position: relative; z-index: 1; width: min(1040px, 94vw); max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; background: var(--bg-secondary); border: 1px solid var(--border-medium); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); animation: skemiScaleIn .3s var(--transition-normal) both; }
+    .rmt-modal-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--border-light); }
+    .rmt-modal-head .rmt-os { width: 34px; height: 34px; }
+    .rmt-modal-titles { min-width: 0; flex: 1 1 auto; }
+    .rmt-modal-titles b { display: block; color: var(--text-primary); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rmt-modal-titles small { color: var(--text-muted); font-size: .8rem; }
+    .rmt-modal-close { width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border-light); background: var(--bg-tertiary); color: var(--text-secondary); cursor: pointer; font-size: 1.1rem; display: grid; place-items: center; }
+    .rmt-modal-close:hover { color: var(--text-primary); border-color: var(--border-medium); }
+    .rmt-stage { position: relative; aspect-ratio: 16 / 9; overflow: hidden; cursor: crosshair; max-height: 56vh;
+        background: radial-gradient(120% 90% at 20% 0%, hsla(var(--wall,240), 70%, 55%, .5), transparent 55%),
+                    radial-gradient(120% 100% at 100% 100%, hsla(calc(var(--wall,240) + 40), 70%, 50%, .42), transparent 50%),
+                    linear-gradient(160deg, #11131c 0%, #0b0c14 100%); }
+    .rmt-stage.ai-mode { cursor: default; }
+    .rmt-live-stream { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #07080d; z-index: 4; }
+    .rmt-stage .rmt-win { left: 16%; top: 14%; right: 16%; bottom: 22%; }
+    .rmt-remote-cursor { position: absolute; z-index: 6; pointer-events: none; font-size: 1rem; color: #fff; filter: drop-shadow(0 1px 3px rgba(0,0,0,.7)); transform: translate(-2px,-2px); transition: opacity .2s; }
+    .rmt-stage-hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 5; background: rgba(0,0,0,.5); color: #e2e8f0; font-size: .78rem; padding: 7px 14px; border-radius: var(--radius-full); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.12); max-width: 88%; text-align: center; }
+    .rmt-modal-foot { padding: 14px 18px; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--border-light); }
+    .rmt-foot-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .rmt-ai-input { flex: 1 1 260px; display: flex; align-items: center; gap: 8px; background: var(--bg-primary); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 4px 4px 4px 14px; }
+    .rmt-ai-input input { flex: 1 1 auto; border: none; background: transparent; outline: none; color: var(--text-primary); font-size: .9rem; padding: 8px 0; }
+    .rmt-ai-input input::placeholder { color: var(--text-muted); }
+    .rmt-legion { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; background: var(--bg-primary); border: 1px solid var(--border-medium); border-radius: var(--radius-md); padding: 6px 12px; color: var(--text-secondary); }
+    .rmt-legion i { color: var(--brand-primary); }
+    .rmt-legion-lbl { font-size: .76rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--text-secondary); }
+    .rmt-legion input[type=range] { -webkit-appearance: none; appearance: none; width: 92px; height: 5px; border-radius: 999px; background: linear-gradient(90deg, var(--brand-primary), var(--accent-success, #34d399)); outline: none; cursor: pointer; }
+    .rmt-legion input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 15px; height: 15px; border-radius: 50%; background: #fff; border: 2px solid var(--brand-primary); cursor: pointer; }
+    .rmt-legion input[type=range]::-moz-range-thumb { width: 15px; height: 15px; border-radius: 50%; background: #fff; border: 2px solid var(--brand-primary); cursor: pointer; }
+    .rmt-legion b { font-variant-numeric: tabular-nums; color: var(--text-primary); min-width: 16px; text-align: center; font-weight: 800; }
+    .rmt-log { max-height: 92px; overflow-y: auto; font-size: .8rem; color: var(--text-secondary); background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 8px 12px; line-height: 1.6; }
+    .rmt-log:empty { display: none; }
+    .rmt-log .ln { display: flex; gap: 8px; }
+    .rmt-log .ln .t { color: var(--text-muted); flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+    .rmt-log .ln.sys .m { color: var(--accent-warning); }
+    .rmt-log .ln.cmd .m { color: var(--text-primary); font-weight: 600; }
+    .rmt-log .ln.res .m { color: var(--accent-emerald); }
+    .rmt-log .ln.err .m { color: var(--accent-danger); }
+    .rmt-btn.is-busy { position: relative; color: transparent !important; pointer-events: none; }
+    .rmt-btn.is-busy::after { content: ''; position: absolute; top: 50%; left: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; animation: rmtSpin .7s linear infinite; }
+    @keyframes rmtSpin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 640px) {
+        .rmt-toolbar { gap: 10px; } .rmt-toolbar-spacer { display: none; } .rmt-grid { grid-template-columns: 1fr; }
+    }
+    </style>
+</head>
+
+<body class="galaxy-mode">
+    <nav class="navbar">
+        <a href="Home.html" class="logo">
+            <span class="logo-mark">★</span>
+            <span class="logo-text">Skemi</span>
+        </a>
+        <div class="navbar-shortcuts" aria-label="Điều hướng chính">
+            <a href="Home.html" class="nav-shortcut"><span>🎓</span><span>Studio</span></a>
+            <a href="Search.html" class="nav-shortcut"><span>🔍</span><span>Tra cứu</span></a>
+            <a href="Quiz.html" class="nav-shortcut"><span>📝</span><span>Quiz</span></a>
+            <a href="/Chat.html" class="nav-shortcut"><span>💬</span><span>Chat</span></a>
+        </div>
+        <div class="navbar-actions">
+            <div id="auth-buttons"></div>
+        </div>
+    </nav>
+
+    <div class="app-layout">
+        <aside class="app-sidebar" id="appSidebar">
+            <ul class="sidebar-links">
+                <li><a href="Home.html" id="mindmap-link"><span class="icon">🎓</span><span>Studio</span></a></li>
+                <li><a href="Search.html" id="search-link"><span class="icon">🔍</span><span>Tra cứu</span></a></li>
+                <li><a href="Quiz.html" id="quiz-link"><span class="icon">📝</span><span>Quiz</span></a></li>
+                <li><a href="/Chat.html" id="chat-link"><span class="icon">💬</span><span>Chat</span></a></li>
+                <li><a href="PromptAgent.html" id="prompt-agent-link"><span class="icon">⚡</span><span>Prompt Agent</span></a></li>
+                <li><a href="Computer.html" id="computer-link"><span class="icon">🖥️</span><span>Skemi Control</span></a></li>
+                <li><a href="Remote.html" class="active" id="remote-link"><span class="icon">📡</span><span data-rmt="navRemote">Điều khiển từ xa</span></a></li>
+                <li><a href="Settings.html" id="settings-link"><span class="icon">⚙️</span><span>Cài đặt</span></a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <button class="toggle-sidebar-btn" id="toggleSidebar" title="Thu gọn menu"><span>◀</span></button>
+            </div>
+        </aside>
+
+        <div class="main-content-wrapper">
+            <main class="rmt-page">
+                <!-- HEADER -->
+                <header class="rmt-header" data-reveal="fade">
+                    <div class="rmt-header-text">
+                        <span class="rmt-eyebrow"><span class="dot"></span><span data-rmt="eyebrow">TRUNG TÂM ĐIỀU KHIỂN</span></span>
+                        <h1 class="rmt-title" data-rmt="title">Điều khiển từ xa</h1>
+                        <p class="rmt-subtitle" data-rmt="subtitle">Kết nối và điều khiển thiết bị từ xa an toàn bằng mã ID và mật khẩu.</p>
+                    </div>
+                    <div class="rmt-header-actions">
+                        <span class="rmt-status-pill">
+                            <span class="pill-dot"></span>
+                            <span><b id="rmtOnlineCount">0</b> <span data-rmt="onlineLabel">đã kết nối</span></span>
+                        </span>
+                    </div>
+                </header>
+
+                <!-- ACCESS: this device identity + connect to partner -->
+                <section class="rmt-access" data-reveal="fade">
+                    <div class="rmt-access-card rmt-identity glass-panel">
+                        <div class="rmt-access-head"><i class="fas fa-desktop"></i><span data-rmt="identityTitle">Thiết bị này</span></div>
+                        <p class="rmt-access-sub" data-rmt="identityHint">Chia sẻ ID và mật khẩu này để cho phép người khác điều khiển máy của bạn.</p>
+                        <div class="rmt-id-row">
+                            <div class="rmt-id-field">
+                                <label data-rmt="myId">ID của bạn</label>
+                                <div class="rmt-id-value">
+                                    <span id="myIdVal">— — —</span>
+                                    <button class="rmt-copy" data-copy="id" title="Sao chép"><i class="far fa-copy"></i></button>
+                                </div>
+                            </div>
+                            <div class="rmt-id-field">
+                                <label data-rmt="myPassword">Mật khẩu</label>
+                                <div class="rmt-id-value">
+                                    <span id="myPassVal">——</span>
+                                    <button class="rmt-copy" data-copy="pass" title="Sao chép"><i class="far fa-copy"></i></button>
+                                    <button class="rmt-copy" id="regenPass" data-rmt-title="regen" title="Tạo mật khẩu mới"><i class="fas fa-rotate"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rmt-share-row">
+                            <button class="rmt-btn" id="rmtShareBtn" type="button"><i class="fas fa-tower-broadcast"></i> <span id="rmtShareLabel">Cho phép điều khiển máy này</span></button>
+                            <span class="rmt-share-state" id="rmtShareState"></span>
+                        </div>
+                    </div>
+
+                    <div class="rmt-access-card rmt-connect glass-panel">
+                        <div class="rmt-access-head"><i class="fas fa-arrow-right-arrow-left"></i><span data-rmt="connectTitle">Kết nối tới thiết bị</span></div>
+                        <p class="rmt-access-sub" data-rmt="connectHint">Nhập mã ID và mật khẩu của thiết bị bạn muốn điều khiển từ xa.</p>
+                        <div class="rmt-connect-form">
+                            <input id="partnerId" class="rmt-input" inputmode="numeric" autocomplete="off" placeholder="ID đối tác">
+                            <input id="partnerPass" class="rmt-input" type="text" autocomplete="off" placeholder="Mật khẩu">
+                            <button class="rmt-btn primary btn-primary" id="connectBtn" data-feature="remote_full" data-feature-badge="off"><i class="fas fa-link"></i> <span data-rmt="connectBtn">Kết nối</span></button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- INFO BANNER -->
+                <div class="rmt-banner" id="rmtBanner" data-reveal="fade">
+                    <i class="fas fa-circle-info bi"></i>
+                    <span data-rmt="banner">Nhập mã ID và mật khẩu của thiết bị đối tác để kết nối. Màn hình và quyền điều khiển sẽ hiển thị ngay khi thiết bị chấp nhận phiên làm việc.</span>
+                    <button id="rmtBannerClose" title="Đóng" aria-label="Đóng">×</button>
+                </div>
+
+                <!-- TOOLBAR (only meaningful when there are devices) -->
+                <div class="rmt-toolbar" id="rmtToolbar" data-reveal="fade" style="display:none;">
+                    <span class="rmt-toolbar-label" data-rmt="modeLabel">Chế độ</span>
+                    <div class="rmt-seg" id="rmtModeSeg" role="tablist">
+                        <button data-mode="manual" class="active"><i class="fas fa-hand-pointer"></i><span data-rmt="modeManual">Thủ công</span></button>
+                        <button data-mode="ai"><i class="fas fa-wand-magic-sparkles"></i><span>AI</span></button>
+                    </div>
+                    <div class="rmt-seg subtle" id="rmtFilterSeg">
+                        <button data-filter="all" class="active"><span data-rmt="fAll">Tất cả</span></button>
+                        <button data-filter="online"><span data-rmt="fOnline">Trực tuyến</span></button>
+                        <button data-filter="offline"><span data-rmt="fOffline">Ngoại tuyến</span></button>
+                    </div>
+                    <div class="rmt-toolbar-spacer"></div>
+                    <div class="rmt-seg subtle" id="rmtViewSeg">
+                        <button data-view="grid" class="active"><i class="fas fa-table-cells-large"></i><span data-rmt="vGrid">Lưới</span></button>
+                        <button data-view="focus"><i class="fas fa-expand"></i><span data-rmt="vFocus">Tiêu điểm</span></button>
+                    </div>
+                </div>
+
+                <!-- DEVICE GRID -->
+                <div class="rmt-grid" id="rmtGrid"></div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ZOOM / CONTROL MODAL -->
+    <div class="rmt-modal-root" id="rmtZoomRoot" aria-hidden="true">
+        <div class="rmt-backdrop" data-close></div>
+        <div class="rmt-modal" role="dialog" aria-modal="true" aria-labelledby="rmtZoomName">
+            <div class="rmt-modal-head">
+                <div class="rmt-os" id="rmtZoomOs"><i class="fas fa-display"></i></div>
+                <div class="rmt-modal-titles">
+                    <b id="rmtZoomName">—</b>
+                    <small id="rmtZoomMeta">—</small>
+                </div>
+                <div class="rmt-seg" id="rmtZoomModeSeg" style="margin-right:8px;">
+                    <button data-mode="manual" class="active"><i class="fas fa-hand-pointer"></i><span data-rmt="modeManual">Thủ công</span></button>
+                    <button data-mode="ai"><i class="fas fa-wand-magic-sparkles"></i><span>AI</span></button>
+                </div>
+                <button class="rmt-modal-close" data-close aria-label="Đóng">×</button>
+            </div>
+            <div class="rmt-stage" id="rmtStage">
+                <!-- Live screen of the connected Skemi device (real AI-desktop stream)
+                     — shown once an AI command runs; the mock below is the idle preview. -->
+                <img id="rmtLiveStream" class="rmt-live-stream" alt="" style="display:none;">
+                <div class="rmt-win">
+                    <div class="rmt-win-bar"><i></i><i></i><i></i></div>
+                    <div class="rmt-win-body"><span></span><span></span><span></span><span></span></div>
+                </div>
+                <div class="rmt-taskbar"><b></b><b></b><b></b></div>
+                <div class="rmt-remote-cursor" id="rmtRemoteCursor" style="opacity:0;"><i class="fas fa-location-arrow"></i></div>
+                <div class="rmt-stage-hint" id="rmtStageHint"></div>
+            </div>
+            <div class="rmt-modal-foot">
+                <div class="rmt-foot-row">
+                    <div class="rmt-legion" id="rmtLegion" style="display:none;" title="Số Agent Legion cùng điều khiển">
+                        <i class="fas fa-shield-halved"></i>
+                        <span class="rmt-legion-lbl" data-rmt="legionLabel">Agent</span>
+                        <input type="range" id="rmtAgentCount" min="1" max="16" value="1" step="1" aria-label="Số Agent Legion">
+                        <b id="rmtAgentCountVal">1</b>
+                    </div>
+                    <div class="rmt-ai-input">
+                        <i class="fas fa-wand-magic-sparkles" style="color:var(--brand-primary)"></i>
+                        <input type="text" id="rmtAiCmd" placeholder="Nhập lệnh cho AI thực hiện trên máy này…">
+                    </div>
+                    <button class="rmt-btn primary btn-primary" id="rmtAiSend"><i class="fas fa-paper-plane"></i> <span data-rmt="send">Gửi</span></button>
+                    <button class="rmt-btn ghost" id="rmtZoomDisconnect"><i class="fas fa-link-slash"></i> <span data-rmt="disconnect">Ngắt</span></button>
+                </div>
+                <div class="rmt-log" id="rmtLog"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer scripts (shared shell) -->
+    <script src="./Js/i18n-packs.js?v=20260601b"></script>
+    <script src="./Js/upgrade-nudge.js?v=20260531a"></script>
+    <script src="./Js/entitlements.js?v=20260701d"></script>
+    <script type="module" src="./Js/User_navbar.js?v=20260702b"></script>
+    <script type="module" src="./Js/LanguageManager.js?v=20260701e"></script>
+    <script src="./Js/GlobalStatus.js?v=20260704a"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('toggleSidebar');
+            if (toggleBtn) {
+                const sidebar = document.getElementById('appSidebar');
+                toggleBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('collapsed');
+                    const span = toggleBtn.querySelector('span');
+                    if (span) span.innerText = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+                });
+            }
+        });
+    </script>
+
+    <!-- Remote console logic (self-contained) -->
+    <script>
+    (function () {
+        'use strict';
+
+        function isVi() {
+            try { return String(localStorage.getItem('skemi_language') || 'vi').trim().toLowerCase().startsWith('vi'); }
+            catch (_) { return true; }
+        }
+        var T = {
+            vi: {
+                navRemote: 'Điều khiển từ xa', eyebrow: 'TRUNG TÂM ĐIỀU KHIỂN', title: 'Điều khiển từ xa',
+                subtitle: 'Kết nối và điều khiển thiết bị từ xa an toàn bằng mã ID và mật khẩu.',
+                onlineLabel: 'đã kết nối',
+                identityTitle: 'Thiết bị này', identityHint: 'Chia sẻ ID và mật khẩu này để cho phép người khác điều khiển máy của bạn.',
+                myId: 'ID của bạn', myPassword: 'Mật khẩu', regen: 'Tạo mật khẩu mới',
+                connectTitle: 'Kết nối tới thiết bị', connectHint: 'Nhập mã ID và mật khẩu của thiết bị bạn muốn điều khiển từ xa.',
+                connectBtn: 'Kết nối', partnerIdPh: 'ID đối tác', partnerPassPh: 'Mật khẩu',
+                banner: 'Nhập mã ID và mật khẩu của thiết bị đối tác để kết nối. Màn hình và quyền điều khiển sẽ hiển thị ngay khi thiết bị chấp nhận phiên làm việc.',
+                modeLabel: 'Chế độ', modeManual: 'Thủ công', fAll: 'Tất cả', fOnline: 'Trực tuyến', fOffline: 'Ngoại tuyến',
+                vGrid: 'Lưới', vFocus: 'Tiêu điểm', send: 'Gửi', disconnect: 'Ngắt',
+                online: 'Trực tuyến', offline: 'Ngoại tuyến', connecting: 'Đang kết nối…',
+                control: 'Điều khiển', zoom: 'Phóng to', remove: 'Gỡ', reconnect: 'Kết nối lại', latencyUnit: 'ms',
+                aiPlaceholder: 'Nhập lệnh cho AI thực hiện trên máy này…',
+                manualHint: 'Di chuyển chuột và gõ phím trong khung hình để điều khiển thiết bị từ xa.',
+                aiHint: 'Nhập lệnh bằng ngôn ngữ tự nhiên — AI sẽ thực hiện thao tác đó trên thiết bị được chọn.',
+                emptyTitle: 'Chưa kết nối thiết bị nào', emptySub: 'Nhập ID và mật khẩu của thiết bị đối tác ở khung “Kết nối tới thiết bị” phía trên để bắt đầu.',
+                filterEmptyTitle: 'Không có thiết bị phù hợp', filterEmptySub: 'Không có thiết bị nào khớp bộ lọc hiện tại. Thử chọn “Tất cả”.',
+                maxReached: 'Đã đạt tối đa 5 thiết bị. Hãy ngắt bớt một thiết bị trước khi kết nối thêm.',
+                needId: 'Vui lòng nhập ID và mật khẩu của thiết bị đối tác.',
+                connectingTo: function (n) { return 'Đang kết nối tới ' + n + '…'; },
+                copiedId: 'Đã sao chép ID', copiedPass: 'Đã sao chép mật khẩu', regenDone: 'Đã tạo mật khẩu mới',
+                removeConfirm: function (n) { return 'Ngắt và gỡ thiết bị “' + n + '” khỏi danh sách?'; },
+                logCmd: function (n) { return 'Đã gửi lệnh tới ' + n + '.'; },
+                logWait: 'Đang thực hiện trên thiết bị, vui lòng đợi…',
+                logDone: 'Đã thực hiện xong.', logFail: 'Không thực hiện được lệnh. Hãy thử lại.',
+                offlineCmd: 'Thiết bị đang ngoại tuyến — hãy kết nối lại trước khi gửi lệnh.',
+                deviceLabel: function (id) { return 'Máy ' + id; },
+                legionLabel: 'Agent', legionTitle: 'Số Agent Legion cùng điều khiển — mỗi agent một cửa sổ, chạy ẩn nên không cướp focus.',
+                logSplit: function (n) { return 'Điều phối ' + n + ' agent Legion — mỗi agent nhận một cửa sổ riêng (chạy ẩn, không giật chuột máy chính).'; }
+            },
+            en: {
+                navRemote: 'Remote', eyebrow: 'CONTROL CENTER', title: 'Remote Control',
+                subtitle: 'Securely connect to and control remote devices with an ID and password.',
+                onlineLabel: 'connected',
+                identityTitle: 'This device', identityHint: 'Share this ID and password to let someone control your machine.',
+                myId: 'Your ID', myPassword: 'Password', regen: 'Generate new password',
+                connectTitle: 'Connect to a device', connectHint: 'Enter the ID and password of the device you want to control remotely.',
+                connectBtn: 'Connect', partnerIdPh: 'Partner ID', partnerPassPh: 'Password',
+                banner: 'Enter the partner device\'s ID and password to connect. Its screen and controls appear once the device accepts the session.',
+                modeLabel: 'Mode', modeManual: 'Manual', fAll: 'All', fOnline: 'Online', fOffline: 'Offline',
+                vGrid: 'Grid', vFocus: 'Focus', send: 'Send', disconnect: 'Disconnect',
+                online: 'Online', offline: 'Offline', connecting: 'Connecting…',
+                control: 'Control', zoom: 'Zoom', remove: 'Remove', reconnect: 'Reconnect', latencyUnit: 'ms',
+                aiPlaceholder: 'Type a command for the AI to run on this device…',
+                manualHint: 'Move your mouse and type within the frame to control the remote device.',
+                aiHint: 'Type a natural-language command — the AI will carry it out on the selected device.',
+                emptyTitle: 'No devices connected', emptySub: 'Enter a partner device\'s ID and password in the “Connect to a device” box above to get started.',
+                filterEmptyTitle: 'No matching devices', filterEmptySub: 'No devices match the current filter. Try selecting “All”.',
+                maxReached: 'Maximum of 5 devices reached. Disconnect one before connecting another.',
+                needId: 'Please enter the partner device\'s ID and password.',
+                connectingTo: function (n) { return 'Connecting to ' + n + '…'; },
+                copiedId: 'ID copied', copiedPass: 'Password copied', regenDone: 'New password generated',
+                removeConfirm: function (n) { return 'Disconnect and remove “' + n + '” from the list?'; },
+                logCmd: function (n) { return 'Command sent to ' + n + '.'; },
+                logWait: 'Running on the device, please wait…',
+                logDone: 'Done.', logFail: 'Could not run the command. Please try again.',
+                offlineCmd: 'Device is offline — reconnect before sending a command.',
+                deviceLabel: function (id) { return 'Device ' + id; },
+                legionLabel: 'Agents', legionTitle: 'How many Legion agents share control — each takes one window, runs hidden so it never steals focus.',
+                logSplit: function (n) { return 'Dispatched to ' + n + ' Legion agents — each takes a separate window (runs hidden, no mouse jitter on the host).'; }
+            }
+        };
+        function t(k) { return T[isVi() ? 'vi' : 'en'][k]; }
+
+        /* ---------- storage (per-account, auto-wiped on logout) ---------- */
+        var STORE_KEY = 'skemi_remote_devices_v1';
+        var ID_KEY = 'skemi_remote_my_id_v1';
+        var PASS_KEY = 'skemi_remote_my_pass_v1';
+        function loadRaw(k) { try { return window.loadUserData ? window.loadUserData(k) : localStorage.getItem(k); } catch (_) { return null; } }
+        function saveRaw(k, v) { try { if (window.saveUserData) window.saveUserData(k, v); else localStorage.setItem(k, v); } catch (_) {} }
+        function loadDevices() { var raw = loadRaw(STORE_KEY); if (!raw) return null; try { var a = JSON.parse(raw); return Array.isArray(a) ? a : null; } catch (_) { return null; } }
+        function persist() { try { saveRaw(STORE_KEY, JSON.stringify(state.devices)); } catch (_) {} }
+
+        function uid() { return 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+        function hueFor(i) { return (210 + i * 46) % 360; }
+        function genId() { var s = ''; for (var i = 0; i < 9; i++) s += Math.floor(Math.random() * 10); return s; }
+        function fmtId(s) { s = String(s || '').replace(/\D/g, ''); return s.replace(/(\d{3})(?=\d)/g, '$1 ').trim(); }
+        function genPass() { var c = 'abcdefghjkmnpqrstuvwxyz23456789'; var s = ''; for (var i = 0; i < 6; i++) s += c.charAt(Math.floor(Math.random() * c.length)); return s; }
+
+        var state = {
+            devices: loadDevices() || [],
+            mode: 'manual', filter: 'all', view: 'grid', activeId: null,
+            myId: '', myPass: ''
+        };
+        if (!loadDevices()) persist();
+
+        // This-device identity (persisted per account)
+        state.myId = (loadRaw(ID_KEY) || '').replace(/\D/g, '') || genId();
+        saveRaw(ID_KEY, state.myId);
+        state.myPass = loadRaw(PASS_KEY) || genPass();
+        saveRaw(PASS_KEY, state.myPass);
+
+        var MAX = 5;
+        var OS_ICON = { windows: 'fab fa-windows', apple: 'fab fa-apple', linux: 'fab fa-linux', android: 'fab fa-android', unknown: 'fas fa-display' };
+
+        var $ = function (id) { return document.getElementById(id); };
+        var grid = $('rmtGrid');
+
+        function applyStaticText() {
+            document.querySelectorAll('[data-rmt]').forEach(function (n) {
+                var v = t(n.getAttribute('data-rmt')); if (typeof v === 'string') n.textContent = v;
+            });
+            document.querySelectorAll('[data-rmt-title]').forEach(function (n) {
+                var v = t(n.getAttribute('data-rmt-title')); if (typeof v === 'string') n.title = v;
+            });
+            var ai = $('rmtAiCmd'); if (ai) ai.placeholder = t('aiPlaceholder');
+            var pid = $('partnerId'); if (pid) pid.placeholder = t('partnerIdPh');
+            var pp = $('partnerPass'); if (pp) pp.placeholder = t('partnerPassPh');
+            try { document.title = (isVi() ? 'Skemi · Điều khiển từ xa' : 'Skemi · Remote Control'); } catch (_) {}
+        }
+
+        function renderIdentity() {
+            $('myIdVal').textContent = fmtId(state.myId);
+            $('myPassVal').textContent = state.myPass;
+        }
+
+        function deviceMatchesFilter(d) {
+            if (state.filter === 'online') return d.status !== 'offline';
+            if (state.filter === 'offline') return d.status === 'offline';
+            return true;
+        }
+        function statusClass(s) { return s === 'online' ? 's-online' : s === 'connecting' ? 's-connecting' : 's-offline'; }
+        function statusText(s) { return s === 'online' ? t('online') : s === 'connecting' ? t('connecting') : t('offline'); }
+        function escapeHtml(s) { return String(s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+        function byId(id) { for (var i = 0; i < state.devices.length; i++) if (state.devices[i].id === id) return state.devices[i]; return null; }
+
+        function deviceCard(d, idx) {
+            var hue = hueFor(idx);
+            var offline = d.status === 'offline';
+            var connecting = d.status === 'connecting';
+            var card = document.createElement('div');
+            card.className = 'rmt-device glass-panel' + (d.id === state.activeId ? ' is-active' : '');
+            card.setAttribute('data-id', d.id);
+
+            var screen = document.createElement('div');
+            screen.className = 'rmt-screen' + (offline ? ' is-offline' : '');
+            screen.style.setProperty('--wall', hue);
+            screen.innerHTML =
+                '<div class="rmt-screen-top">' +
+                    '<span class="rmt-chip"><span class="s-dot ' + statusClass(d.status) + '"></span>' + statusText(d.status) + '</span>' +
+                    (d.status === 'online' ? '<span class="rmt-chip">' + d.latency + ' ' + t('latencyUnit') + '</span>' : '') +
+                '</div>' +
+                (offline
+                    ? '<div class="rmt-offline-state"><span class="oi"><i class="fas fa-plug-circle-xmark"></i></span><span>' + t('offline') + '</span></div>'
+                    : connecting
+                        ? '<div class="rmt-connecting-state"><span class="skemi-spinner"></span><span>' + t('connecting') + '</span></div>'
+                        : '<div class="rmt-win"><div class="rmt-win-bar"><i></i><i></i><i></i></div><div class="rmt-win-body"><span></span><span></span><span></span><span></span></div></div>' +
+                          '<div class="rmt-taskbar"><b></b><b></b><b></b></div>' +
+                          '<div class="rmt-live-cursor" style="left:58%;top:46%;"><i class="fas fa-location-arrow" style="color:#fff"></i></div>') +
+                '<div class="rmt-screen-veil">' +
+                    (offline
+                        ? '<button class="rmt-veil-btn go" data-act="reconnect" title="' + t('reconnect') + '"><i class="fas fa-rotate-right"></i></button>'
+                        : connecting ? ''
+                        : '<button class="rmt-veil-btn go" data-act="open" title="' + t('control') + '"><i class="fas fa-up-right-and-down-left-from-center"></i></button>') +
+                '</div>';
+
+            var bar = document.createElement('div');
+            bar.className = 'rmt-device-bar';
+            bar.innerHTML =
+                '<div class="rmt-os"><i class="' + (OS_ICON[d.os] || OS_ICON.unknown) + '"></i></div>' +
+                '<div class="rmt-meta">' +
+                    '<div class="rmt-name" title="' + escapeHtml(d.name) + '">' + escapeHtml(d.name) + '</div>' +
+                    '<div class="rmt-sub"><span class="s-dot ' + statusClass(d.status) + '"></span>' + statusText(d.status) +
+                        (d.status === 'online' ? ' · ' + d.latency + ' ' + t('latencyUnit') : '') + '</div>' +
+                '</div>' +
+                '<div class="rmt-row-actions">' +
+                    (offline
+                        ? '<button class="rmt-icon-btn" data-act="reconnect" title="' + t('reconnect') + '"><i class="fas fa-rotate-right"></i></button>'
+                        : connecting ? ''
+                        : '<button class="rmt-icon-btn" data-act="open" title="' + t('zoom') + '"><i class="fas fa-expand"></i></button>') +
+                    '<button class="rmt-icon-btn danger" data-act="remove" title="' + t('remove') + '"><i class="fas fa-trash-can"></i></button>' +
+                '</div>';
+
+            card.appendChild(screen);
+            card.appendChild(bar);
+
+            screen.addEventListener('click', function (e) {
+                var actBtn = e.target.closest('[data-act]');
+                var act = actBtn ? actBtn.getAttribute('data-act') : null;
+                if (act === 'reconnect') { reconnect(d.id); return; }
+                if (act === 'open') { openZoom(d.id); return; }
+                if (!actBtn && d.status === 'online') openZoom(d.id);
+            });
+            bar.addEventListener('click', function (e) {
+                var actBtn = e.target.closest('[data-act]'); if (!actBtn) return;
+                var act = actBtn.getAttribute('data-act');
+                if (act === 'open') openZoom(d.id);
+                else if (act === 'reconnect') reconnect(d.id);
+                else if (act === 'remove') removeDevice(d.id);
+            });
+            return card;
+        }
+
+        function render() {
+            grid.classList.toggle('focus', state.view === 'focus');
+            grid.innerHTML = '';
+            var visible = state.devices.filter(deviceMatchesFilter);
+
+            $('rmtToolbar').style.display = state.devices.length ? '' : 'none';
+
+            if (state.devices.length === 0) {
+                var empty = document.createElement('div');
+                empty.className = 'rmt-empty';
+                empty.innerHTML = '<div class="ei"><i class="fas fa-satellite-dish"></i></div>' +
+                    '<h3>' + t('emptyTitle') + '</h3><p>' + t('emptySub') + '</p>';
+                grid.appendChild(empty);
+            } else if (visible.length === 0) {
+                // devices EXIST but none match the active filter → explain, don't show a blank grid
+                var fe = document.createElement('div');
+                fe.className = 'rmt-empty';
+                fe.innerHTML = '<div class="ei"><i class="fas fa-filter-circle-xmark"></i></div>' +
+                    '<h3>' + t('filterEmptyTitle') + '</h3><p>' + t('filterEmptySub') + '</p>';
+                grid.appendChild(fe);
+            } else {
+                visible.forEach(function (d) { grid.appendChild(deviceCard(d, state.devices.indexOf(d))); });
+            }
+
+            var on = state.devices.filter(function (d) { return d.status === 'online'; }).length;
+            $('rmtOnlineCount').textContent = on;
+
+            try {
+                if (document.body.classList.contains('skemi-anim-in')) {
+                    grid.querySelectorAll('.glass-panel').forEach(function (el, i) {
+                        el.setAttribute('data-skemi-stagger', ''); el.style.setProperty('--i', String(Math.min(i, 12)));
+                    });
+                }
+            } catch (_) {}
+        }
+
+        /* ========== REAL remote relay over WebSocket (TeamViewer-style) ========== */
+        function wsUrl() { return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws/remote'; }
+        var ctrlSockets = {};   // device.id -> controller WebSocket
+        var ctrlPass = {};      // device.id -> password (in-memory only, never persisted)
+
+        // ----- DEVICE MODE: let others control THIS machine -----
+        var deviceWS = null, deviceFrameTimer = null, deviceImg = null, deviceCanvas = null;
+        function setShareUI(on) {
+            var btn = $('rmtShareBtn'), st = $('rmtShareState'), lbl = $('rmtShareLabel');
+            if (btn) btn.classList.toggle('is-on', on);
+            if (lbl) lbl.textContent = on ? (isVi() ? 'Đang cho phép điều khiển — bấm để tắt' : 'Sharing — click to stop') : (isVi() ? 'Cho phép điều khiển máy này' : 'Allow control of this device');
+            if (st) { st.className = 'rmt-share-state' + (on ? ' live' : ''); st.innerHTML = on ? '<span class="dot"></span> ' + (isVi() ? 'Trực tuyến · ID ' : 'Online · ID ') + fmtId(state.myId) : ''; }
+        }
+        function startDeviceMode() {
+            if (deviceWS) return;
+            var ws = new WebSocket(wsUrl()); deviceWS = ws;
+            ws.onopen = function () { ws.send(JSON.stringify({ type: 'hello', role: 'device', id: state.myId, password: state.myPass, name: (isVi() ? 'Máy của tôi' : 'My device'), os: 'windows' })); };
+            ws.onmessage = function (ev) {
+                var m; try { m = JSON.parse(ev.data); } catch (_) { return; }
+                if (m.type === 'registered') setShareUI(true);
+                else if (m.type === 'controller_joined') startDeviceFrames();
+                else if (m.type === 'ai_command') runDeviceCommand(m.command);
+                else if (m.type === 'error') toast(m.message || 'Lỗi chia sẻ');
+            };
+            ws.onclose = function () { stopDeviceMode(true); };
+            ws.onerror = function () {};
+        }
+        function startDeviceFrames() {
+            if (deviceFrameTimer) return;
+            if (!deviceImg) { deviceImg = new Image(); deviceImg.src = '/api/local-computer/mjpeg?t=' + Date.now(); }
+            if (!deviceCanvas) { deviceCanvas = document.createElement('canvas'); deviceCanvas.width = 960; deviceCanvas.height = 600; }
+            deviceFrameTimer = setInterval(function () {
+                if (!deviceWS || deviceWS.readyState !== 1) return;
+                try {
+                    var ctx = deviceCanvas.getContext('2d');
+                    ctx.fillStyle = '#0b0c14'; ctx.fillRect(0, 0, deviceCanvas.width, deviceCanvas.height);
+                    if (deviceImg.naturalWidth) ctx.drawImage(deviceImg, 0, 0, deviceCanvas.width, deviceCanvas.height);
+                    deviceWS.send(JSON.stringify({ type: 'frame', data: deviceCanvas.toDataURL('image/jpeg', 0.45) }));
+                } catch (_) {}
+            }, 1200);
+        }
+        function runDeviceCommand(cmd) {
+            cmd = (cmd || '').trim(); if (!cmd) return;
+            fetch('/api/local-computer/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ command: cmd, consent: true, source: 'remote-device', mode: 'ai' }) })
+                .then(function (r) { return r.json(); }).then(function (res) {
+                    var ok = !!(res && (res.success || res.ok));
+                    var text = (res && (res.final_result || res.summary || res.error)) || (ok ? 'Đã thực hiện.' : 'Không thực hiện được.');
+                    if (deviceWS && deviceWS.readyState === 1) deviceWS.send(JSON.stringify({ type: 'result', ok: ok, text: text }));
+                }).catch(function () { if (deviceWS && deviceWS.readyState === 1) deviceWS.send(JSON.stringify({ type: 'result', ok: false, text: 'Lỗi thực hiện lệnh.' })); });
+        }
+        function stopDeviceMode(fromClose) {
+            if (deviceFrameTimer) { clearInterval(deviceFrameTimer); deviceFrameTimer = null; }
+            if (deviceWS && !fromClose) { try { deviceWS.close(); } catch (_) {} }
+            deviceWS = null; setShareUI(false);
+        }
+        function toggleShare() { if (deviceWS) stopDeviceMode(); else startDeviceMode(); }
+
+        // ----- CONTROLLER: connect to a remote device through the relay -----
+        function openControllerWS(d, digits, pass) {
+            var ws; try { ws = new WebSocket(wsUrl()); } catch (_) { var dd0 = byId(d.id); if (dd0) { dd0.status = 'offline'; persist(); render(); } return; }
+            ctrlSockets[d.id] = ws; ctrlPass[d.id] = pass;
+            var t0 = Date.now();
+            ws.onopen = function () { ws.send(JSON.stringify({ type: 'hello', role: 'controller', id: digits, password: pass })); };
+            ws.onmessage = function (ev) {
+                var m; try { m = JSON.parse(ev.data); } catch (_) { return; }
+                var dd = byId(d.id); if (!dd) return;
+                if (m.type === 'connected') { dd.status = 'online'; dd.latency = Math.max(1, Date.now() - t0); if (m.device) { dd.name = m.device.name || dd.name; dd.os = m.device.os || dd.os; } persist(); render(); }
+                else if (m.type === 'frame') { if (state.activeId === d.id) { var img = $('rmtLiveStream'); if (img) { img.src = m.data; img.style.display = 'block'; } } }
+                else if (m.type === 'result') { logLine(m.ok ? 'res' : 'err', m.text || ''); var b = $('rmtAiSend'); if (b) { b.disabled = false; b.classList.remove('is-busy'); } }
+                else if (m.type === 'device_offline') { dd.status = 'offline'; persist(); render(); }
+                else if (m.type === 'error') { dd.status = 'offline'; persist(); render(); toast(m.message || (isVi() ? 'Không kết nối được' : 'Could not connect')); try { ws.close(); } catch (_) {} delete ctrlSockets[d.id]; }
+            };
+            ws.onclose = function () { var dd = byId(d.id); if (dd && dd.status !== 'offline') { dd.status = 'offline'; persist(); render(); } delete ctrlSockets[d.id]; };
+            ws.onerror = function () {};
+        }
+
+        /* ---------- connect / actions ---------- */
+        function connect() {
+            var pid = ($('partnerId').value || '').replace(/\s+/g, ' ').trim();
+            var pass = ($('partnerPass').value || '').trim();
+            if (!pid || !pass) { toast(t('needId')); return; }
+            var digits = pid.replace(/\D/g, '');
+            var existing = state.devices.filter(function (d) { return (d.partnerId || '') === digits; })[0];
+            if (existing) {
+                $('partnerId').value = ''; $('partnerPass').value = '';
+                ctrlPass[existing.id] = pass;
+                if (existing.status === 'online') { openZoom(existing.id); return; }
+                existing.status = 'connecting'; persist(); render(); openControllerWS(existing, digits, pass); return;
+            }
+            if (state.devices.length >= MAX) { toast(t('maxReached')); return; }
+            var d = { id: uid(), partnerId: digits, name: t('deviceLabel')(fmtId(digits)), os: 'unknown', status: 'connecting', latency: 0 };
+            state.devices.push(d); persist(); render();
+            toast(t('connectingTo')(fmtId(digits)));
+            $('partnerId').value = ''; $('partnerPass').value = '';
+            openControllerWS(d, digits, pass);
+        }
+        function reconnect(id) {
+            var d = byId(id); if (!d) return;
+            var pass = ctrlPass[id];
+            if (!pass) { toast(isVi() ? 'Nhập lại ID và mật khẩu để kết nối lại.' : 'Re-enter the ID and password to reconnect.'); return; }
+            d.status = 'connecting'; d.latency = 0; persist(); render();
+            openControllerWS(d, (d.partnerId || '').replace(/\D/g, ''), pass);
+        }
+        function removeDevice(id) {
+            var d = byId(id); if (!d) return;
+            if (!window.confirm(t('removeConfirm')(d.name))) return;
+            try { if (ctrlSockets[id]) ctrlSockets[id].close(); } catch (_) {}
+            delete ctrlSockets[id]; delete ctrlPass[id];
+            state.devices = state.devices.filter(function (x) { return x.id !== id; });
+            if (state.activeId === id) closeZoom();
+            persist(); render();
+        }
+
+        /* ---------- zoom / control modal ---------- */
+        function openZoom(id) {
+            var d = byId(id); if (!d || d.status !== 'online') return;
+            state.activeId = id;
+            $('rmtStage').style.setProperty('--wall', hueFor(state.devices.indexOf(d)));
+            $('rmtZoomName').textContent = d.name;
+            $('rmtZoomMeta').textContent = statusText(d.status) + ' · ' + d.latency + ' ' + t('latencyUnit');
+            $('rmtZoomOs').innerHTML = '<i class="' + (OS_ICON[d.os] || OS_ICON.unknown) + '"></i>';
+            $('rmtLog').innerHTML = '';
+            stopLiveStream();           // start on the idle preview until a command runs
+            syncZoomMode();
+            openModal('rmtZoomRoot');
+            render();
+        }
+        function closeZoom() { state.activeId = null; stopLiveStream(); closeModal('rmtZoomRoot'); render(); }
+        function syncZoomMode() {
+            var stage = $('rmtStage');
+            stage.classList.toggle('ai-mode', state.mode === 'ai');
+            $('rmtStageHint').textContent = state.mode === 'ai' ? t('aiHint') : t('manualHint');
+            $('rmtZoomModeSeg').querySelectorAll('button').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-mode') === state.mode); });
+            // Legion agent picker only makes sense in AI Autopilot mode.
+            var lg = $('rmtLegion'); if (lg) lg.style.display = (state.mode === 'ai') ? 'flex' : 'none';
+        }
+        (function () {
+            var ac = $('rmtAgentCount'); var lbl = $('rmtAgentCountVal');
+            if (ac && lbl) ac.addEventListener('input', function () { lbl.textContent = ac.value; });
+        })();
+        function sendAiCommand() {
+            var inp = $('rmtAiCmd'); var cmd = inp.value.trim();
+            var d = byId(state.activeId); if (!d || !cmd) return;
+            // The button is disabled while running, but the Enter-key handler isn't —
+            // bail if a command is still in flight so we don't fire concurrent runs.
+            if ($('rmtAiSend').disabled) return;
+            if (d.status !== 'online') { logLine('err', t('offlineCmd')); return; }
+            var ws = ctrlSockets[d.id];
+            if (!ws || ws.readyState !== 1) { logLine('err', t('offlineCmd')); return; }
+            logLine('cmd', t('logCmd')(d.name) + ' “' + cmd + '”');
+            // Legion split: when the user assigns more than one agent, each takes a
+            // separate window on the remote device (runs hidden, no focus steal).
+            var agents = Math.max(1, Math.min(16, parseInt(($('rmtAgentCount') || {}).value, 10) || 1));
+            if (agents > 1) logLine('sys', t('logSplit')(agents));
+            logLine('sys', t('logWait'));
+            inp.value = '';
+            var btn = $('rmtAiSend'); btn.disabled = true; btn.classList.add('is-busy');
+            // Send the command to the REMOTE device through the relay. That device runs
+            // it on ITS own Skemi agent (ghost-input UIA/PostMessage — no focus steal)
+            // and sends a `result` back, handled in openControllerWS.onmessage. This is
+            // the "AI tự vào điều khiển thiết bị thay người" path.
+            try { ws.send(JSON.stringify({ type: 'ai_command', command: cmd, agents: agents })); }
+            catch (e) { btn.disabled = false; btn.classList.remove('is-busy'); logLine('err', t('logFail')); return; }
+            // safety re-enable if no result returns within the agent's max budget
+            setTimeout(function () { if (btn) { btn.disabled = false; btn.classList.remove('is-busy'); } }, 215000);
+        }
+        function logLine(kind, msg, ret) {
+            var log = $('rmtLog'); var now = new Date();
+            var hh = String(now.getHours()).padStart(2, '0'); var mm = String(now.getMinutes()).padStart(2, '0');
+            var ln = document.createElement('div'); ln.className = 'ln ' + kind;
+            ln.innerHTML = '<span class="t">' + hh + ':' + mm + '</span><span class="m">' + escapeHtml(msg) + '</span>';
+            log.appendChild(ln); log.scrollTop = log.scrollHeight;
+            if (ret) return ln;
+        }
+        // LIVE SCREEN: stream the connected Skemi device's real AI desktop into the
+        // stage (same MJPEG feed as Skemi Control). Idle = the mock preview; once a
+        // command runs we show the genuine screen so the user sees the AI working.
+        function startLiveStream() {
+            var img = $('rmtLiveStream'); if (!img) return;
+            img.onerror = function () { img.style.display = 'none'; };   // no desktop yet → keep mock
+            img.src = '/api/local-computer/mjpeg?t=' + Date.now();
+            img.style.display = 'block';
+        }
+        function stopLiveStream() {
+            var img = $('rmtLiveStream'); if (!img) return;
+            img.style.display = 'none';
+            img.src = '';                                               // close the MJPEG connection
+        }
+        (function manualCursor() {
+            var stage = $('rmtStage'); var cur = $('rmtRemoteCursor');
+            if (!stage || !cur) return;
+            stage.addEventListener('mousemove', function (e) {
+                if (state.mode === 'ai') { cur.style.opacity = '0'; return; }
+                var r = stage.getBoundingClientRect();
+                cur.style.left = (e.clientX - r.left) + 'px'; cur.style.top = (e.clientY - r.top) + 'px'; cur.style.opacity = '1';
+            });
+            stage.addEventListener('mouseleave', function () { cur.style.opacity = '0'; });
+        })();
+
+        function openModal(rootId) { var r = $(rootId); if (r) { r.classList.add('open'); r.setAttribute('aria-hidden', 'false'); } }
+        function closeModal(rootId) { var r = $(rootId); if (r) { r.classList.remove('open'); r.setAttribute('aria-hidden', 'true'); } }
+
+        function toast(msg) {
+            var el = document.createElement('div'); el.className = 'toast';
+            el.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:2000;background:var(--text-primary);color:var(--bg-secondary);padding:11px 18px;border-radius:12px;font-weight:600;font-size:.88rem;box-shadow:var(--shadow-lg);max-width:90vw;text-align:center;';
+            el.textContent = msg; document.body.appendChild(el);
+            setTimeout(function () { el.style.transition = 'opacity .4s, transform .4s'; el.style.opacity = '0'; el.style.transform = 'translateX(-50%) translateY(8px)'; }, 2200);
+            setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 2700);
+        }
+        function copyText(text, okMsg) {
+            var done = function () { toast(okMsg); };
+            try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); }); return; } } catch (_) {}
+            fallbackCopy(text); done();
+        }
+        function fallbackCopy(text) {
+            try { var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); } catch (_) {}
+        }
+
+        function bindSeg(segId, attr, apply) {
+            var seg = $(segId); if (!seg) return;
+            seg.addEventListener('click', function (e) {
+                var b = e.target.closest('button'); if (!b) return;
+                seg.querySelectorAll('button').forEach(function (x) { x.classList.remove('active'); });
+                b.classList.add('active'); apply(b.getAttribute(attr));
+            });
+        }
+
+        function init() {
+            applyStaticText();
+            renderIdentity();
+            render();
+
+            $('connectBtn').addEventListener('click', connect);
+            $('partnerPass').addEventListener('keydown', function (e) { if (e.key === 'Enter') connect(); });
+            $('partnerId').addEventListener('keydown', function (e) { if (e.key === 'Enter') { $('partnerPass').focus(); } });
+
+            document.querySelectorAll('[data-copy]').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    if (b.getAttribute('data-copy') === 'id') copyText(state.myId, t('copiedId'));
+                    else copyText(state.myPass, t('copiedPass'));
+                });
+            });
+            $('regenPass').addEventListener('click', function () {
+                state.myPass = genPass(); saveRaw(PASS_KEY, state.myPass); renderIdentity(); toast(t('regenDone'));
+                if (deviceWS) { stopDeviceMode(); startDeviceMode(); }   // re-register with the new password
+            });
+            var shareBtn = $('rmtShareBtn'); if (shareBtn) shareBtn.addEventListener('click', toggleShare);
+            window.addEventListener('beforeunload', function () { try { stopDeviceMode(); } catch (_) {} });
+
+            bindSeg('rmtModeSeg', 'data-mode', function (v) { state.mode = v; syncZoomMode(); });
+            bindSeg('rmtFilterSeg', 'data-filter', function (v) { state.filter = v; render(); });
+            bindSeg('rmtViewSeg', 'data-view', function (v) { state.view = v; render(); });
+            bindSeg('rmtZoomModeSeg', 'data-mode', function (v) {
+                state.mode = v; syncZoomMode();
+                $('rmtModeSeg').querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', x.getAttribute('data-mode') === v); });
+            });
+
+            $('rmtAiSend').addEventListener('click', sendAiCommand);
+            $('rmtAiCmd').addEventListener('keydown', function (e) { if (e.key === 'Enter') sendAiCommand(); });
+            $('rmtZoomDisconnect').addEventListener('click', closeZoom);
+
+            document.querySelectorAll('[data-close]').forEach(function (el) {
+                el.addEventListener('click', function () { var root = el.closest('.rmt-modal-root'); if (root && root.id === 'rmtZoomRoot') closeZoom(); });
+            });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && $('rmtZoomRoot').classList.contains('open')) closeZoom(); });
+
+            var bc = $('rmtBannerClose'); if (bc) bc.addEventListener('click', function () { var b = $('rmtBanner'); if (b) b.style.display = 'none'; });
+
+            window.addEventListener('languageChanged', function () { applyStaticText(); renderIdentity(); render(); syncZoomMode(); });
+        }
+
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+        else init();
+    })();
+    </script>
+</body>
+</html>

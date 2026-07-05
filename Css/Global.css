@@ -1,0 +1,637 @@
+/* ========================================
+   SKEMI - GLOBAL DESIGN SYSTEM
+   Modern Light Theme with Premium Aesthetics
+======================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap');
+@import url('./design-tokens.css');
+
+/* Theme variables come from design-tokens.css. Global.css only defines layout/components. */
+
+/* --- RESET --- */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* --- Global button click feedback ---
+   Every <button> gets a consistent press response + clear disabled state, so
+   clicks feel responsive across the whole app (user: "nhấn nút không có
+   animation"). Uses translate/filter (not a positioning transform) so it never
+   fights transform-centred elements. */
+button { transition: transform .12s cubic-bezier(.2,.7,.2,1), filter .15s ease, box-shadow .2s ease, opacity .15s ease; }
+button:not(:disabled):not([aria-disabled="true"]):active { transform: translateY(1px) scale(.975); filter: brightness(.95); }
+button:disabled, button[aria-disabled="true"] { opacity: .5; cursor: not-allowed; filter: grayscale(.25); }
+/* Buttons flagged busy (JS adds .is-loading / [data-busy]) show a spinner pip. */
+button.is-loading, button[data-busy="1"] { position: relative; pointer-events: none; opacity: .85; }
+button.is-loading::after, button[data-busy="1"]::after {
+  content: ""; position: absolute; right: 12px; top: 50%; width: 13px; height: 13px; margin-top: -7px;
+  border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
+  animation: skemiBtnSpin .7s linear infinite; opacity: .85;
+}
+@keyframes skemiBtnSpin { to { transform: rotate(360deg); } }
+
+/* Force :visited links to inherit color from their non-visited rule. Chromium's
+   :visited security restricts CSS variable resolution on visited links, which
+   causes nav links to render in the light-mode --text-secondary value
+   (#334155) regardless of the active theme. Explicit :visited rules below
+   restore var() resolution. */
+a:visited { color: inherit; }
+body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scrollbar-gutter: stable;
+    font-family: var(--font-body);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* --- LAYOUT --- */
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.navbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 72px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+    background: var(--bg-glass);
+    backdrop-filter: var(--glass-blur) var(--glass-saturate);
+    -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturate);
+    border-bottom: 1px solid var(--border-light);
+    box-shadow: 0 1px 0 var(--border-light), 0 10px 30px -22px rgba(15, 23, 42, 0.45);
+    z-index: 1001;
+}
+
+.navbar-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    width: 360px;
+    flex: 0 0 360px;
+}
+
+.app-sidebar {
+    position: fixed; top: 72px; left: 0; bottom: 0; width: 260px;
+    background: var(--bg-secondary); border-right: 1px solid var(--border-light);
+    z-index: 1000; transition: width 0.3s ease;
+    display: flex; flex-direction: column; padding: 1.5rem 0.75rem;
+}
+
+.app-sidebar.collapsed { width: 70px; padding: 1.5rem 0; align-items: center; }
+
+.main-content-wrapper {
+    flex: 1; 
+    margin-left: 260px; 
+    padding-top: 80px; /* Increased padding to avoid navbar overlap */
+    min-height: 100vh;
+    transition: margin-left 0.3s ease; 
+    background: var(--bg-primary);
+    position: relative;
+    z-index: 1;
+}
+
+
+.app-sidebar.collapsed + .main-content-wrapper { margin-left: 70px; }
+
+/* Top navbar = clean account strip: it keeps the brand + username + login/
+   register, but the section-switch shortcuts live ONLY in the left rail, so the
+   top duplicates are hidden (User_navbar.js also hides any runtime-injected ones). */
+.navbar-shortcuts { display: none !important; }
+
+/* --- SIDEBAR COMPONENTS --- */
+.sidebar-links { list-style: none; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.sidebar-links li a {
+    display: flex; align-items: center; gap: 14px; padding: 12px 14px;
+    color: var(--text-secondary); text-decoration: none; border-radius: var(--radius-md);
+    transition: all 0.2s ease; font-weight: 500;
+}
+.sidebar-links li a { position: relative; }
+.sidebar-links li a:hover { background: var(--bg-tertiary); color: var(--brand-primary); }
+.sidebar-links li a.active { background: var(--brand-light); color: var(--brand-primary); font-weight: 600; }
+/* Conventional left rail marks the active section for a vertical nav. */
+.sidebar-links li a.active::before {
+    content: "";
+    position: absolute; left: -0.75rem; top: 50%;
+    transform: translateY(-50%);
+    width: 4px; height: 60%;
+    border-radius: 0 var(--radius-full) var(--radius-full) 0;
+    background: var(--brand-gradient);
+}
+.app-sidebar.collapsed .sidebar-links li a.active::before { display: none; }
+.app-sidebar.collapsed .sidebar-links li a span { display: none; }
+.app-sidebar.collapsed .sidebar-links li a { justify-content: center; }
+
+.toggle-sidebar-btn {
+    position: absolute; bottom: 20px; right: -18px; width: 42px; height: 42px;
+    background: linear-gradient(135deg, rgba(18, 26, 45, 0.96), rgba(56, 22, 82, 0.92));
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 14px 28px rgba(8, 12, 24, 0.28); z-index: 10;
+    color: #f8fafc;
+    backdrop-filter: blur(14px);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.toggle-sidebar-btn:hover {
+    transform: translateY(-2px) scale(1.03);
+    border-color: rgba(255, 255, 255, 0.28);
+    box-shadow: 0 18px 34px rgba(8, 12, 24, 0.34);
+}
+
+.toggle-sidebar-btn span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    font-size: 0;
+    line-height: 1;
+    color: currentColor;
+}
+
+.toggle-sidebar-btn::before {
+    content: "\00D7";
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    color: currentColor;
+}
+
+.app-sidebar.collapsed .toggle-sidebar-btn::before {
+    content: "\2261";
+    font-size: 18px;
+}
+
+body:not(.dark-mode):not(.galaxy-mode) .toggle-sidebar-btn {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(235, 242, 255, 0.94));
+    color: #14213d;
+    border-color: rgba(90, 115, 188, 0.18);
+    box-shadow: 0 14px 26px rgba(92, 113, 176, 0.18);
+}
+
+.logo,
+.logo:hover,
+.logo:focus,
+.logo:active,
+.logo:hover .logo-text,
+.logo:focus .logo-text {
+    text-decoration: none !important;
+}
+.logo {
+    font-size: 1.75rem; font-weight: 800;
+    text-decoration: none; display: flex; align-items: center; gap: 8px;
+}
+
+.logo-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25em;
+    height: 1.25em;
+    color: var(--brand-primary);
+    -webkit-text-fill-color: currentColor;
+    font-size: 0;
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+.logo-mark::before {
+    content: "\2605";
+    font-size: 1.9rem;
+    line-height: 1;
+}
+
+.logo-text {
+    background: var(--brand-premium-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-family: var(--font-heading);
+    letter-spacing: -1px;
+}
+
+
+.navbar-shortcuts {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    margin: 0 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.navbar-shortcuts::-webkit-scrollbar {
+    display: none;
+}
+
+.navbar-shortcuts { color: var(--text-secondary); }
+
+.nav-shortcut {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: var(--radius-full);
+    border: 1px solid transparent;
+    text-decoration: none;
+    color: inherit;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all var(--transition-fast);
+}
+
+.nav-shortcut:hover {
+    color: var(--brand-primary);
+    background: var(--brand-light);
+    border-color: var(--border-brand);
+}
+
+.nav-shortcut.active {
+    color: #fff;
+    background: var(--brand-premium-gradient);
+    border-color: transparent;
+    box-shadow: 0 6px 18px -4px color-mix(in srgb, var(--brand-primary) 45%, transparent);
+}
+
+/* Custom bg active (Preferences.js sets data-skemi-bg): a preset theme may hard-code a
+   light nav-link color (e.g. galaxy's pink) — and the navbar even redefines
+   --text-secondary locally, so a var() reference gets shadowed. Use EXPLICIT colors
+   keyed to the marker so inactive nav/sidebar links stay readable on the flipped bg. */
+html[data-skemi-bg="light"] .nav-shortcut:not(.active), html[data-skemi-bg="light"] .nav-shortcut:not(.active) span,
+html[data-skemi-bg="light"] .sidebar-links a:not(.active), html[data-skemi-bg="light"] .sidebar-links a:not(.active) span { color: #1e293b; }
+html[data-skemi-bg="dark"] .nav-shortcut:not(.active), html[data-skemi-bg="dark"] .nav-shortcut:not(.active) span,
+html[data-skemi-bg="dark"] .sidebar-links a:not(.active), html[data-skemi-bg="dark"] .sidebar-links a:not(.active) span { color: #e2e8f0; }
+/* Active link: on a light custom bg use dark text + a subtle highlight (its neon accent
+   on light fails). On a dark custom bg keep light text. */
+html[data-skemi-bg="light"] .sidebar-links a.active, html[data-skemi-bg="light"] .sidebar-links a.active span { color: #1e293b; }
+html[data-skemi-bg="light"] .sidebar-links a.active { background: rgba(15,23,42,0.07); }
+html[data-skemi-bg="dark"] .sidebar-links a.active, html[data-skemi-bg="dark"] .sidebar-links a.active span { color: #e2e8f0; }
+
+
+/* --- BUTTONS --- */
+.btn, button {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 12px 24px; font-family: inherit; font-size: 0.9rem;
+    font-weight: 600; border: none; border-radius: var(--radius-md);
+    cursor: pointer; transition: all 0.2s ease;
+}
+.btn-primary { background: var(--brand-gradient); color: var(--text-on-brand, #fff); box-shadow: var(--shadow-md); border: none; }
+.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--shadow-lg); filter: brightness(1.05); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-light); }
+.btn-secondary:hover:not(:disabled) { background: var(--bg-glass-hover); border-color: var(--border-medium); }
+.btn-secondary.active { background: var(--brand-gradient); color: var(--text-on-brand, #fff); border-color: transparent; }
+.btn-outline { background: transparent; border: 1px solid var(--border-medium); color: var(--text-primary); }
+.btn-outline:hover:not(:disabled) { border-color: var(--brand-primary); color: var(--brand-primary); }
+.btn-danger { background: var(--accent-danger); color: #fff; border: none; }
+.btn-danger:hover:not(:disabled) { filter: brightness(1.1); }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Upgrade CTA — the single colored call-to-action in the navbar. Defined as a
+   real class (was inline-styled in User_navbar.js) so it themes + animates. */
+.btn-upgrade {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 18px;
+    border: none; border-radius: var(--radius-full);
+    font-weight: 700; font-size: 0.9rem; letter-spacing: 0.2px;
+    cursor: pointer; color: #fff;
+    background: var(--brand-gradient);
+    box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--brand-primary) 55%, transparent);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
+}
+.btn-upgrade:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+    box-shadow: 0 12px 28px -6px color-mix(in srgb, var(--brand-primary) 68%, transparent);
+}
+.btn-upgrade:active { transform: translateY(0) scale(0.97); }
+.btn-upgrade .upgrade-spark { font-size: 0.95em; line-height: 1; display: inline-flex; }
+
+/* Account chip — neutral glass pill. Keeping it quiet (not a loud gradient)
+   makes the Upgrade button the one clear accent and reads far more pro. */
+.btn-user-premium {
+    background: var(--bg-secondary);
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-light);
+    padding: 6px 16px 6px 6px;
+    border-radius: var(--radius-full);
+    display: flex; align-items: center; gap: 10px; font-weight: 600;
+    box-shadow: var(--shadow-sm);
+    transition: background var(--transition-fast), border-color var(--transition-fast),
+                box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+.btn-user-premium:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--border-medium);
+    box-shadow: var(--shadow-md);
+}
+
+#auth-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    min-height: 44px;
+    /* Size to content so the upgrade button + full username both fit, but keep a
+       stable minimum so the navbar doesn't visibly reflow while auth state loads. */
+    width: auto;
+    min-width: 300px;
+    flex: 0 0 auto;
+}
+
+#auth-buttons .btn {
+    height: 44px;
+}
+
+#auth-buttons .btn-primary,
+#auth-buttons .btn-secondary {
+    min-width: 128px;
+}
+
+#auth-buttons .btn-user-premium {
+    min-width: 170px;
+    max-width: 300px;
+}
+.user-avatar-small {
+    width: 32px; height: 32px;
+    background: var(--brand-gradient);
+    color: #fff;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem;
+    box-shadow: 0 2px 8px -2px color-mix(in srgb, var(--brand-primary) 50%, transparent);
+    flex: 0 0 auto;
+}
+.user-name-text {
+    font-size: 0.95rem;
+    letter-spacing: 0.3px;
+    /* Show typical usernames in full; only ellipsize pathologically long ones. */
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* --- FORM ELEMENTS --- */
+input, textarea, select {
+    width: 100%; display: block; padding: 12px 16px; font-family: inherit; font-size: 0.95rem;
+    color: var(--text-primary); background: var(--bg-secondary);
+    border: 1px solid var(--border-light); border-radius: var(--radius-md);
+    outline: none; transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+.input-area { width: 100%; display: block; }
+input:focus, textarea:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--brand-light); }
+
+/* --- TOAST NOTIFICATIONS --- */
+.toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; }
+.toast {
+    display: flex; align-items: center; gap: 12px; padding: 16px 24px;
+    background: var(--bg-secondary); border-left: 4px solid var(--brand-primary);
+    border-radius: var(--radius-md); box-shadow: var(--shadow-xl);
+    animation: slideInRight 0.3s ease-out; min-width: 300px;
+}
+.toast.success { border-left-color: var(--accent-emerald); }
+.toast.error { border-left-color: var(--accent-rose); }
+.toast.warning { border-left-color: var(--accent-amber); }
+.toast-title { font-weight: 600; margin-bottom: 2px; }
+.toast-message { font-size: 0.85rem; color: var(--text-secondary); }
+.toast-close { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
+
+@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fadeOutRight { to { transform: translateX(100%); opacity: 0; } }
+@keyframes fadeInFast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.animate-fadeInFast { animation: fadeInFast 0.15s ease-out forwards; }
+
+/* Custom Context Menu */
+.custom-context-menu {
+    min-width: 160px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding: 8px;
+    z-index: 10000 !important;
+}
+
+.custom-context-menu .menu-item {
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px;
+    font-weight: 500; color: var(--text-primary);
+    cursor: pointer; border-radius: var(--radius-sm);
+    transition: all 0.2s;
+}
+
+.custom-context-menu .menu-item:hover { background: var(--bg-tertiary); }
+.custom-context-menu .logout-item { color: #ef4444; }
+
+/* --- THEME TOGGLE (Already had) --- */
+.theme-toggle {
+    width: 44px; height: 44px; border-radius: 50%; background: var(--bg-tertiary);
+    display: flex; align-items: center; justify-content: center; position: relative;
+    overflow: hidden; cursor: pointer; transition: all var(--transition-normal);
+}
+.theme-toggle i, .theme-toggle span { transition: all 0.3s ease; }
+.theme-toggle .icon-sun, .theme-toggle .icon-moon { position: absolute; transition: 0.3s; pointer-events: none; }
+.theme-toggle .icon-sun { opacity: 0; transform: translateY(20px); }
+body.dark-mode .theme-toggle .icon-sun { opacity: 1; transform: translateY(0); }
+body.dark-mode .theme-toggle .icon-moon { opacity: 0; transform: translateY(-20px); }
+
+/* --- UTILITIES --- */
+.hidden { display: none !important; }
+.text-gradient { 
+    background: var(--brand-gradient); 
+    -webkit-background-clip: text; 
+    background-clip: text;
+    color: transparent; 
+}
+.mb-2 { margin-bottom: 8px; }
+
+/* --- RESPONSIVE --- */
+/* Hamburger is desktop-hidden; the media queries below reveal it on mobile. */
+.nav-hamburger { display: none; }
+.sidebar-backdrop { display: none; }
+.app-sidebar { transition: width 0.3s ease, left 0.28s cubic-bezier(.2,.7,.2,1); }
+
+@media (max-width: 1024px) {
+    .app-sidebar { width: 70px; }
+    .main-content-wrapper { margin-left: 70px; }
+    .navbar-shortcuts {
+        margin: 0 16px;
+        gap: 8px;
+    }
+    /* Tablet/narrow desktop: the shortcut text labels clip into "Stu"/"Qi" when
+       they don't fit. Show icon-only (the emoji) so they stay tappable + clean;
+       the sidebar icon-rail still gives full navigation. */
+    .navbar-shortcuts .nav-shortcut span:last-child:not(:first-child) { display: none; }
+    .nav-shortcut {
+        padding: 9px 11px;
+    }
+}
+/* Tablet only (not phones, where the sidebar becomes a full labelled drawer):
+   render the 70px sidebar as a clean centred icon rail instead of cramped,
+   wrapping text labels. */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .app-sidebar .sidebar-links li a { justify-content: center; padding-left: 0; padding-right: 0; }
+    .app-sidebar .sidebar-links li a span:not(.icon) { display: none; }
+    .app-sidebar .sidebar-links li a.active::before { display: none; }
+}
+@media (max-width: 768px) {
+    .app-sidebar { left: -100%; width: 260px; box-shadow: 8px 0 40px -12px rgba(0,0,0,.5); }
+    .app-sidebar.mobile-open { left: 0; }
+    .main-content-wrapper { margin-left: 0 !important; }
+
+    /* Hamburger opener — sits at the far left of the navbar on mobile. */
+    .nav-hamburger {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 42px; height: 42px; flex: 0 0 auto; margin-right: 4px;
+        border: 1px solid var(--border-light); border-radius: 11px;
+        background: var(--bg-tertiary); color: var(--text-primary);
+        font-size: 1.25rem; line-height: 1; cursor: pointer;
+        transition: transform .12s ease, filter .15s ease;
+    }
+    .nav-hamburger:active { transform: scale(.9); filter: brightness(.92); }
+    /* Tap-to-close scrim behind the open drawer. */
+    .sidebar-backdrop {
+        display: block; position: fixed; inset: 72px 0 0 0;
+        background: rgba(2,6,23,.55); opacity: 0; pointer-events: none;
+        transition: opacity .25s ease; z-index: 999;
+    }
+    .sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
+    body.sidebar-locked { overflow: hidden; }
+
+    .navbar {
+        padding: 0 12px;
+        gap: 10px;
+    }
+
+    .navbar-shortcuts {
+        flex: 1 1 auto;
+        min-width: 0;
+        margin: 0 8px;
+        padding-bottom: 0;
+    }
+
+    .nav-shortcut {
+        padding: 8px 10px;
+        font-size: 0.82rem;
+    }
+
+    .navbar-actions {
+        width: auto;
+        flex: 0 1 auto;
+        gap: 8px;
+    }
+
+    #auth-buttons {
+        width: auto;
+        flex: 0 1 auto;
+        gap: 8px;
+    }
+
+    #auth-buttons .btn-primary,
+    #auth-buttons .btn-secondary {
+        min-width: 100px;
+    }
+}
+/* Narrow phones: the top nav-shortcuts (Studio/Tra cứu/Quiz/Chat) duplicate the
+   sidebar links, so hide them to stop the auth buttons overflowing the right edge. */
+@media (max-width: 480px) {
+    .navbar-shortcuts { display: none; }
+    .navbar { justify-content: space-between; gap: 8px; }
+    /* the desktop rule pins navbar-actions to a fixed 360px — collapse it to content
+       width on phones (with !important to beat that fixed width + the JS inline gap). */
+    .navbar-actions { width: auto !important; flex: 0 0 auto !important; gap: 6px !important; }
+    #auth-buttons { gap: 6px !important; min-width: 0 !important; }
+    #auth-buttons .btn-primary,
+    #auth-buttons .btn-secondary { min-width: 0; padding: 8px 12px; font-size: .82rem; white-space: nowrap; }
+}
+/* --- AI ACTIVITY PULSE --- */
+@keyframes aiPulse {
+    0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(168, 85, 247, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
+}
+
+.ai-activity-pulse {
+    position: relative;
+}
+
+body.compact-mode {
+    --radius-lg: 12px;
+    --radius-xl: 18px;
+}
+
+body.compact-mode .navbar {
+    min-height: 60px;
+    padding: 0 16px;
+}
+
+body.compact-mode .nav-shortcut {
+    padding: 8px 12px;
+}
+
+body.compact-mode .app-sidebar {
+    width: 232px;
+}
+
+body.compact-mode .sidebar-links a {
+    padding: 12px 14px;
+}
+
+body.compact-mode .main-content-wrapper {
+    padding: 14px;
+}
+
+body.compact-mode .settings-card,
+body.compact-mode .stats-card,
+body.compact-mode .chart-container,
+body.compact-mode .plan-card,
+body.compact-mode .glass-panel {
+    border-radius: 14px;
+}
+
+body.compact-mode .settings-card,
+body.compact-mode .stats-card,
+body.compact-mode .chart-container,
+body.compact-mode .plan-card {
+    padding: 14px;
+}
+
+body.reduce-motion *,
+body.reduce-motion *::before,
+body.reduce-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+}
+
+.ai-activity-pulse::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--brand-primary);
+    box-shadow: 0 0 8px var(--brand-primary);
+    animation: aiPulse 2s infinite;
+}
+
+[data-theme="dark"] .ai-activity-pulse::after {
+    background: #a855f7;
+    box-shadow: 0 0 12px #a855f7;
+}
+
+.sidebar-links li a.ai-activity-pulse {
+    background: var(--brand-light);
+    border-right: 2px solid var(--brand-primary);
+}
+
+body::-webkit-scrollbar { display: none; }

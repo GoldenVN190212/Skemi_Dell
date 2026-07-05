@@ -1,0 +1,569 @@
+/* ========================================
+   AI NOTEBOOK - NotebookLM Style Interface
+   ======================================== */
+
+/* Notebook Layout */
+.ai-notebook-section {
+    display: none;
+    padding: 20px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    min-height: 80vh;
+}
+
+.ai-notebook-section.active {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Main Notebook Container */
+.notebook-container {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(420px, 2fr) minmax(280px, 1fr);
+    gap: 20px;
+    height: 100%;
+    min-height: 600px;
+    align-items: stretch;
+}
+
+/* File Upload & Analysis Panel */
+.notebook-files-panel {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.notebook-upload-area {
+    border: 2px dashed var(--border-medium);
+    border-radius: var(--radius-md);
+    padding: 30px 20px;
+    text-align: center;
+    transition: all var(--transition-normal);
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.notebook-upload-area:hover {
+    border-color: var(--brand-primary);
+    background: var(--brand-light);
+}
+
+.notebook-upload-area.dragover {
+    border-color: var(--brand-primary);
+    background: var(--brand-light);
+    transform: scale(1.02);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    color: var(--text-muted);
+}
+
+.file-list {
+    margin-top: 20px;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.file-item:hover {
+    border-color: var(--brand-primary);
+    transform: translateX(4px);
+}
+
+.file-item.active {
+    background: var(--brand-light);
+    border-color: var(--brand-primary);
+}
+
+.file-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    text-align: center;
+}
+
+.file-info {
+    flex: 1;
+}
+
+.file-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.file-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.file-remove {
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-normal);
+}
+
+.file-remove:hover {
+    background: var(--bg-error);
+    color: white;
+}
+
+/* Diagram Canvas Panel */
+.notebook-canvas-panel {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.canvas-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-light);
+    flex-wrap: wrap;
+}
+
+.toolbar-btn {
+    padding: 8px 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    font-size: 0.9rem;
+}
+
+.toolbar-btn:hover {
+    background: var(--brand-primary);
+    color: white;
+    border-color: var(--brand-primary);
+}
+
+.toolbar-btn.active {
+    background: var(--brand-primary);
+    color: white;
+    border-color: var(--brand-primary);
+}
+
+.canvas-area {
+    flex: 1;
+    position: relative;
+    overflow: auto;
+    padding: 20px;
+    min-height: 0;
+}
+
+.diagram-canvas {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    background: white;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+/* AI Chat Panel */
+.notebook-chat-panel {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.chat-header {
+    padding: 16px;
+    background: var(--brand-gradient);
+    color: white;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search-toggle {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.search-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.search-toggle.active {
+    background: rgba(255, 255, 255, 0.4);
+    border-color: white;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 180px;
+}
+
+.notebook-message {
+    max-width: 90%;
+    padding: 12px 16px;
+    border-radius: var(--radius-lg);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.notebook-message.user {
+    align-self: flex-end;
+    background: var(--brand-gradient);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.notebook-message.ai {
+    align-self: flex-start;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-light);
+    border-bottom-left-radius: 4px;
+}
+
+.message-sources {
+    margin-top: 8px;
+    padding: 8px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+}
+
+.source-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    color: var(--text-muted);
+}
+
+.source-link {
+    color: var(--brand-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.source-link:hover {
+    text-decoration: underline;
+}
+
+.source-item span {
+    color: var(--text-secondary);
+}
+
+.chat-input-area {
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-light);
+}
+
+.chat-input-container {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.chat-input {
+    flex: 1;
+    min-height: 44px;
+    max-height: 100px;
+    padding: 12px 16px;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-full);
+    resize: none;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all var(--transition-normal);
+}
+
+.chat-input:focus {
+    outline: none;
+    border-color: var(--brand-primary);
+    background: var(--bg-secondary);
+    box-shadow: 0 0 0 3px var(--brand-light);
+}
+
+.chat-send-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--brand-gradient);
+    border: none;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.chat-send-btn:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md), 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.chat-send-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Diagram Type Selector */
+.diagram-type-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.diagram-type-card {
+    padding: 16px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    text-align: center;
+}
+
+.diagram-type-card:hover {
+    border-color: var(--brand-primary);
+    transform: translateY(-2px);
+}
+
+.diagram-type-card.selected {
+    background: var(--brand-light);
+    border-color: var(--brand-primary);
+}
+
+.diagram-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.diagram-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.diagram-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Loading States */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-light);
+    border-top-color: var(--brand-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .notebook-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(380px, 1fr) minmax(260px, auto);
+        min-height: auto;
+    }
+    
+    .notebook-files-panel {
+        order: 1;
+    }
+    
+    .notebook-canvas-panel {
+        order: 2;
+        min-height: 440px;
+    }
+    
+    .notebook-chat-panel {
+        order: 3;
+        min-height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .ai-notebook-section {
+        padding: 10px;
+    }
+    
+    .notebook-container {
+        gap: 12px;
+    }
+
+    .notebook-files-panel,
+    .notebook-canvas-panel,
+    .notebook-chat-panel {
+        border-radius: var(--radius-md);
+    }
+    
+    .canvas-toolbar {
+        padding: 8px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .toolbar-btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        flex: 0 0 auto;
+    }
+    
+    .diagram-type-selector {
+        grid-template-columns: 1fr;
+    }
+
+    .canvas-area {
+        padding: 10px;
+    }
+
+    .diagram-canvas {
+        min-height: 320px;
+    }
+
+    .chat-input-area {
+        padding: 10px;
+    }
+
+    .chat-input {
+        min-height: 40px;
+        font-size: 0.86rem;
+    }
+
+    .chat-send-btn {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .notebook-upload-area {
+        padding: 18px 12px;
+    }
+
+    .upload-icon {
+        font-size: 2rem;
+    }
+
+    .file-item {
+        padding: 10px;
+    }
+
+    .file-name {
+        font-size: 0.86rem;
+    }
+
+    .file-meta {
+        font-size: 0.75rem;
+    }
+
+    .chat-header {
+        padding: 12px;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .search-toggle {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Mermaid Diagram Styles */
+.mermaid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
+}
+
+/* Chart Container */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+}
+
+/* Manual Drawing Tools */
+.drawing-tools {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-light);
+    flex-wrap: wrap;
+}
+
+.drawing-tool {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.drawing-tool:hover {
+    background: var(--brand-primary);
+    color: white;
+    border-color: var(--brand-primary);
+}
+
+.drawing-tool.active {
+    background: var(--brand-primary);
+    color: white;
+    border-color: var(--brand-primary);
+}

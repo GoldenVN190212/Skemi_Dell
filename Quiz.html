@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/Css/design-tokens.css?v=20260701b">
+    <link rel="stylesheet" href="/Css/Motion.css?v=20260607k">
+    <script defer src="/Js/motion.js?v=20260531a"></script>
+        <script src="/Js/guest-storage-guard.js?v=20260527"></script>
+        <script src="/Js/account-storage.js?v=20260527"></script>
+        <script type="module" src="/Js/Auth.js?v=20260527"></script>
+        <script type="module" src="/Js/UserScopedStorage.js?v=20260527"></script>
+        <script type="module" src="/Js/CloudSync.js?v=20260702b"></script>
+        <script src="/Js/UserDataManager.js?v=20260531b"></script>
+        <script src="/Js/Preferences.js?v=20260621a"></script>
+        <script src="/Js/UI.js?v=20260510"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skemi Quiz</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9733;</text></svg>">
+    <link rel="stylesheet" href="./Css/Global.css?v=20260629c" />
+    <link rel="stylesheet" href="./Css/Polish.css?v=20260630d" />
+    <style>
+        .embed-main { position: relative; flex: 1; min-height: 0; height: calc(100vh - 64px); padding: 0; }
+        .embed-frame { width: 100%; height: 100%; border: 0; display: block; background: var(--bg, #08030f); }
+        .embed-offline { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center; padding: 32px; background: var(--bg, #08030f); color: var(--text, #efeaff); }
+        .embed-offline.hidden { display: none; }
+        .embed-offline h2 { font-size: 1.6rem; margin: 0; letter-spacing: .5px; }
+        .embed-offline p { max-width: 540px; line-height: 1.6; opacity: .8; margin: 0; font-size: .95rem; }
+        .embed-offline code { background: rgba(125,125,160,.18); padding: 3px 8px; border-radius: 6px; font-size: .85rem; }
+        .embed-retry { cursor: pointer; border: 0; background: var(--accent, #f472b6); color: #fff; padding: 12px 26px; border-radius: 999px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: .72rem; }
+        .embed-spinner { width: 38px; height: 38px; border: 3px solid rgba(125,125,160,.25); border-top-color: var(--accent, #f472b6); border-radius: 50%; animation: embspin .8s linear infinite; }
+        @keyframes embspin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="galaxy-mode">
+    <nav class="navbar">
+        <a href="Home.html" class="logo">
+            <span class="logo-mark">★</span>
+            <span class="logo-text">Skemi</span>
+        </a>
+        <div class="navbar-shortcuts" aria-label="Điều hướng chính">
+            <a href="Home.html" class="nav-shortcut"><span>🎓</span><span data-i18n="nav_studio">Studio</span></a>
+            <a href="Search.html" class="nav-shortcut"><span>🔍</span><span data-i18n="nav_search">Tra cứu</span></a>
+            <a href="Quiz.html" class="nav-shortcut active"><span>📝</span><span data-i18n="nav_quiz">Quiz</span></a>
+            <a href="Chat.html" class="nav-shortcut"><span>💬</span><span data-i18n="nav_chat">Chat</span></a>
+        </div>
+        <div class="navbar-actions">
+            <div id="auth-buttons"></div>
+        </div>
+    </nav>
+
+    <div class="app-layout">
+        <aside class="app-sidebar" id="appSidebar">
+            <ul class="sidebar-links">
+                <li><a href="Home.html" id="mindmap-link"><span class="icon">🎓</span><span data-i18n="nav_studio">Studio</span></a></li>
+                <li><a href="Search.html" id="search-link"><span class="icon">🔍</span><span data-i18n="nav_search">Tra cứu</span></a></li>
+                <li><a href="Quiz.html" class="active" id="quiz-link"><span class="icon">📝</span><span data-i18n="nav_quiz">Quiz</span></a></li>
+                <li><a href="Chat.html" id="chat-link"><span class="icon">💬</span><span data-i18n="nav_chat">Chat</span></a></li>
+                <li><a href="PromptAgent.html" id="prompt-agent-link"><span class="icon">⚡</span><span data-i18n="nav_prompt_agent">Prompt Agent</span></a></li>
+                <li><a href="Computer.html" id="computer-link"><span class="icon">🖥️</span><span data-i18n="nav_computer">Skemi Control</span></a></li>
+                <li><a href="Remote.html" id="remote-link"><span class="icon">📡</span><span data-i18n="nav_remote">Điều khiển từ xa</span></a></li>
+                <li><a href="Settings.html" id="settings-link"><span class="icon">⚙️</span><span data-i18n="nav_settings">Cài đặt</span></a></li>
+            </ul>
+        </aside>
+
+        <div class="main-content-wrapper">
+            <main class="embed-main">
+                <iframe id="embedFrame" class="embed-frame" title="Skemi Quiz Arena" referrerpolicy="no-referrer"></iframe>
+                <div id="embedOffline" class="embed-offline hidden">
+                    <div class="embed-spinner"></div>
+                    <h2 data-i18n="quiz_connecting">Đang kết nối Đấu Trường Quiz…</h2>
+                    <p data-i18n="quiz_offline_hint">Dịch vụ Quiz chưa sẵn sàng. Nếu mãi không vào được, khởi động lại <code>python Server.py</code> rồi bấm Thử lại.</p>
+                    <button class="embed-retry" id="embedRetry" data-i18n="action_retry">Thử lại</button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // The Quiz section IS the gamification "Đấu Trường AI" arena, embedded +
+        // theme-synced. Health-probe the service so users see a friendly notice
+        // instead of a raw connection error.
+        (function () {
+            // Served SAME-ORIGIN through Server.py's mount of the real skemi_quiz
+            // backend (FastAPI, real WebSocket PvP + ELO matchmaking) — replaces
+            // the old /arena reverse proxy to the fake-matchmaking Node app.
+            const SERVICE_URL = location.origin + '/quiz/quiz.html';
+            const HEALTH_URL = location.origin + '/api/quiz/queue/flux/status';
+            const frame = document.getElementById('embedFrame');
+            const offline = document.getElementById('embedOffline');
+            const retry = document.getElementById('embedRetry');
+            let connected = false;
+
+            function identityQuery() {
+                const p = new URLSearchParams();
+                const clean = (k) => (localStorage.getItem(k) || '').replace(/^"|"$/g, '').trim();
+                try {
+                    p.set('skemi_theme', clean('skemi-theme') || 'galaxy');
+                    const bg = clean('skemi_bg_color'); if (bg) p.set('skemi_bg', bg);
+                    const accent = clean('skemi_accent_color'); if (accent) p.set('skemi_accent', accent);
+                    p.set('skemi_lang', clean('skemi_language') || 'vi');
+                    p.set('skemi_api', location.origin);   // lets the embedded app reach /api/translate-ui-batch for i18n
+                    // Real logged-in account id — skemi_quiz's own userId() reads
+                    // this param and persists it, so ELO/bot/history are tied to
+                    // the actual Skemi account instead of a random Guest_xxxx id.
+                    const uid = localStorage.getItem('skemi_user_id');
+                    if (uid) p.set('skemi_uid', uid);
+                } catch (e) {}
+                const s = p.toString();
+                return s ? '?' + s : '';
+            }
+
+            async function probe() {
+                try {
+                    const ctrl = new AbortController();
+                    const t = setTimeout(() => ctrl.abort(), 2500);
+                    const r = await fetch(HEALTH_URL, { signal: ctrl.signal, cache: 'no-store' });
+                    clearTimeout(t);
+                    return r.ok;
+                } catch (e) { return false; }
+            }
+
+            async function connect() {
+                // Start loading the embedded app IMMEDIATELY (parallel with the health
+                // check) so it appears as fast as the native sections. The old code
+                // ran a ~2.5s health probe FIRST and only then set the iframe src,
+                // which is why entering this section "loaded" for a few seconds.
+                if (!frame.getAttribute('src')) {
+                    frame.src = SERVICE_URL + identityQuery();
+                    frame.addEventListener('load', () => { connected = true; offline.classList.add('hidden'); }, { once: true });
+                }
+                // The probe now only decides whether to KEEP showing the offline card.
+                const ok = await probe();
+                if (ok) { connected = true; offline.classList.add('hidden'); }
+                else if (!connected) { offline.classList.remove('hidden'); }
+            }
+
+            retry.addEventListener('click', connect);
+            connect();
+            const poll = setInterval(() => { if (connected) { clearInterval(poll); } else { connect(); } }, 4000);
+        })();
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script type="module" src="./Js/Galaxy.js"></script>
+    <script src="./Js/i18n-packs.js?v=20260601b"></script>
+    <script src="./Js/upgrade-nudge.js?v=20260531a"></script>
+    <script src="./Js/entitlements.js?v=20260701d"></script>
+    <script type="module" src="./Js/User_navbar.js?v=20260702b"></script>
+    <script type="module" src="./Js/LanguageManager.js?v=20260701e"></script>
+    <script src="./Js/GlobalStatus.js?v=20260704a"></script>
+    <script src="./Js/LegionSectionConfig.js?v=20260705a"></script>
+</body>
+</html>

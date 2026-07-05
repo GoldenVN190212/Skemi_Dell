@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skemi Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
+    <link rel="stylesheet" href="./Css/Chat.css">
+    <link rel="stylesheet" href="./Css/AIChat.css?v=20260329i">
+    <script>
+        (() => {
+            const BOOT_KEY = 'skemma_chat_bootstrap_ready_v1';
+            // Chat now opens instantly like every other section — messages hydrate
+            // in place, no full-screen loading gate. (Was: overlay on first visit.)
+            const skipLoading = true;
+            document.documentElement.dataset.skemmaChatSkipLoading = '1';
+            window.__SKEMMA_SKIP_LOADING_OVERLAY__ = skipLoading;
+            window.__SKEMMA_CHAT_BOOT_KEY__ = BOOT_KEY;
+        })();
+    </script>
+    <style>
+        /* Temporary CSS to avoid layout jumps before the main file loads */
+        :root {
+            --gradient: linear-gradient(135deg, #6E62FF, #8B5CF6);
+            --dark: #0a0a1a;
+            --darker: #06060f;
+            --card: rgba(24, 22, 38, 0.95);
+            --text: #f3f2ff;
+            --text2: rgba(243, 242, 255, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        html[data-skemma-chat-skip-loading="1"] #loadingOverlay {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body data-theme="light">
+    <!-- Loading screen -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-card">
+            <!-- Logo/Icon -->
+            <div class="app-logo">
+                <div class="logo-icon">Skemi</div>
+                <div class="logo-subtitle">Phiên bản 1.0</div>
+            </div>
+
+            <!-- Spinner -->
+            <div class="loading-content">
+                <div class="smart-spinner">
+                    <div class="spinner-circle"></div>
+                    <div class="spinner-wave"></div>
+                </div>
+
+                <!-- Loading status -->
+                <div class="loading-status">
+                    <div id="loadingText" class="loading-text">Loading messages...</div>
+                    <div id="loadingProgress" class="loading-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+                    <div class="loading-progress-meta">
+                        <span id="loadingPercent" class="loading-percent">0%</span>
+                    </div>
+                </div>
+
+                <!-- Network Status -->
+                <div class="network-status">
+                    <div class="network-icon">
+                        <i class="fas fa-wifi" id="wifiIcon"></i>
+                    </div>
+                    <div class="network-info">
+                        <div id="networkStatusText" class="network-text">Checking network...</div>
+                        <div id="networkSpeed" class="network-speed"></div>
+                    </div>
+                </div>
+
+                <!-- Error message -->
+                <div id="loadingError" class="loading-error" style="display:none;">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="error-content">
+                        <h3 id="errorTitle">Connection issue</h3>
+                        <p id="errorMessage">Trying to reconnect...</p>
+                        <div class="error-actions">
+                            <button id="retryButton" class="retry-btn">
+                                <i class="fas fa-redo"></i> Retry
+                            </button>
+                            <button id="continueButton" class="continue-btn">
+                                <i class="fas fa-forward"></i> Continue
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading tip -->
+                <div class="loading-tips">
+                    <div class="tip-item">
+                        <i class="fas fa-lightbulb"></i>
+                        <span id="loadingTip">Check your network connection for the best experience</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeout warning -->
+            <div id="timeoutWarning" class="timeout-warning" style="display:none;">
+                <div class="timeout-icon">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div class="timeout-text">
+                    <strong>This is taking longer than expected</strong>
+                    <small>Check your internet connection</small>
+                </div>
+                <div class="timeout-timer">
+                    <span id="timeoutCountdown">15</span>s
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="logo">Skemi</div>
+        <div class="nav-right">
+            <div id="userNavContainer" style="display: flex; align-items: center; gap: 10px; margin-right: 15px;"></div>
+        </div>
+    </nav>
+
+    <div class="chat-wrapper">
+        <!-- Standard Skemi section rail (matches Chat.dc.html mockup) -->
+        <aside class="chat-navrail" aria-label="Điều hướng Skemi">
+            <a href="/Home.html" class="cnr-link"><i class="fas fa-feather-alt"></i><span>Studio</span></a>
+            <a href="/Search.html" class="cnr-link"><i class="fas fa-magnifying-glass"></i><span>Tra cứu</span></a>
+            <a href="/Quiz.html" class="cnr-link"><i class="fas fa-trophy"></i><span>Quiz</span></a>
+            <a href="/Chat.html" class="cnr-link active"><i class="fas fa-comment-dots"></i><span>Chat</span></a>
+            <a href="/PromptAgent.html" class="cnr-link"><i class="fas fa-bolt"></i><span>Prompt Agent</span></a>
+            <a href="/Computer.html" class="cnr-link"><i class="fas fa-desktop"></i><span>Skemi Control</span></a>
+            <a href="/Remote.html" class="cnr-link"><i class="fas fa-satellite-dish"></i><span>Điều khiển từ xa</span></a>
+            <a href="/Legion.html" class="cnr-link"><i class="fas fa-users"></i><span>Legion</span></a>
+            <a href="/Workspace.html" class="cnr-link"><i class="fas fa-terminal"></i><span>Skemi CLI</span></a>
+            <a href="/Settings.html" class="cnr-link"><i class="fas fa-sliders"></i><span>Cài đặt</span></a>
+        </aside>
+        <!-- FRIENDS SIDEBAR -->
+        <div class="friends-sidebar" id="friendsSidebar">
+            <div class="search-section">
+                <h3><i class="fas fa-user-friends"></i> Bạn bè</h3>
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="friendSearchInput" placeholder="Tìm bạn bè...">
+                    <button id="addFriendBtn" class="add-friend-btn" title="Add friend">
+                        <i class="fas fa-user-plus"></i>
+                    </button>
+                </div>
+                <ul id="searchResults" class="search-results"></ul>
+            </div>
+            <ul id="friendsList" class="friends-list">
+                <div class="empty-friends">
+                    <div class="empty-icon">👋</div>
+                    <div class="empty-text">No friends yet</div>
+                    <div class="empty-subtext">Find and add friends to start chatting</div>
+                </div>
+            </ul>
+        </div>
+
+        <!-- CHAT AREA -->
+        <div class="chat-container no-friend">
+            <!-- CHAT HEADER -->
+            <div class="chat-header" id="chatHeader">
+                <div class="header-left">
+                    <div class="friend-info">
+                        <span id="friendNameDisplay">Chọn một người bạn để trò chuyện</span>
+                        <div id="friendStatus" class="friend-status">Ngoại tuyến</div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button id="voiceCallBtn" title="Voice call" disabled>
+                        <i class="fas fa-phone"></i>
+                    </button>
+                    <button id="videoCallBtn" title="Video call" disabled>
+                        <i class="fas fa-video"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- MESSAGES AREA -->
+            <div id="messages" class="messages-area">
+                <!-- State before selecting a friend -->
+                <div class="welcome-state" id="welcomeState">
+                    <div class="welcome-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="welcome-title">Chào mừng đến Skemi Chat</div>
+                    <div class="welcome-subtitle">Chọn một người bạn để bắt đầu trò chuyện</div>
+
+                    <div class="features-guide">
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-palette"></i>
+                            </div>
+                            <div class="feature-text">
+                                <strong>Đổi giao diện</strong>
+                                <small>Nhấn nút mặt trăng</small>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-bars"></i>
+                            </div>
+                            <div class="feature-text">
+                                <strong>Danh sách bạn bè</strong>
+                                <small>Nhấn nút menu</small>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-smile"></i>
+                            </div>
+                            <div class="feature-text">
+                                <strong>Biểu tượng cảm xúc</strong>
+                                <small>Thêm emoji vào tin nhắn</small>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-paperclip"></i>
+                            </div>
+                            <div class="feature-text">
+                                <strong>Đính kèm tệp</strong>
+                                <small>Gửi hình ảnh, video hoặc tài liệu</small>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-microphone"></i>
+                            </div>
+                            <div class="feature-text">
+                                <strong>Tin nhắn thoại</strong>
+                                <small>Giữ để ghi âm</small>
+                            </div>
+                        </div>
+
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="feature-text">
+                                <strong>Gọi thoại & video</strong>
+                                <small>Kết nối trực tiếp với bạn bè</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- State after selecting a friend but before any message -->
+                <div class="empty-chat" id="emptyChatState" style="display:none;">
+                    <div class="empty-icon">
+                        <div id="friendAvatarLarge" class="friend-avatar-large"></div>
+                    </div>
+                    <div class="empty-text" id="friendGreeting">You have no messages with <span
+                            id="friendNameGreeting"></span></div>
+                    <div class="empty-subtext">Start the conversation by sending a greeting.</div>
+
+                    <div class="greeting-icons">
+                        <button class="greeting-btn" data-text="👋 Hello!">
+                            <span>👋</span>
+                            <small>Say hi</small>
+                        </button>
+                        <button class="greeting-btn" data-text="😊 Nice to meet you!">
+                            <span>😊</span>
+                            <small>Introduce</small>
+                        </button>
+                        <button class="greeting-btn" data-text="👍 How are you?">
+                            <span>👍</span>
+                            <small>Check in</small>
+                        </button>
+                        <button class="greeting-btn" data-text="💬 What are you up to?">
+                            <span>💬</span>
+                            <small>Chat</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button id="jumpToLatestBtn" class="jump-to-latest" type="button" aria-hidden="true">
+                <i class="fas fa-arrow-down"></i>
+                <span class="jump-to-latest-label">New messages</span>
+            </button>
+
+            <!-- TYPING INDICATOR -->
+            <div id="typingIndicator" class="typing-indicator" style="display:none;">
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <div class="typing-text">Typing...</div>
+            </div>
+
+            <!-- REPLY PREVIEW -->
+            <div id="replyPreview" class="reply-preview" style="display:none;">
+                <div class="reply-info">
+                    <i class="fas fa-reply"></i>
+                    <span id="replyText"></span>
+                </div>
+                <button id="cancelReplyBtn" class="cancel-reply-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- INPUT AREA -->
+            <div class="input-area">
+                <div id="attachmentPreview" class="attachment-preview" style="display:none;">
+                    <div class="preview-left">
+                        <div class="preview-thumb" id="attachmentThumb">
+                            <i class="fas fa-file"></i>
+                        </div>
+                        <div class="preview-meta">
+                            <div class="preview-name" id="attachmentName"></div>
+                            <div class="preview-size" id="attachmentSize"></div>
+                        </div>
+                    </div>
+                    <button id="removeAttachmentBtn" class="preview-remove" title="Remove attachment">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="input-main-row">
+                    <div class="input-actions-left">
+                        <button id="emojiBtn" class="input-btn" title="Emojis" type="button" aria-label="Emoji">
+                            <i class="far fa-smile"></i>
+                        </button>
+                        <button id="attachBtn" class="input-btn" title="Attach file" type="button" aria-label="Attach">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <!-- Analysis-mode selector (Trợ lý/Cấu trúc/Ngắn gọn) removed per
+                             design — file analysis runs in the default assistant mode. The
+                             hidden container stays so Chat.js's populate call is a no-op. -->
+                        <div id="analysisModeWrap" class="analysis-mode-segment" aria-label="Analysis modes" style="display:none"></div>
+                        <input type="file" id="fileInput" style="display:none">
+                    </div>
+
+                    <div class="input-wrapper">
+                        <textarea id="msg" placeholder="Nhập tin nhắn..." rows="1"></textarea>
+                    </div>
+
+                    <div class="input-actions-right">
+                        <button id="sendBtn" class="send-btn" title="Send message">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                        <button id="stopBtn" class="stop-btn" title="Stop" style="display: none;">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESEARCH PLAN SIDEBAR -->
+        <div class="research-sidebar" id="researchSidebar" hidden aria-hidden="true">
+            <div class="research-header">
+                <h3><i class="fas fa-microscope"></i> Research plan</h3>
+                <button id="closeResearchBtn" class="close-research-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="research-body" id="researchBody">
+                <!-- Research steps will be injected here -->
+            </div>
+            <div class="research-footer">
+                <button id="editResearchBtn" class="research-action-btn secondary">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button id="startResearchBtn" class="research-action-btn primary">
+                    <i class="fas fa-play"></i> Start research
+                </button>
+            </div>
+        </div>
+
+        <!-- SOURCES SIDEBAR -->
+        <div class="sources-sidebar" id="sourcesSidebar">
+            <div class="sources-header">
+                <h3><i class="fas fa-book-open"></i> Sources</h3>
+                <button id="closeSourcesBtn" class="close-sources-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="sources-body" id="sourcesBody">
+                <div class="sources-loading">
+                    <div class="spinner-small"></div>
+                    <span>Loading sources...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CALL OVERLAY (FIXED VERSION) -->
+    <div class="call-overlay" id="callArea" style="display:none;">
+        <!-- HEADER CALL -->
+        <div class="call-header">
+            <button id="backBtn" class="back-btn" title="Back to chat">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="call-info">
+                <div class="call-friend-name" id="callFriendName">Calling...</div>
+                <div class="call-status" id="callStatusText">Connecting</div>
+            </div>
+            <div class="call-timer" id="callTimer">00:00</div>
+        </div>
+
+        <!-- VIDEO / AVATAR AREA -->
+        <div class="video-container">
+            <div class="remote-video-wrapper">
+                <video id="remoteVideo" autoplay playsinline class="remote-video" style="display:none;"></video>
+
+                <!-- AVATAR AND STATUS - FIXED LAYOUT -->
+                <div class="remote-avatar" id="remoteAvatar">
+                    <div class="avatar-circle">
+                        <div class="call-status-content">
+                            <h2 class="call-status-title">CALLING</h2>
+                            <p class="call-status-subtitle">Connecting...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ringingAnimation" class="ringing-anim" style="display:none;">
+                    <div class="phone-icon"><i class="fas fa-phone"></i></div>
+                    <div class="ringing-text">Ringing...</div>
+                    <div class="wave-ring"></div>
+                    <div class="wave-ring"></div>
+                    <div class="wave-ring"></div>
+                </div>
+            </div>
+
+            <!-- LOCAL VIDEO PIP -->
+            <div class="local-video-pip">
+                <video id="localVideo" muted autoplay playsinline class="local-video"></video>
+                <div class="local-avatar" id="localAvatar" style="display:none;">
+                    <div class="avatar-initials">You</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CALL CONTROLS -->
+        <div class="call-controls">
+            <div class="call-controls-inner">
+                <button id="muteBtn" class="call-control-btn active" title="Mic">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button id="videoToggleBtn" class="call-control-btn active" title="Camera">
+                    <i class="fas fa-video"></i>
+                </button>
+                <button id="switchBtn" class="call-control-btn" title="Switch camera">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button id="speakerBtn" class="call-control-btn active" title="Speaker">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <button id="endCallBtn" class="call-control-btn end-call" title="End call">
+                    <i class="fas fa-phone-slash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- INCOMING CALL -->
+    <div id="incomingCallCard" class="incoming-popup" style="display:none;">
+        <div class="caller-avatar">
+            <i class="fas fa-user caller-avatar-icon"></i>
+        </div>
+        <div class="caller-info">
+            <div id="callerNameLabel" class="caller-name">Caller</div>
+            <div id="callerTypeLabel" class="caller-type">Incoming video call</div>
+        </div>
+        <div class="call-actions">
+            <button id="declineCallBtn" class="decline-btn">
+                <i class="fas fa-phone-slash"></i>
+                <span>Decline</span>
+            </button>
+            <button id="acceptCallBtn" class="answer-btn">
+                <i class="fas fa-check"></i>
+                <span>Accept</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- CREATE GROUP MODAL -->
+    <div id="createGroupModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create new group</h3>
+                <span class="close-modal" id="closeGroupModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="groupNameInput" placeholder="Nhập tên nhóm..." class="group-name-input">
+                <div class="friends-selection-list" id="friendsSelectionList">
+                    <!-- Friends will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmCreateGroupBtn" class="btn-primary">Create group</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script charset="utf-8" src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+        (() => {
+            const hostname = window.location.hostname || '127.0.0.1';
+            const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
+            const currentOrigin = window.location.origin;
+            const socketOrigin = window.location.port === '8001'
+                ? currentOrigin
+                : `${protocol}://${hostname}:8001`;
+            const aiBaseCandidates = [
+                `${socketOrigin}/api`,
+                `${protocol}://${hostname}:8000`,
+                'http://127.0.0.1:8000',
+                'http://localhost:8000'
+            ];
+
+            window.__SKEMMA_SOCKET_ORIGIN__ = socketOrigin;
+            window.__SKEMMA_AI_BASE_CANDIDATES__ = Array.from(new Set(aiBaseCandidates.filter(Boolean)));
+            window.__SKEMMA_HOME_URL__ = new URL('./Home.html', window.location.href).href;
+        })();
+    </script>
+    <script type="module" charset="utf-8" src="./Js/Chat.js?v=20260404c"></script>
+    <script type="module" charset="utf-8" src="./Js/User_navbar.js"></script>
+    <script type="module" charset="utf-8" src="./Js/Friends.js"></script>
+    <script type="module" src="./Js/AIChat.js?v=20260329i"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.__SKEMMA_SKIP_LOADING_OVERLAY__) {
+                const overlay = document.getElementById('loadingOverlay');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                    overlay.style.display = 'none';
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
+
+

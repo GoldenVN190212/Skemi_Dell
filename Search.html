@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/Css/design-tokens.css?v=20260701b">
+    <link rel="stylesheet" href="/Css/Motion.css?v=20260607k">
+    <script defer src="/Js/motion.js?v=20260531a"></script>
+        <script src="/Js/guest-storage-guard.js?v=20260527"></script>
+        <script src="/Js/account-storage.js?v=20260527"></script>
+        <script type="module" src="/Js/Auth.js?v=20260527"></script>
+        <script type="module" src="/Js/UserScopedStorage.js?v=20260527"></script>
+        <script type="module" src="/Js/CloudSync.js?v=20260702b"></script>
+        <script src="/Js/UserDataManager.js?v=20260531b"></script>
+        <script src="/Js/Preferences.js?v=20260621a"></script>
+        <script src="/Js/UI.js?v=20260510"></script>
+    <script src="/Js/Skills.js?v=20260624d"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Skemi Tra cứu - Chuyển một chủ đề thành chiến lược báo cáo chuyên sâu.">
+    <title>Skemi Tra cứu</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>★</text></svg>">
+    <link rel="stylesheet" href="./Css/Global.css?v=20260629c" />
+    <link rel="stylesheet" href="./Css/Polish.css?v=20260630d" />
+    <link rel="stylesheet" href="./Css/Search.css?v=20260629b" />
+    <link rel="stylesheet" href="./Css/ResearchGraph.css?v=20260629b" />
+    <link rel="stylesheet" href="./Css/AIChat.css?v=20260410" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="./Js/preferences.js"></script>
+</head>
+
+<body class="galaxy-mode">
+    <nav class="navbar">
+        <a href="Home.html" class="logo">
+            <span class="logo-mark">★</span>
+            <span class="logo-text">Skemi</span>
+        </a>
+        <div class="navbar-shortcuts" aria-label="Điều hướng chính">
+            <a href="Home.html" class="nav-shortcut">
+                <span>🎓</span>
+                <span>Studio</span>
+            </a>
+            <a href="Search.html" class="nav-shortcut active">
+                <span>🔍</span>
+                <span>Tra cứu</span>
+            </a>
+            <a href="Quiz.html" class="nav-shortcut">
+                <span>📝</span>
+                <span>Quiz</span>
+            </a>
+            <a href="/Chat.html" class="nav-shortcut">
+                <span>💬</span>
+                <span>Chat</span>
+            </a>
+        </div>
+        <div class="navbar-actions">
+            <div id="auth-buttons"></div>
+        </div>
+    </nav>
+
+    <div class="app-layout">
+        <aside class="app-sidebar" id="appSidebar">
+            <ul class="sidebar-links">
+                <li><a href="Home.html" id="mindmap-link"><span class="icon">🎓</span><span>Studio</span></a></li>
+                <li><a href="Search.html" class="active" id="search-link"><span class="icon">🔍</span><span>Tra cứu</span></a></li>
+                <li><a href="Quiz.html" id="quiz-link"><span class="icon">📝</span><span>Quiz</span></a></li>
+                <li><a href="/Chat.html" id="chat-link"><span class="icon">💬</span><span>Chat</span></a></li>
+                <li><a href="PromptAgent.html" id="prompt-agent-link"><span class="icon">⚡</span><span>Prompt Agent</span></a></li>
+                <li><a href="Computer.html" id="computer-link"><span class="icon">🖥️</span><span>Skemi Control</span></a></li>
+                <li><a href="Remote.html" id="remote-link"><span class="icon">📡</span><span>Điều khiển từ xa</span></a></li>
+                <li><a href="Settings.html" id="settings-link"><span class="icon">⚙️</span><span>Cài đặt</span></a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <button class="toggle-sidebar-btn" id="toggleSidebar" title="Thu gọn menu"><span>◀</span></button>
+            </div>
+        </aside>
+
+        <div class="main-content-wrapper">
+            <main class="search-page">
+                <!-- HERO (2026-07 reskin -> matches Search.dc.html mockup: minimal
+                     title + single search card + deep-research toggle + 2 dropdowns
+                     + empty-state chips. All JS-bound ids kept verbatim.) -->
+                <div id="searchHero" class="search-hero search-hero-v2">
+                    <div class="sr-head">
+                        <h1 class="search-hero-title">Tra cứu</h1>
+                        <p class="search-hero-subtitle">Nghiên cứu sâu với AI — nguồn có kiểm chứng, tiến trình theo thời gian thực.</p>
+                    </div>
+
+                    <div class="sr-search-card">
+                        <div class="search-box-container">
+                            <span class="search-icon"><i class="fas fa-search"></i></span>
+                            <input type="text" id="searchInput" class="premium-search-input" data-i18n-placeholder="search_input_placeholder" placeholder="Bạn muốn tìm hiểu điều gì?">
+                            <button id="searchBtn" class="btn-premium-search">
+                                <i class="fas fa-search"></i> <span id="searchBtnLang">Tra cứu</span>
+                            </button>
+                            <div id="suggestionsDropdown" class="hidden"></div>
+                        </div>
+
+                        <div class="sr-controls">
+                            <button id="srDeepToggle" class="sr-toggle is-on" type="button" role="switch" aria-checked="true" title="Bật/tắt nghiên cứu sâu">
+                                <span class="sr-toggle-track"><span class="sr-toggle-thumb"></span></span>
+                                <span class="sr-toggle-label">Nghiên cứu sâu</span>
+                            </button>
+                            <select id="srCategory" class="sr-select" aria-label="Danh mục">
+                                <option>Tất cả danh mục</option>
+                                <option>Khoa học</option>
+                                <option>Công nghệ</option>
+                                <option>Kinh tế</option>
+                                <option>Lịch sử</option>
+                                <option>Y học</option>
+                            </select>
+                            <select id="langFilter" class="sr-select" aria-label="Ngôn ngữ">
+                                <option value="vi">Tiếng Việt</option>
+                                <option value="en">English</option>
+                                <option value="auto">Đa ngôn ngữ</option>
+                            </select>
+                            <div class="sr-controls-spacer"></div>
+                            <button id="rgOpenBtn" class="rg-open-btn sr-ghost-btn" type="button">
+                                🧠 <span>Bản đồ tri thức 3D</span>
+                            </button>
+                            <button id="openLabBtn" class="rg-open-btn sr-ghost-btn" type="button" title="Mở phòng thí nghiệm ý tưởng"
+                                onclick="window.location.href='Lab.html' + (document.getElementById('searchInput') && document.getElementById('searchInput').value.trim() ? ('?idea=' + encodeURIComponent(document.getElementById('searchInput').value.trim())) : '')">
+                                ⚗️ <span>Lab</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Empty state (before a search): icon + prompt + suggestion chips -->
+                    <div class="sr-empty" id="srEmptyState">
+                        <div class="sr-empty-icon"><i class="fas fa-search"></i></div>
+                        <div class="sr-empty-title">Bắt đầu nghiên cứu</div>
+                        <div class="sr-empty-sub">Nhập câu hỏi phía trên. Thử gợi ý:</div>
+                        <div class="search-suggest-row" id="searchSuggestRow" aria-label="Chủ đề gợi ý">
+                            <button class="search-chip" type="button" data-topic="Trí tuệ nhân tạo tạo sinh 2026">✨ AI tạo sinh 2026</button>
+                            <button class="search-chip" type="button" data-topic="Hố đen và thuyết tương đối rộng">🌌 Hố đen &amp; tương đối</button>
+                            <button class="search-chip" type="button" data-topic="Biến đổi khí hậu và giải pháp năng lượng">🌍 Biến đổi khí hậu</button>
+                            <button class="search-chip" type="button" data-topic="Kinh tế vĩ mô Việt Nam">📈 Kinh tế vĩ mô VN</button>
+                            <button class="search-chip" type="button" data-topic="Khoa học giấc ngủ và năng suất">😴 Khoa học giấc ngủ</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STATS & FILTERS (Hidden, maintained for JS logic)  -->
+                <div id="statsBar" class="hidden">
+                    <span id="statArticles"></span><span id="statSources"></span><span id="statDbSize"></span><span id="statLastUpdate"></span>
+                </div>
+                <div class="hidden">
+                    <select id="timeFilter"></select>
+                    <select id="sortFilter"></select>
+                </div>
+                <!-- TRENDING -->
+                 <!-- NEXUS INTELLIGENCE HUB (V4.2 COMMAND CENTER) -->
+                <div id="nexusIntelligenceHub" class="nexus-hub hidden">
+                    <!-- Toggle kept hidden (legacy) -->
+                    <button id="toggleResearchHUD" class="hud-toggle-btn" title="Toggle Research HUD" style="display:none;">
+                        <span class="hud-icon">📡</span><span class="hud-label">RESEARCH HUD</span>
+                    </button>
+
+                    <!-- BEAUTIFUL ANIMATED RESEARCH PROGRESS (replaces the terminal) -->
+                    <div id="researchHUD" class="rg-progress hidden">
+                        <div class="rgp-orb">
+                            <div class="rgp-orb-ring"></div>
+                            <div class="rgp-orb-ring rgp-orb-ring2"></div>
+                            <div class="rgp-orb-core"></div>
+                        </div>
+                        <div class="rgp-body">
+                            <div class="rgp-status" id="rgpStatus">Đang khởi động nghiên cứu sâu…</div>
+                            <div class="rgp-phases">
+                                <div class="rgp-phase" data-phase="search"><span class="rgp-ico">🔍</span><span class="rgp-lbl">Tìm nguồn</span></div>
+                                <div class="rgp-phase" data-phase="read"><span class="rgp-ico">📖</span><span class="rgp-lbl">Đọc tài liệu</span></div>
+                                <div class="rgp-phase" data-phase="cross"><span class="rgp-ico">🧠</span><span class="rgp-lbl">Đối soát</span></div>
+                                <div class="rgp-phase" data-phase="synth"><span class="rgp-ico">✨</span><span class="rgp-lbl">Tổng hợp</span></div>
+                            </div>
+                            <div class="rgp-bar"><div id="neuralProgressBar" class="rgp-bar-fill"></div></div>
+                        </div>
+                        <!-- legacy console kept for code that references it, but hidden -->
+                        <div id="researchConsole" style="display:none;"></div>
+                    </div>
+
+                    <div class="nexus-workspace">
+                        <!-- MAIN: the deep-research report (dominant, wide & readable) -->
+                        <main class="nexus-main">
+                            <div class="synthesis-core glass-panel">
+                                <div id="expertIdentityCard"></div>
+                                <div id="synthesisContent" class="synthesis-text"></div>
+                                <div id="briefActions" class="intel-action-hub"></div>
+                                <div id="searchSquad"></div>
+                            </div>
+                        </main>
+
+                        <!-- RIGHT RAIL: sources, next steps, fact-check, process -->
+                        <aside class="nexus-rail">
+                            <div class="glass-panel library-panel">
+                                <div class="panel-tag">📚 Nguồn tham khảo</div>
+                                <h3 id="sourcesPanelTitle">Nguồn đã đối soát</h3>
+                                <div id="briefSourcesGrid" class="asset-grid-v4"></div>
+                            </div>
+
+                            <div class="glass-panel logic-panel mt-4">
+                                <div class="panel-tag">🧭 Hướng nghiên cứu tiếp</div>
+                                <h3>Đào sâu &amp; giải pháp mới</h3>
+                                <div id="executionGrid" class="stratagem-grid"></div>
+                            </div>
+
+                            <div class="glass-panel verification-panel mt-4">
+                                <div class="panel-tag">✓ Kiểm chứng</div>
+                                <h3>Đối chiếu dữ kiện</h3>
+                                <div id="verificationGrid" class="fact-grid"></div>
+                            </div>
+
+                            <details class="glass-panel reasoning-panel mt-4 rg-process">
+                                <summary><span class="panel-tag">🔬 Quá trình phân tích</span></summary>
+                                <div id="reasoningSteps" class="reasoning-list"></div>
+                            </details>
+                        </aside>
+                    </div>
+                </div>
+
+                <!-- LEGACY / FALLBACK (HIDDEN) -->
+                <div id="resultsArea" class="hidden"></div>
+                <div id="researchBrief" class="hidden"></div>
+                <div id="resultsQueryWrap" class="hidden"><span id="resultsQuery"></span></div>
+                <div id="resultsContainer"></div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 3D Library for Omni-Synapse -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script type="module" src="./Js/Galaxy.js"></script>
+    <!-- 52+ Language Packs - Load before LanguageManager -->
+    <script src="./Js/i18n-packs.js?v=20260601b"></script>
+    <script src="./Js/upgrade-nudge.js?v=20260531a"></script>
+    <script src="./Js/entitlements.js?v=20260701d"></script>
+    <script type="module" src="./Js/User_navbar.js?v=20260702b"></script>
+    <script type="module" src="./Js/LanguageManager.js?v=20260701e"></script>
+    </script>
+    <script>
+      (function(){ var t=document.getElementById('srDeepToggle'); if(t){ t.addEventListener('click',function(){ var on=t.classList.toggle('is-on'); t.setAttribute('aria-checked', on?'true':'false'); }); } })();
+    </script>
+    <script type="module" src="./Js/Search.js?v=20260702b"></script>
+    <script>
+      // Example-topic chips: fill the search box and launch the analysis.
+      (function () {
+        function bindChips() {
+          var input = document.getElementById('searchInput');
+          var btn = document.getElementById('searchBtn');
+          document.querySelectorAll('#searchSuggestRow .search-chip').forEach(function (chip) {
+            chip.addEventListener('click', function () {
+              var topic = chip.getAttribute('data-topic') || chip.textContent.trim();
+              if (input) { input.value = topic; input.focus(); }
+              if (btn) btn.click();
+            });
+          });
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindChips);
+        else bindChips();
+      })();
+    </script>
+    <script type="module" src="./Js/AIChat.js?v=20260702a"></script>
+    <script src="./Js/GlobalStatus.js?v=20260704a"></script>
+    <script src="./Js/LegionSectionConfig.js?v=20260705a"></script>
+
+    <!-- Deep-research knowledge map + Iron-Man gesture control -->
+    <div id="rgOverlay" class="rg-overlay" aria-hidden="true">
+        <div class="rg-topbar">
+            <span class="rg-title"><span class="dot"></span> Bản đồ tri thức</span>
+            <span id="rgTopic" class="rg-topic"></span>
+            <span class="rg-spacer"></span>
+            <button id="rgVisualBtn" class="rg-btn rg-3d-btn" type="button" title="Hình ảnh / mô hình 3D trực quan của chủ đề — tự chọn 3D hay đồ hoạ tuỳ chủ đề">🎬 Trực quan</button>
+            <button id="rgLabBtn" class="rg-btn" type="button" title="Phòng lab: kéo dây nối node, double-click nền để tạo node mới">🧪 Phòng lab</button>
+            <button id="rgGestureBtn" class="rg-btn" type="button" title="Điều khiển bằng cử chỉ tay qua camera">✋ Cử chỉ</button>
+            <button id="rgExportBtn" class="rg-btn" type="button" title="Xuất nghiên cứu thành báo cáo PDF">📄 Xuất báo cáo</button>
+            <button id="rgCloseBtn" class="rg-btn close" type="button" title="Đóng">×</button>
+        </div>
+        <div class="rg-stage">
+            <canvas id="researchGraphCanvas"></canvas>
+            <canvas id="researchGraphHud"></canvas>
+            <div id="rgGestureStatus" class="rg-gesture-status"></div>
+            <div id="rgGestureGuide" class="rg-gesture-guide" style="display:none;">
+                <div class="gg-title">✋ Điều khiển tay</div>
+                <div class="gg-row"><b>🖐 Một tay</b><span>Con trỏ đi theo tay</span></div>
+                <div class="gg-row"><b>🤏 Chụm + di</b><span>Nắm & kéo node gần nhất</span></div>
+                <div class="gg-row"><b>🙌 Hai tay kéo ra/vào</b><span>Phóng to / thu nhỏ</span></div>
+                <div class="gg-row"><b>🙌 Hai tay xoay</b><span>Quay bản đồ</span></div>
+                <div class="gg-live">Đang nhận: <b id="rgLiveGesture">…</b></div>
+            </div>
+            <div id="rgOverview" class="rg-overview" style="display:none;"></div>
+            <div class="rg-legend">
+                <div class="row"><span class="swatch" style="background:#f472b6"></span> Gốc / chủ đề</div>
+                <div class="row"><span class="swatch" style="background:#a855f7"></span> Ý cốt lõi</div>
+                <div class="row"><span class="swatch" style="background:#60a5fa"></span> Thành phần</div>
+                <div class="row"><span class="swatch" style="background:#34d399"></span> Ứng dụng</div>
+                <div class="row"><span class="swatch" style="background:#fbbf24"></span> Ví dụ</div>
+                <div class="row"><span class="swatch" style="background:#fb7185"></span> Lưu ý</div>
+            </div>
+            <div id="rgDetail" class="rg-detail">
+                <span class="tag" id="rgDetailTag"></span>
+                <h4 id="rgDetailTitle"></h4>
+                <p id="rgDetailBody"></p>
+                <button id="rgDrillBtn" class="rg-drill-btn" type="button">🔬 Đào sâu node này</button>
+            </div>
+            <div id="rgLoading" class="rg-loading" style="display:none;">
+                <div class="ring"></div>
+                <div id="rgLoadingText">Đang dựng bản đồ tri thức…</div>
+            </div>
+            <div id="rgLabHint" class="rg-lab-hint" style="display:none;">🧪 Phòng lab BẬT — kéo dây từ node này sang node khác → Skemi <b>tổng hợp ra ý tưởng mới</b> (kèm mức khả thi) · double-click nền trống để tạo node · kéo node thả đâu nằm yên đó</div>
+            <!-- Alternate result views (List / Timeline) of the same knowledge nodes -->
+            <div id="rgListView" class="rg-altview" style="display:none;" aria-hidden="true"></div>
+            <div id="rgTimelineView" class="rg-altview rg-timeline" style="display:none;" aria-hidden="true"></div>
+        </div>
+
+        <!-- NODE WORLD: double-click a node to dive into its rich content -->
+        <div id="rgNodeWorld" class="rg-world" aria-hidden="true">
+            <div class="rg-world-card">
+                <button id="rgWorldClose" class="rg-world-close" type="button" title="Đóng">×</button>
+                <div class="rg-world-head">
+                    <span id="rgWorldIcon" class="rg-world-icon">◆</span>
+                    <div>
+                        <span id="rgWorldTag" class="tag"></span>
+                        <h2 id="rgWorldTitle"></h2>
+                    </div>
+                </div>
+                <div class="rg-world-panes">
+                    <section class="rg-world-pane">
+                        <h3 class="rg-world-pane-title">📖 Tổng quan</h3>
+                        <p id="rgWorldBody" class="rg-world-body"></p>
+                    </section>
+                    <section class="rg-world-pane">
+                        <h3 class="rg-world-pane-title">🧩 Chi tiết &amp; dữ kiện</h3>
+                        <div id="rgWorldFacts" class="rg-world-facts"></div>
+                    </section>
+                </div>
+                <div class="rg-world-section">
+                    <h3>🔗 Liên kết</h3>
+                    <div id="rgWorldLinks" class="rg-world-links"></div>
+                </div>
+                <div class="rg-world-actions">
+                    <button id="rgWorldDrill" class="rg-drill-btn" type="button">🔬 Đào sâu node này</button>
+                    <button id="rgWorldLab" class="rg-drill-btn" type="button" title="Mang khái niệm này sang Phòng Thí Nghiệm để thực nghiệm ý tưởng">⚗️ Thực nghiệm ở Lab</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D COMPONENT LAB: take the object apart, rotate, zoom, inspect each part -->
+        <div id="rgLab3D" class="rg-lab3d" aria-hidden="true">
+            <div class="rg-lab3d-card">
+                <div class="rg-lab3d-head">
+                    <span id="rgLab3DTitle" class="rg-lab3d-title">Mô hình 3D</span>
+                    <div class="rg-lab3d-tools">
+                        <button id="rgLab3DExplode" class="rg-btn" type="button">💥 Tháo rời</button>
+                        <button id="rgLab3DClose" class="rg-btn close" type="button" title="Đóng">×</button>
+                    </div>
+                </div>
+                <div class="rg-lab3d-stage">
+                    <canvas id="rgLab3DCanvas"></canvas>
+                    <div id="rgVisInfographic" class="rg-vis-info" style="display:none;"></div>
+                    <div id="rgLab3DLoading" class="rg-lab3d-loading"><div class="ring"></div><span id="rgLab3DLoadingText">Đang dựng hình ảnh trực quan…</span></div>
+                    <div id="rgLab3DHint" class="rg-lab3d-hint">🖱️ Kéo để xoay · cuộn để phóng to/thu nhỏ · bấm một phần tử để xem chi tiết</div>
+                </div>
+                <div class="rg-lab3d-rail">
+                    <div id="rgLab3DPartName" class="rg-lab3d-part">Trực quan tổng thể</div>
+                    <div id="rgLab3DPartDesc" class="rg-lab3d-desc">Hình ảnh tổng thể, trực quan về chủ đề — giúp nhìn rõ và dễ tìm ra giải pháp mới.</div>
+                    <div id="rgLab3DList" class="rg-lab3d-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D KNOWLEDGE-GRAPH SCENE: the whole map as a rotatable 3D constellation -->
+        <div id="rgGraph3D" class="rg-graph3d" aria-hidden="true">
+            <div class="rg-graph3d-head">
+                <span class="rg-graph3d-title">🌌 Không gian 3D — <span id="rgGraph3DTopic"></span></span>
+                <div class="rg-graph3d-tools">
+                    <button id="rgGraph3DReset" class="rg-btn" type="button" title="Về góc nhìn mặc định">🎯 Canh giữa</button>
+                    <button id="rgGraph3DClose" class="rg-btn close" type="button" title="Đóng">×</button>
+                </div>
+            </div>
+            <canvas id="rgGraph3DCanvas" class="rg-graph3d-canvas"></canvas>
+            <div id="rgGraph3DHint" class="rg-graph3d-hint">🖱️ Kéo để xoay · cuộn để phóng to/thu nhỏ · bấm một node để xem chi tiết</div>
+            <div id="rgGraph3DPanel" class="rg-graph3d-panel" style="display:none;">
+                <button id="rgGraph3DPanelClose" class="rg-graph3d-panel-close" type="button">×</button>
+                <span id="rgGraph3DPanelTag" class="tag"></span>
+                <h3 id="rgGraph3DPanelTitle"></h3>
+                <p id="rgGraph3DPanelBody"></p>
+                <a id="rgGraph3DPanelSrc" class="rg-world-source" target="_blank" rel="noopener" style="display:none;"></a>
+            </div>
+        </div>
+    </div>
+
+    <script src="./Js/ResearchGraph.js?v=20260629a"></script>
+    <script src="./Js/HandGesture.js?v=20260608b"></script>
+    <script src="./Js/ComponentLab.js?v=20260615b"></script>
+    <script src="./Js/Graph3D.js?v=20260617a"></script>
+    <script>
+    (function () {
+        const $ = (id) => document.getElementById(id);
+        const overlay = $('rgOverlay');
+        if (!overlay || !window.ResearchGraph) return;
+        let graph = null, gesture = null, lastTopic = '', worldNode = null;
+        const GROUP_VI = { root: 'Gốc', core: 'Cốt lõi', component: 'Thành phần',
+            application: 'Ứng dụng', example: 'Ví dụ', caution: 'Lưu ý', custom: 'Tự tạo', default: 'Khái niệm' };
+        const GROUP_ICON = { root: '◆', core: '✸', component: '▣', application: '◈', example: '✦', caution: '⚠', custom: '＋', default: '•' };
+
+        function setDrillBtn(btn, node) {
+            if (!btn || !node) return;
+            if (node.drilling) { btn.disabled = true; btn.textContent = '⏳ Đang đào sâu…'; }
+            else if (node.drillMsg) { btn.disabled = false; btn.textContent = node.drillMsg; }
+            else { btn.disabled = false; btn.textContent = node.expanded ? '🔬 Đào sâu thêm' : '🔬 Đào sâu node này'; }
+        }
+
+        // Shared deep-research drill: state lives ON the node so it persists when
+        // you switch nodes and come back.
+        async function drill(node) {
+            if (!graph || !node || node.drilling) return;
+            node.drilling = true; node.drillMsg = '';
+            setDrillBtn($('rgDrillBtn'), node); setDrillBtn($('rgWorldDrill'), worldNode === node ? node : null);
+            const lang = (localStorage.getItem('skemi_language') || 'vi');
+            try {
+                const r = await fetch('/api/research/graph', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic: node.label, language: lang }),
+                });
+                const data = await r.json();
+                node.drilling = false;
+                if (data && data.success) {
+                    const n = graph.mergeData(data, node);
+                    node.drillMsg = n > 0 ? `✅ +${n} khái niệm` : '✓ Đã đủ chi tiết';
+                    graph.fit();
+                } else { node.drillMsg = '⚠️ Thử lại'; }
+            } catch (e) { node.drilling = false; node.drillMsg = '⚠️ Thử lại'; }
+            // re-render whichever drill buttons are showing this node
+            if (graph.selected === node) setDrillBtn($('rgDrillBtn'), node);
+            if (worldNode === node) { setDrillBtn($('rgWorldDrill'), node); renderWorldLinks(node); }
+        }
+
+        function renderWorldLinks(node) {
+            const box = $('rgWorldLinks'); if (!box || !graph) return;
+            const links = [];
+            graph.edges.forEach((e) => {
+                if (e.source === node) links.push({ other: e.target, rel: e.relation });
+                else if (e.target === node) links.push({ other: e.source, rel: e.relation });
+            });
+            if (!links.length) { box.innerHTML = '<span class="rg-world-empty">Chưa có liên kết — đào sâu hoặc dùng phòng lab để nối.</span>'; return; }
+            box.innerHTML = links.map((l) =>
+                `<button class="rg-world-link" data-id="${l.other.id}"><span class="dot" style="background:${({root:'#f472b6',core:'#a855f7',component:'#60a5fa',application:'#34d399',example:'#fbbf24',caution:'#fb7185',custom:'#22d3ee'}[l.other.group]||'#94a3b8')}"></span><b>${(l.rel||'liên kết')}</b> → ${l.other.label}</button>`
+            ).join('');
+            box.querySelectorAll('.rg-world-link').forEach((b) => b.addEventListener('click', () => {
+                const t = graph.nodes.find((x) => x.id === b.dataset.id);
+                if (t) { graph.select(t); openWorld(t); }
+            }));
+        }
+
+        // Pane B "Chi tiết & dữ kiện": distil key points from a node's detail/body,
+        // plus type / relevance / link-count chips and the source. Keeps the
+        // two-pane node-world useful even before a deep-dive enriches the node.
+        function splitKeyPoints(text, max) {
+            if (!text) return [];
+            return String(text)
+                .split(/(?<=[.!?。…⁉‼])\s+/)
+                .map((s) => s.trim())
+                .filter((s) => s.length > 22)
+                .slice(0, max || 6);
+        }
+
+        function renderWorldFacts(node) {
+            const box = $('rgWorldFacts'); if (!box) return;
+            const html = [];
+            const detail = (node.detail && node.detail !== node.body) ? node.detail : '';
+            const points = splitKeyPoints(detail || node.body, 6);
+            if (points.length) {
+                html.push('<ul class="rg-world-points">' + points.map((p) => `<li>${esc(p)}</li>`).join('') + '</ul>');
+            }
+            const chips = [`<span class="rg-world-chip">Loại: ${esc(GROUP_VI[node.group] || node.group || 'Khái niệm')}</span>`];
+            if (typeof node.score === 'number') chips.push(`<span class="rg-world-chip">Liên quan: ${Math.round(node.score * 100) / 100}</span>`);
+            const relCount = graph ? graph.edges.filter((e) => e.source === node || e.target === node).length : 0;
+            chips.push(`<span class="rg-world-chip">Liên kết: ${relCount}</span>`);
+            html.push('<div class="rg-world-chips">' + chips.join('') + '</div>');
+            if (node.url) {
+                html.push(`<a class="rg-world-source" href="${esc(node.url)}" target="_blank" rel="noopener">🔗 Mở nguồn: ${esc(node.url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 50))}</a>`);
+            }
+            if (!points.length && !node.url) {
+                html.unshift('<p class="rg-world-empty">Chưa có dữ kiện chi tiết — hãy bấm “🔬 Đào sâu node này”.</p>');
+            }
+            box.innerHTML = html.join('');
+        }
+
+        function openWorld(node) {
+            worldNode = node;
+            $('rgWorldIcon').textContent = GROUP_ICON[node.group] || '•';
+            $('rgWorldTag').textContent = GROUP_VI[node.group] || node.group;
+            $('rgWorldTitle').textContent = node.label;
+            $('rgWorldBody').textContent = node.body || node.detail || 'Chưa có mô tả chi tiết cho node này. Hãy đào sâu để Skemi nghiên cứu thêm.';
+            renderWorldFacts(node);
+            renderWorldLinks(node);
+            setDrillBtn($('rgWorldDrill'), node);
+            $('rgNodeWorld').classList.add('show'); $('rgNodeWorld').setAttribute('aria-hidden', 'false');
+        }
+        function closeWorld() { worldNode = null; $('rgNodeWorld').classList.remove('show'); $('rgNodeWorld').setAttribute('aria-hidden', 'true'); }
+
+        const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        let topicOverviewText = '';   // the research overview, restored when nothing is selected
+
+        // Fill the TOP overview panel with the SELECTED node's research context —
+        // its role + connections (clickable) — so both khung carry node content.
+        function fillOverviewForNode(n) {
+            const ov = $('rgOverview'); if (!ov || !n) return;
+            const links = [];
+            if (graph) graph.edges.forEach((e) => {
+                if (e.source === n && !links.some((l) => l.id === e.target.id)) links.push(e.target);
+                else if (e.target === n && !links.some((l) => l.id === e.source.id)) links.push(e.source);
+            });
+            const tag = GROUP_VI[n.group] || n.group;
+            let html = `<div class="rgov-head">🔬 <b>${esc(n.label)}</b> <span class="rgov-tag">${esc(tag)}</span></div>`;
+            html += `<div class="rgov-body">${esc(n.body || n.detail || 'Bấm “Đào sâu” để nghiên cứu chuyên sâu node này.')}</div>`;
+            if (links.length) {
+                html += `<div class="rgov-rel"><span class="rgov-rel-h">🔗 Kết nối:</span> `
+                    + links.slice(0, 8).map((t) => `<span class="rgov-chip" data-id="${esc(t.id)}">${esc(t.label)}</span>`).join(' ') + `</div>`;
+            }
+            ov.innerHTML = html;
+            ov.style.display = 'block';
+            ov.querySelectorAll('.rgov-chip').forEach((c) => c.addEventListener('click', () => {
+                const t = graph && graph.nodes.find((x) => x.id === c.dataset.id); if (t) graph.select(t);
+            }));
+        }
+
+        function ensureGraph() {
+            if (graph) return graph;
+            graph = new window.ResearchGraph($('researchGraphCanvas'), {
+                onSelect: (n) => {
+                    // BOTTOM detail card — the node's full research content + drill.
+                    $('rgDetailTag').textContent = GROUP_VI[n.group] || n.group;
+                    $('rgDetailTitle').textContent = n.label;
+                    $('rgDetailBody').textContent = n.body || n.detail || 'Bấm "Đào sâu node này" để Skemi nghiên cứu chuyên sâu hơn.';
+                    setDrillBtn($('rgDrillBtn'), n);
+                    $('rgDetail').classList.add('show');
+                    // TOP overview panel — same node, but its CONNECTIONS & role (so both
+                    // khung carry the node's research, not the default topic blurb).
+                    fillOverviewForNode(n);
+                },
+                onEnter: (n) => { graph.select(n); openWorld(n); },   // double-click → node world
+                onCreateNode: (world) => {
+                    const label = prompt('Tên node mới:');
+                    if (label && label.trim()) graph.addNode(label.trim(), 'custom', world);
+                },
+                // LAB: wiring two nodes together SYNTHESISES a new idea (what their
+                // connection creates + feasibility) and drops it as a new node.
+                onLink: async (a, b, feas) => {
+                    const s = $('rgGestureStatus');
+                    if (s) { s.textContent = `⚗️ Đang tổng hợp ý tưởng từ "${a.label}" + "${b.label}"…`; s.classList.add('show'); }
+                    try {
+                        const r = await fetch('/api/research/synthesize', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ a: a.label, b: b.label, topic: lastTopic, language: (localStorage.getItem('skemi_language') || 'vi') }),
+                        });
+                        const d = await r.json();
+                        if (d && d.success) {
+                            const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - 80 };
+                            const node = graph.addNode(d.label, 'custom', mid);
+                            node.body = d.body || '';
+                            node.detail = (d.feasible ? '✅ Khả thi' : '⚠️ Khó khả thi') + (d.score != null ? ` ~${d.score}%` : '');
+                            node.fixed = true;
+                            graph.linkNodes(a, node, 'tạo ra', true);
+                            graph.linkNodes(b, node, 'tạo ra', true);
+                            if (s) { s.textContent = `✨ Tạo ra: ${d.label} (${node.detail})`; setTimeout(() => s.classList.remove('show'), 3500); }
+                            openWorld(node);
+                        } else if (s) { s.textContent = '⚠️ Chưa tổng hợp được, thử lại.'; setTimeout(() => s.classList.remove('show'), 2800); }
+                    } catch (e) { if (s) { s.textContent = '⚠️ Lỗi tổng hợp.'; setTimeout(() => s.classList.remove('show'), 2800); } }
+                },
+            });
+            return graph;
+        }
+
+        async function loadTopic(topic) {
+            topic = (topic || '').trim();
+            if (!topic) { topic = (document.getElementById('searchInput') || {}).value || 'Kiến thức tổng quát'; topic = topic.trim() || 'Kiến thức tổng quát'; }
+            $('rgTopic').textContent = topic;
+            // REUSE the research the user ALREADY ran ("Phân tích chủ đề") — the map just
+            // VISUALISES it, never re-searches/re-synthesises. Prefer the in-memory graph,
+            // then one persisted earlier this session (so closing + re-opening the map
+            // keeps the SAME map instead of rebuilding).
+            let pre = window.__skemiSearchGraph;
+            if (!pre) { try { pre = JSON.parse(sessionStorage.getItem('skemi_research_graph') || 'null'); } catch (e) {} }
+            const tnorm = topic.toLowerCase();
+            if (pre && pre.data && pre.data.nodes && pre.data.nodes.length &&
+                (!pre.topic || pre.topic === tnorm || tnorm.indexOf(pre.topic) >= 0 || pre.topic.indexOf(tnorm) >= 0)) {
+                $('rgLoading').style.display = 'none';
+                $('rgDetail').classList.remove('show');
+                ensureGraph().setData(pre.data);
+                lastTopic = topic;
+                if (pre.data.overview) { $('rgOverview').textContent = pre.data.overview; $('rgOverview').style.display = 'block'; }
+                else { $('rgOverview').style.display = 'none'; }
+                return;
+            }
+            $('rgLoading').style.display = 'flex';
+            $('rgOverview').style.display = 'none';
+            $('rgDetail').classList.remove('show');
+            const lang = (localStorage.getItem('skemi_language') || 'vi');
+            // Cycle through research-phase messages so the ~30s deep build feels alive
+            // and professional instead of a frozen spinner.
+            const phases = (lang.startsWith('vi')
+                ? ['🔍 Đang thu thập nguồn dữ liệu…', '📖 Đang đọc & bóc tách tài liệu…',
+                   '🧠 Đang đối soát, liên kết khái niệm…', '🕸 Đang dựng các nhánh tri thức…',
+                   '✨ Đang tổng hợp & sắp xếp bản đồ…']
+                : ['🔍 Gathering sources…', '📖 Reading & extracting…', '🧠 Cross-checking concepts…',
+                   '🕸 Building the knowledge branches…', '✨ Synthesising the map…']);
+            let _ph = 0; $('rgLoadingText').textContent = phases[0];
+            const _phTimer = setInterval(() => { _ph = (_ph + 1) % phases.length; $('rgLoadingText').textContent = phases[_ph]; }, 2600);
+            let data = null;
+            try {
+                const r = await fetch('/api/research/graph', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, language: lang }),
+                });
+                data = await r.json();
+            } catch (e) { data = null; }
+            clearInterval(_phTimer);
+            $('rgLoading').style.display = 'none';
+            if (!data || !data.success) {
+                $('rgLoadingText').textContent = 'Không dựng được bản đồ. Thử lại nhé.';
+                $('rgLoading').style.display = 'flex';
+                return;
+            }
+            ensureGraph().setData(data);
+            requestAnimationFrame(() => setTimeout(() => graph && graph.fit(), 400));
+            lastTopic = topic;
+            // Persist so re-opening the map reuses THIS build (no re-search).
+            try { sessionStorage.setItem('skemi_research_graph', JSON.stringify({ topic: tnorm, data, ts: Date.now() })); } catch (e) {}
+            if (data.overview) { $('rgOverview').textContent = data.overview; $('rgOverview').style.display = 'block'; }
+        }
+
+        function open() {
+            overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false');
+            setGraphView('graph');   // always open on the mindmap; List/Timeline render on demand
+            ensureGraph();
+            requestAnimationFrame(() => { graph._resize(); graph.start();
+                const topic = (document.getElementById('searchInput') || {}).value || '';
+                if (topic.trim() !== lastTopic) loadTopic(topic);
+            });
+        }
+        function close() {
+            overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true');
+            closeWorld();
+            if (gesture) { gesture.stop(); gesture = null; $('rgGestureBtn').classList.remove('active'); }
+            if (graph) graph.stop();
+        }
+
+        $('rgDrillBtn') && $('rgDrillBtn').addEventListener('click', () => { if (graph && graph.selected) drill(graph.selected); });
+        $('rgWorldDrill') && $('rgWorldDrill').addEventListener('click', () => { if (worldNode) drill(worldNode); });
+        // Bridge Search → Idea Lab: carry the concept (+ its summary) over to experiment on it.
+        $('rgWorldLab') && $('rgWorldLab').addEventListener('click', () => {
+            if (!worldNode) return;
+            const idea = (worldNode.label || '') + (worldNode.body ? ' — ' + worldNode.body : (worldNode.detail ? ' — ' + worldNode.detail : ''));
+            window.location.href = 'Lab.html?idea=' + encodeURIComponent(idea.slice(0, 600));
+        });
+        $('rgWorldClose') && $('rgWorldClose').addEventListener('click', closeWorld);
+
+        // ---- Adaptive VISUAL of the whole topic: 3D model (objects) OR infographic ----
+        let lab3d = null, visualKind = '';
+        // Build the topic visual FROM the completed deep-research (no LLM) so the
+        // "Trực quan tổng thể" is ALWAYS rich + surfaces solution paths — even when the
+        // cloud model is rate-limited. Sections → pillars, decision-paths → insight.
+        function buildVisualFromAnalysis(a) {
+            if (!a) return null;
+            const rep = a.report || {};
+            const sections = Array.isArray(rep.sections) ? rep.sections : [];
+            const findings = Array.isArray(rep.key_findings) ? rep.key_findings : [];
+            const outlook = Array.isArray(rep.outlook) ? rep.outlook : [];
+            const paths = Array.isArray(a.decision_paths) ? a.decision_paths : [];
+            const tldr = Array.isArray(a.tldr) ? a.tldr : (Array.isArray(rep.tldr) ? rep.tldr : []);
+            const nSrc = (a.sources_drawer || a.sources || []).length;
+            if (sections.length < 2 && findings.length < 2) return null;
+            const ICONS = ['📊', '🔬', '⚙️', '🌍', '💡', '🧩'];
+            const pillars = sections.slice(0, 6).map((s, i) => ({ icon: ICONS[i % ICONS.length], name: s.heading || '', desc: s.body || '' }));
+            const stats = [];
+            if (nSrc) stats.push({ value: String(nSrc) + (nSrc >= 100 ? '+' : ''), label: 'nguồn' });
+            if (findings.length) stats.push({ value: findings.length, label: 'phát hiện' });
+            if (sections.length) stats.push({ value: sections.length, label: 'chủ điểm' });
+            if (outlook.length) stats.push({ value: outlook.length, label: 'dự báo' });
+            const insight = (paths[0] && ((paths[0].title ? paths[0].title + ': ' : '') + (paths[0].description || '')))
+                || rep.consensus || tldr[0] || '';
+            return { kind: 'infographic', headline: a.headline || a.display_query || a.query || '', stats, pillars, insight, fromSearch: true };
+        }
+        function reportVisualFor(topic) {
+            const sa = window.__skemiSearchAnalysis;
+            if (sa && sa.topic && topic.toLowerCase() === sa.topic) { try { return buildVisualFromAnalysis(sa.data); } catch (e) {} }
+            return null;
+        }
+        function openVisual() {
+            const topic = (lastTopic || (document.getElementById('searchInput') || {}).value || '').trim();
+            if (!topic) return;
+            const root = $('rgLab3D');
+            $('rgLab3DTitle').textContent = '🎬 ' + topic;
+            $('rgLab3DLoading').style.display = 'flex';
+            $('rgLab3DLoadingText').textContent = 'Đang dựng hình ảnh trực quan…';
+            $('rgLab3DList').innerHTML = '';
+            $('rgVisInfographic').style.display = 'none';
+            $('rgLab3DCanvas').style.display = '';
+            root.classList.add('show'); root.setAttribute('aria-hidden', 'false');
+            const lang = (localStorage.getItem('skemi_language') || 'vi');
+            const reportViz = reportVisualFor(topic);   // rich, from the search we already ran
+            // Show the research-derived infographic IMMEDIATELY (no waiting) if we have
+            // it — always useful, never blank.
+            if (reportViz) { $('rgLab3DLoading').style.display = 'none'; visualKind = 'infographic'; renderInfographic(reportViz); }
+            // Still ask the model — only to UPGRADE to a real 3D object model.
+            fetch('/api/research/visual', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ topic, language: lang }) })
+              .then((r) => r.json()).then((d) => {
+                if (d && d.success && d.kind === '3d' && Array.isArray(d.parts) && d.parts.length && window.ComponentLab) {
+                    $('rgLab3DLoading').style.display = 'none'; visualKind = '3d'; renderVisual3D(d); return;
+                }
+                if (reportViz) return;   // already showing the rich research infographic
+                $('rgLab3DLoading').style.display = 'none'; visualKind = 'infographic';
+                const llmRich = d && d.success && d.kind === 'infographic' && ((d.pillars || []).length || (d.stats || []).length);
+                renderInfographic(llmRich ? d : { headline: topic, insight: 'Hãy chạy “Phân tích chủ đề” trước để có dữ liệu dựng hình ảnh tổng quan.' });
+              }).catch(() => {
+                if (reportViz) return;
+                $('rgLab3DLoading').style.display = 'none'; visualKind = 'infographic';
+                renderInfographic({ headline: topic, insight: 'Hãy chạy “Phân tích chủ đề” trước để có dữ liệu.' });
+              });
+        }
+        function renderVisual3D(d) {
+            $('rgVisInfographic').style.display = 'none';
+            $('rgLab3DCanvas').style.display = '';
+            $('rgLab3DExplode').style.display = '';
+            $('rgLab3DExplode').textContent = '💥 Tháo rời';
+            $('rgLab3DHint').style.display = '';
+            $('rgLab3DPartName').textContent = 'Bấm vào một phần tử';
+            $('rgLab3DPartDesc').textContent = 'Mô hình 3D của chủ đề — kéo để xoay, cuộn để phóng to, tháo rời để xem từng phần.';
+            if (!lab3d) {
+                lab3d = new window.ComponentLab($('rgLab3DCanvas'), {
+                    onSelect: (p) => {
+                        $('rgLab3DPartName').textContent = p ? p.name : 'Bấm vào một phần tử';
+                        $('rgLab3DPartDesc').textContent = p ? (p.desc || '') : 'Mỗi phần tử của vật thể được tách riêng — bấm để xem vai trò.';
+                        $('rgLab3DList').querySelectorAll('button').forEach((b) => b.classList.toggle('active', p && +b.dataset.i === p.index));
+                    },
+                });
+            }
+            lab3d.start(); requestAnimationFrame(() => lab3d._resize());
+            lab3d.setParts(d);
+            $('rgLab3DList').innerHTML = (d.parts || []).map((p, i) =>
+                `<button data-i="${i}"><span class="sw" style="background:${p.color || '#60a5fa'}"></span>${esc(p.name || ('Phần ' + (i + 1)))}</button>`).join('');
+            $('rgLab3DList').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => lab3d.select(+b.dataset.i)));
+        }
+        function renderInfographic(d) {
+            if (lab3d) lab3d.stop();
+            $('rgLab3DCanvas').style.display = 'none';
+            $('rgLab3DExplode').style.display = 'none';
+            $('rgLab3DHint').style.display = 'none';
+            const box = $('rgVisInfographic'); box.style.display = 'block';
+            const stats = Array.isArray(d.stats) ? d.stats : [];
+            const pillars = Array.isArray(d.pillars) ? d.pillars : [];
+            let h = `<div class="rgvi-headline">${esc(d.headline || '')}</div>`;
+            if (stats.length) h += `<div class="rgvi-stats">` + stats.slice(0, 5).map((s) =>
+                `<div class="rgvi-stat"><div class="rgvi-val">${esc(s.value)}</div><div class="rgvi-lab">${esc(s.label)}</div></div>`).join('') + `</div>`;
+            if (pillars.length) h += `<div class="rgvi-pillars">` + pillars.slice(0, 6).map((p) =>
+                `<div class="rgvi-pillar"><div class="rgvi-pico">${esc(p.icon || '◆')}</div><div class="rgvi-pname">${esc(p.name)}</div><div class="rgvi-pdesc">${esc(p.desc)}</div></div>`).join('') + `</div>`;
+            if (d.insight) h += `<div class="rgvi-insight">💡 ${esc(d.insight)}</div>`;
+            box.innerHTML = h;
+            $('rgLab3DPartName').textContent = 'Tổng quan trực quan';
+            $('rgLab3DPartDesc').textContent = 'Hình ảnh tổng thể về chủ đề — số liệu, trụ cột chính và gợi ý giải pháp.';
+            $('rgLab3DList').innerHTML = '';
+        }
+        function close3DLab() { const root = $('rgLab3D'); root.classList.remove('show'); root.setAttribute('aria-hidden', 'true'); if (lab3d) lab3d.stop(); }
+        $('rgVisualBtn') && $('rgVisualBtn').addEventListener('click', openVisual);
+
+        // ---- 3D KNOWLEDGE-GRAPH SCENE (the whole map as a rotatable constellation) ----
+        let graph3d = null;
+        function openGraph3D() {
+            if (!window.Graph3D) return;
+            if (!graph || !graph.nodes || !graph.nodes.length) return;
+            const root = $('rgGraph3D');
+            $('rgGraph3DTopic').textContent = lastTopic || '';
+            root.classList.add('show'); root.setAttribute('aria-hidden', 'false');
+            $('rgGraph3DPanel').style.display = 'none';
+            if (!graph3d) {
+                graph3d = new Graph3D($('rgGraph3DCanvas'), {
+                    onSelect: (node) => {
+                        const p = $('rgGraph3DPanel'); if (!p) return;
+                        $('rgGraph3DPanelTag').textContent = GROUP_VI[node.group] || node.group || '';
+                        $('rgGraph3DPanelTitle').textContent = node.label || '';
+                        $('rgGraph3DPanelBody').textContent = node.body || node.detail || 'Bấm “🔬 Đào sâu node này” trong bản đồ 2D để Skemi bổ sung chi tiết.';
+                        const s = $('rgGraph3DPanelSrc');
+                        if (node.url) { s.href = node.url; s.textContent = '🔗 ' + node.url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 46); s.style.display = 'inline-block'; }
+                        else s.style.display = 'none';
+                        p.style.display = 'block';
+                    }
+                });
+            }
+            const nodes = graph.nodes.map((n) => ({ id: n.id, label: n.label, group: n.group, body: n.body, detail: n.detail, url: n.url, score: n.score }));
+            const edges = graph.edges.map((e) => ({ source: e.source.id, target: e.target.id, relation: e.relation }));
+            requestAnimationFrame(() => { graph3d.resize(); graph3d.setData(nodes, edges); });
+        }
+        function closeGraph3D() { const r = $('rgGraph3D'); r.classList.remove('show'); r.setAttribute('aria-hidden', 'true'); }
+        $('rgGraph3DBtn') && $('rgGraph3DBtn').addEventListener('click', openGraph3D);
+        $('rgGraph3DClose') && $('rgGraph3DClose').addEventListener('click', closeGraph3D);
+        $('rgGraph3DPanelClose') && $('rgGraph3DPanelClose').addEventListener('click', () => { $('rgGraph3DPanel').style.display = 'none'; });
+        $('rgGraph3DReset') && $('rgGraph3DReset').addEventListener('click', () => { if (graph3d) { graph3d._rot = { x: -0.25, y: graph3d._rot.y }; graph3d._auto = true; } });
+        window.addEventListener('resize', () => { if (graph3d && $('rgGraph3D').classList.contains('show')) graph3d.resize(); });
+
+        // ---- Export the whole research as a clean printable / PDF report ----
+        function exportReport() {
+            const topic = (lastTopic || (document.getElementById('searchInput') || {}).value || 'Nghiên cứu').trim();
+            const briefEl = document.getElementById('researchBrief');
+            const briefText = briefEl && !briefEl.classList.contains('hidden') ? briefEl.innerText.trim() : '';
+            const nodes = (graph && graph.nodes) ? graph.nodes : [];
+            const esc2 = (s) => String(s == null ? '' : s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+            const nodeRows = nodes.filter((n) => n.group !== 'root').map((n) => {
+                const pts = splitKeyPoints((n.detail && n.detail !== n.body) ? n.detail : n.body, 5);
+                return `<section class="r-node"><h3>${esc2(n.label)} <span class="r-tag">${esc2(GROUP_VI[n.group] || n.group || '')}</span></h3>`
+                    + (n.body ? `<p>${esc2(n.body)}</p>` : '')
+                    + (pts.length ? `<ul>${pts.map((p) => `<li>${esc2(p)}</li>`).join('')}</ul>` : '')
+                    + (n.url ? `<a href="${esc2(n.url)}">${esc2(n.url)}</a>` : '')
+                    + `</section>`;
+            }).join('');
+            const sources = nodes.filter((n) => n.url).map((n) => `<li><a href="${esc2(n.url)}">${esc2(n.label)} — ${esc2(n.url)}</a></li>`).join('');
+            const win = window.open('', '_blank');
+            if (!win) { alert('Trình duyệt chặn cửa sổ. Hãy cho phép popup để xuất báo cáo.'); return; }
+            win.document.write(`<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><title>Báo cáo: ${esc2(topic)}</title>`
+                + `<style>body{font-family:'Segoe UI',Inter,Arial,sans-serif;max-width:820px;margin:40px auto;padding:0 24px;color:#1a1330;line-height:1.6;}`
+                + `h1{font-size:2rem;color:#6d28d9;margin:0 0 4px;}.r-sub{color:#64748b;margin:0 0 24px;font-size:.9rem;}`
+                + `.r-brief{background:#f5f3ff;border:1px solid #ddd6fe;border-radius:14px;padding:18px 20px;white-space:pre-wrap;margin:0 0 28px;}`
+                + `.r-node{border-top:1px solid #ececf5;padding:16px 0;}.r-node h3{margin:0 0 6px;color:#4c1d95;}`
+                + `.r-tag{font-size:.7rem;background:#ede9fe;color:#6d28d9;padding:2px 8px;border-radius:999px;vertical-align:middle;}`
+                + `.r-node ul{margin:8px 0;}.r-node a{color:#2563eb;word-break:break-all;font-size:.85rem;}`
+                + `h2{margin:28px 0 8px;color:#312e81;}.r-src li{margin:4px 0;font-size:.85rem;}@media print{body{margin:0;}}</style></head><body>`
+                + `<h1>${esc2(topic)}</h1>`
+                + `<p class="r-sub">Báo cáo nghiên cứu Skemi · ${new Date().toLocaleString('vi-VN')} · ${nodes.length} khái niệm</p>`
+                + (briefText ? `<div class="r-brief">${esc2(briefText)}</div>` : '')
+                + `<h2>🧩 Các khái niệm</h2>`
+                + (nodeRows || '<p>Chưa có dữ liệu — hãy chạy một tìm kiếm trước.</p>')
+                + (sources ? `<h2>🔗 Nguồn tham khảo</h2><ul class="r-src">${sources}</ul>` : '')
+                + `<scr` + `ipt>setTimeout(function(){window.print();},400);</scr` + `ipt></body></html>`);
+            win.document.close();
+        }
+        $('rgExportBtn') && $('rgExportBtn').addEventListener('click', exportReport);
+        $('rgLab3DClose') && $('rgLab3DClose').addEventListener('click', close3DLab);
+        $('rgLab3DExplode') && $('rgLab3DExplode').addEventListener('click', () => {
+            if (!lab3d || visualKind !== '3d') return; const on = lab3d.explode();
+            $('rgLab3DExplode').textContent = on ? '🔧 Lắp lại' : '💥 Tháo rời';
+        });
+
+        $('rgOpenBtn') && $('rgOpenBtn').addEventListener('click', open);
+        $('rgCloseBtn') && $('rgCloseBtn').addEventListener('click', close);
+        $('rgRespin') && $('rgRespin').addEventListener('click', () => {
+            if (!graph) return;
+            graph.nodes.forEach((n) => { if (n.group !== 'root') n.fixed = false; });  // release pinned-in-place nodes
+            graph._alpha = 1;
+            graph.refit(2400);   // keep it framed while it re-settles
+        });
+        $('rgFitBtn') && $('rgFitBtn').addEventListener('click', () => { if (graph) graph.refit(1200); });
+        $('rgLabBtn') && $('rgLabBtn').addEventListener('click', () => {
+            if (!graph) return;
+            const on = !graph.labMode; graph.setLabMode(on);
+            $('rgLabBtn').classList.toggle('active', on);
+            $('rgLabHint').style.display = on ? 'block' : 'none';
+        });
+
+        // ── Result view modes: Mindmap (canvas) / List / Timeline of the SAME nodes ──
+        const RG_GROUP_META = {
+            root: { vi: 'Chủ đề', en: 'Topic', c: '#f472b6' }, core: { vi: 'Cốt lõi', en: 'Core', c: '#a855f7' },
+            component: { vi: 'Thành phần', en: 'Component', c: '#60a5fa' }, application: { vi: 'Ứng dụng', en: 'Application', c: '#34d399' },
+            example: { vi: 'Ví dụ', en: 'Example', c: '#fbbf24' }, note: { vi: 'Lưu ý', en: 'Note', c: '#fb7185' },
+            default: { vi: 'Khái niệm', en: 'Concept', c: '#a855f7' }
+        };
+        function rgIsVi() { try { return String((window.languageManager && window.languageManager.currentLanguage) || localStorage.getItem('skemi_language') || 'vi').toLowerCase().startsWith('vi'); } catch (e) { return true; } }
+        function rgEsc(s) { return String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+        function rgOrderedNodes() {
+            const ns = (graph && graph.nodes) ? graph.nodes.slice() : [];
+            const rank = { root: 0, core: 1, component: 2, application: 3, example: 4, note: 5 };
+            return ns.sort((a, b) => ((rank[a.group] == null ? 9 : rank[a.group]) - (rank[b.group] == null ? 9 : rank[b.group])));
+        }
+        function setGraphView(mode) {
+            const seg = $('rgViewSeg'); if (seg) seg.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.view === mode));
+            const list = $('rgListView'), tl = $('rgTimelineView'); if (!list || !tl) return;
+            const vi = rgIsVi();
+            const emptyMsg = `<div class="rg-altview-empty">${vi ? 'Chưa có dữ liệu — hãy chạy một tìm kiếm trước.' : 'No data yet — run a search first.'}</div>`;
+            if (mode === 'list') {
+                const ns = rgOrderedNodes();
+                list.innerHTML = ns.length ? ns.map(n => {
+                    const g = RG_GROUP_META[n.group] || RG_GROUP_META.default;
+                    const src = n.url ? `<a class="rg-li-src" href="${rgEsc(n.url)}" target="_blank" rel="noopener">🔗 ${vi ? 'Nguồn' : 'Source'}</a>` : '';
+                    return `<div class="rg-list-item" style="--rg-acc:${g.c}"><h4><span class="rg-li-tag" style="--rg-acc:${g.c}">${vi ? g.vi : g.en}</span>${rgEsc(n.label)}</h4><p>${rgEsc(n.body || n.detail || '')}</p>${src}</div>`;
+                }).join('') : emptyMsg;
+                list.style.display = 'block'; tl.style.display = 'none';
+            } else if (mode === 'timeline') {
+                const ns = rgOrderedNodes();
+                tl.innerHTML = ns.length ? `<div class="rg-tl-track">${ns.map((n, i) => {
+                    const g = RG_GROUP_META[n.group] || RG_GROUP_META.default;
+                    return `<div class="rg-tl-step" style="--rg-acc:${g.c}"><div class="rg-tl-num">${(vi ? 'Bước ' : 'Step ') + (i + 1)} · ${vi ? g.vi : g.en}</div><h4>${rgEsc(n.label)}</h4><p>${rgEsc(n.body || n.detail || '')}</p></div>`;
+                }).join('')}</div>` : emptyMsg;
+                tl.style.display = 'block'; list.style.display = 'none';
+            } else {
+                list.style.display = 'none'; tl.style.display = 'none';   // mindmap canvas sits behind
+            }
+        }
+        $('rgViewSeg') && $('rgViewSeg').querySelectorAll('button').forEach(b => b.addEventListener('click', () => setGraphView(b.dataset.view)));
+        // Bilingual seg labels (reliable, not dependent on the web-translate sweep).
+        const RG_VIEW_LABELS = { vi: { graph: 'Sơ đồ', list: 'Danh sách', timeline: 'Dòng thời gian' }, en: { graph: 'Mindmap', list: 'List', timeline: 'Timeline' } };
+        function rgSyncViewLabels() { const L = RG_VIEW_LABELS[rgIsVi() ? 'vi' : 'en']; document.querySelectorAll('#rgViewSeg [data-rg-vlabel]').forEach((s) => { const k = s.getAttribute('data-rg-vlabel'); if (L[k]) s.textContent = L[k]; }); }
+        rgSyncViewLabels();
+        window.addEventListener('languageChanged', () => { rgSyncViewLabels(); const act = document.querySelector('#rgViewSeg button.active'); if (act && act.dataset.view !== 'graph') setGraphView(act.dataset.view); });
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            if ($('rgLab3D').classList.contains('show')) { close3DLab(); return; }
+            if ($('rgNodeWorld').classList.contains('show')) { closeWorld(); return; }
+            if (overlay.classList.contains('open')) close();
+        });
+
+        $('rgGestureBtn') && $('rgGestureBtn').addEventListener('click', async () => {
+            if (!window.HandGesture) return;
+            const status = $('rgGestureStatus');
+            const guide = $('rgGestureGuide');
+            const liveEl = $('rgLiveGesture');
+            const GV = { PINCH: '🤏 Nắm/kéo', POINT: '👆 Trỏ', OPEN: '🖐 Mở',
+                TWO: '🙌 Hai tay: phóng to/nhỏ', NONE: '…' };
+            if (gesture) {
+                gesture.stop(); gesture = null;
+                $('rgGestureBtn').classList.remove('active');
+                status.classList.remove('show');
+                if (guide) guide.style.display = 'none';
+                return;
+            }
+            gesture = new window.HandGesture(ensureGraph(), {
+                overlay: $('researchGraphHud'),
+                onStatus: (m) => { status.textContent = m; status.classList.add('show'); },
+                onGesture: (g) => { if (liveEl) liveEl.textContent = GV[g] || g; },
+            });
+            $('rgGestureBtn').classList.add('active');
+            if (guide) guide.style.display = 'block';
+            const res = await gesture.start();
+            if (!res.ok) {
+                gesture = null; $('rgGestureBtn').classList.remove('active');
+                if (guide) guide.style.display = 'none';
+            }
+        });
+    })();
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('toggleSidebar');
+            if (toggleBtn) {
+                const sidebar = document.getElementById('appSidebar');
+                toggleBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('collapsed');
+                    const span = toggleBtn.querySelector('span');
+                    if (span) span.innerText = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

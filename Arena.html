@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/Css/design-tokens.css?v=20260701b">
+    <link rel="stylesheet" href="/Css/Motion.css?v=20260607k">
+    <script defer src="/Js/motion.js?v=20260531a"></script>
+        <script src="/Js/guest-storage-guard.js?v=20260527"></script>
+        <script src="/Js/account-storage.js?v=20260527"></script>
+        <script type="module" src="/Js/Auth.js?v=20260527"></script>
+        <script type="module" src="/Js/UserScopedStorage.js?v=20260527"></script>
+        <script type="module" src="/Js/CloudSync.js?v=20260702b"></script>
+        <script src="/Js/UserDataManager.js?v=20260531b"></script>
+        <script src="/Js/Preferences.js?v=20260621a"></script>
+        <script src="/Js/UI.js?v=20260510"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skemi Arena</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>★</text></svg>">
+    <link rel="stylesheet" href="./Css/Global.css?v=20260629c" />
+    <link rel="stylesheet" href="./Css/Polish.css?v=20260630d" />
+    <style>
+        /* Embedded-feature shell — full-bleed iframe for the gamification Arena
+           service. Scoped here so no shared CSS file is touched. */
+        .embed-main { position: relative; flex: 1; min-height: 0; height: calc(100vh - 64px); padding: 0; }
+        .embed-frame { width: 100%; height: 100%; border: 0; display: block; background: #050505; }
+        .embed-offline { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center; padding: 32px; background: radial-gradient(circle at 50% 30%, #1a1130, #05030d 70%); color: #efeaff; }
+        .embed-offline.hidden { display: none; }
+        .embed-offline h2 { font-size: 1.6rem; margin: 0; letter-spacing: .5px; }
+        .embed-offline p { max-width: 540px; line-height: 1.6; opacity: .8; margin: 0; font-size: .95rem; }
+        .embed-offline code { background: rgba(255,255,255,.08); padding: 3px 8px; border-radius: 6px; font-size: .85rem; }
+        .embed-retry { cursor: pointer; border: 1px solid rgba(181,140,255,.5); background: linear-gradient(135deg,#ff62c0,#b58cff); color: #fff; padding: 12px 26px; border-radius: 999px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: .72rem; }
+        .embed-spinner { width: 38px; height: 38px; border: 3px solid rgba(255,255,255,.18); border-top-color: #ff62c0; border-radius: 50%; animation: embspin .8s linear infinite; }
+        @keyframes embspin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="galaxy-mode">
+    <nav class="navbar">
+        <a href="Home.html" class="logo">
+            <span class="logo-mark">★</span>
+            <span class="logo-text">Skemi</span>
+        </a>
+        <div class="navbar-shortcuts" aria-label="Điều hướng chính">
+            <a href="Home.html" class="nav-shortcut"><span>🎓</span><span>Studio</span></a>
+            <a href="Search.html" class="nav-shortcut"><span>🔍</span><span>Tra cứu</span></a>
+            <a href="Quiz.html" class="nav-shortcut"><span>📝</span><span>Quiz</span></a>
+            <a href="Chat.html" class="nav-shortcut"><span>💬</span><span>Chat</span></a>
+        </div>
+        <div class="navbar-actions">
+            <div id="auth-buttons"></div>
+        </div>
+    </nav>
+
+    <div class="app-layout">
+        <aside class="app-sidebar" id="appSidebar">
+            <ul class="sidebar-links">
+                <li><a href="Home.html" id="mindmap-link"><span class="icon">🎓</span><span>Studio</span></a></li>
+                <li><a href="Search.html" id="search-link"><span class="icon">🔍</span><span>Tra cứu</span></a></li>
+                <li><a href="Quiz.html" id="quiz-link"><span class="icon">📝</span><span>Quiz</span></a></li>
+                <li><a href="Chat.html" id="chat-link"><span class="icon">💬</span><span>Chat</span></a></li>
+                <li><a href="PromptAgent.html" id="prompt-agent-link"><span class="icon">⚡</span><span>Prompt Agent</span></a></li>
+                <li><a href="Computer.html" id="computer-link"><span class="icon">🖥️</span><span>Skemi Control</span></a></li>
+                <li><a href="Remote.html" id="remote-link"><span class="icon">📡</span><span>Điều khiển từ xa</span></a></li>
+                <li><a href="Settings.html" id="settings-link"><span class="icon">⚙️</span><span>Cài đặt</span></a></li>
+            </ul>
+        </aside>
+
+        <div class="main-content-wrapper">
+            <main class="embed-main">
+                <iframe id="embedFrame" class="embed-frame" title="Skemi Arena" referrerpolicy="no-referrer"></iframe>
+                <div id="embedOffline" class="embed-offline">
+                    <div class="embed-spinner"></div>
+                    <h2>Đang kết nối Đấu Trường AI…</h2>
+                    <p>Dịch vụ Arena chạy ở <code>http://localhost:5000</code>. Nếu mãi không vào được, hãy khởi động nó bằng <code>Start_features.bat</code> (hoặc <code>node backend/server.js</code> trong thư mục gamification) rồi bấm Thử lại.</p>
+                    <button class="embed-retry" id="embedRetry">Thử lại</button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Health-probe the Arena service before showing the iframe so users see a
+        // friendly message instead of a raw "connection refused" frame.
+        (function () {
+            const SERVICE_URL = 'http://localhost:5000/';
+            const HEALTH_URL = 'http://localhost:5000/api/status';
+            const frame = document.getElementById('embedFrame');
+            const offline = document.getElementById('embedOffline');
+            const retry = document.getElementById('embedRetry');
+            let connected = false;
+
+            // Login bridge: forward the signed-in Skemi identity so the Arena
+            // adopts it (instead of a random guest). Empty when not signed in.
+            function identityQuery() {
+                const p = new URLSearchParams();
+                const clean = (k) => (localStorage.getItem(k) || '').replace(/^"|"$/g, '').trim();
+                try {
+                    p.set('skemi_theme', clean('skemi-theme') || 'galaxy');
+                    const bg = clean('skemi_bg_color'); if (bg) p.set('skemi_bg', bg);
+                    const accent = clean('skemi_accent_color'); if (accent) p.set('skemi_accent', accent);
+                    const name = localStorage.getItem('skemi_username');
+                    if (name) { p.set('skemi_user', name); const uid = localStorage.getItem('skemi_user_id'); if (uid) p.set('skemi_uid', uid); }
+                } catch (e) {}
+                const s = p.toString();
+                return s ? '?' + s : '';
+            }
+
+            async function probe() {
+                try {
+                    const ctrl = new AbortController();
+                    const t = setTimeout(() => ctrl.abort(), 2500);
+                    const r = await fetch(HEALTH_URL, { signal: ctrl.signal, cache: 'no-store' });
+                    clearTimeout(t);
+                    if (r.ok) return true;
+                } catch (e) { /* down */ }
+                return false;
+            }
+
+            async function connect() {
+                offline.classList.remove('hidden');
+                const ok = await probe();
+                if (ok) {
+                    connected = true;
+                    frame.src = SERVICE_URL + identityQuery();
+                    frame.addEventListener('load', () => offline.classList.add('hidden'), { once: true });
+                    // Safety: hide overlay shortly after even if load event is swallowed by cross-origin.
+                    setTimeout(() => offline.classList.add('hidden'), 1200);
+                } else {
+                    offline.classList.remove('hidden');
+                }
+            }
+
+            retry.addEventListener('click', connect);
+            connect();
+            // Auto-retry every 4s until connected.
+            const poll = setInterval(() => { if (connected) { clearInterval(poll); } else { connect(); } }, 4000);
+        })();
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script type="module" src="./Js/Galaxy.js"></script>
+    <script src="./Js/i18n-packs.js?v=20260601b"></script>
+    <script src="./Js/upgrade-nudge.js?v=20260531a"></script>
+    <script src="./Js/entitlements.js?v=20260701d"></script>
+    <script type="module" src="./Js/User_navbar.js?v=20260702b"></script>
+    <script type="module" src="./Js/LanguageManager.js?v=20260701e"></script>
+    <script src="./Js/GlobalStatus.js"></script>
+</body>
+</html>

@@ -1,0 +1,966 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/Css/design-tokens.css?v=20260701b">
+    <link rel="stylesheet" href="/Css/Motion.css?v=20260607k">
+    <script defer src="/Js/motion.js?v=20260531a"></script>
+        <script src="/Js/guest-storage-guard.js?v=20260527"></script>
+        <script src="/Js/account-storage.js?v=20260527"></script>
+        <script type="module" src="/Js/Auth.js?v=20260527"></script>
+        <script type="module" src="/Js/UserScopedStorage.js?v=20260527"></script>
+        <script type="module" src="/Js/CloudSync.js?v=20260702b"></script>
+        <script src="/Js/UserDataManager.js?v=20260531b"></script>
+        <script src="/Js/Preferences.js?v=20260621a"></script>
+        <script src="/Js/UI.js?v=20260510"></script>
+    <script src="/Js/Skills.js?v=20260624d"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legion — Trung tâm chỉ huy AI</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>★</text></svg>">
+    <link rel="stylesheet" href="./Css/Global.css?v=20260629c" />
+    <link rel="stylesheet" href="./Css/Polish.css?v=20260630d" />
+    <style>
+        :root { --lg-cyan: #22d3ee; --lg-magenta: #f472b6; --lg-amber: #fbbf24; --lg-green: #34d399; --lg-red: #fb7185; }
+        .lg-main { flex: 1; min-height: 0; padding: 26px 30px 60px; overflow-y: auto; }
+        .lg-wrap { max-width: 1320px; margin: 0 auto; }
+        /* Command center */
+        .lg-command {
+            position: relative; border-radius: 16px; padding: 26px 28px; margin-bottom: 24px;
+            background: var(--bg-secondary, rgba(255,255,255,.025));
+            border: 1px solid var(--border-light, rgba(255,255,255,.08));
+        }
+        .lg-kicker { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text2, #8b93a7); margin: 0 0 8px; font-weight: 600; }
+        .lg-title { font-size: clamp(1.55rem, 3vw, 2.05rem); font-weight: 700; margin: 0 0 12px; color: var(--text, #fff); letter-spacing: -.02em; }
+        .lg-title b { color: var(--lg-cyan); }
+        .lg-rom { width: 100%; min-height: 78px; resize: vertical; border-radius: 14px; padding: 14px 16px;
+            background: var(--bg2, rgba(0,0,0,.32)); border: 1px solid color-mix(in srgb, var(--lg-cyan) 25%, transparent);
+            color: var(--text, #e8e8ea); font-size: .96rem; line-height: 1.55; outline: none; font-family: inherit; }
+        .lg-rom:focus { border-color: var(--lg-cyan); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lg-cyan) 14%, transparent); }
+        .lg-rom::placeholder { color: rgba(180,190,210,.5); }
+        .lg-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 14px; }
+        .lg-select { background: rgba(0,0,0,.3); color: var(--text, #fff); border: 1px solid color-mix(in srgb, var(--lg-cyan) 25%, transparent); border-radius: 12px; padding: 11px 14px; font-weight: 600; cursor: pointer; }
+        .lg-slider-wrap { display: flex; align-items: center; gap: 10px; background: var(--bg2, rgba(0,0,0,.3)); border: 1px solid color-mix(in srgb, var(--lg-cyan) 25%, transparent); border-radius: 12px; padding: 9px 14px; }
+        .lg-slider-lbl { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--text2, #9aa0aa); font-weight: 700; }
+        .lg-slider { -webkit-appearance: none; appearance: none; width: 130px; height: 5px; border-radius: 999px; background: linear-gradient(90deg, var(--lg-cyan), var(--lg-magenta)); outline: none; cursor: pointer; }
+        .lg-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+        .lg-slider::-moz-range-thumb { width: 16px; height: 16px; border: 0; border-radius: 50%; background: #fff; cursor: pointer; }
+        .lg-slider-val { font-weight: 800; color: var(--lg-cyan); font-variant-numeric: tabular-nums; min-width: 22px; text-align: center; }
+        /* Promote suggestion banner */
+        .lg-promote-banner { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; padding: 12px 16px; border-radius: 14px; background: color-mix(in srgb, var(--lg-amber) 14%, var(--bg2, rgba(0,0,0,.2))); border: 1px solid color-mix(in srgb, var(--lg-amber) 45%, transparent); animation: lgPbIn .35s ease; }
+        .lg-promote-banner[hidden] { display: none; }
+        @keyframes lgPbIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+        .lg-pb-ic { font-size: 1.4rem; }
+        .lg-pb-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+        .lg-pb-text b { color: var(--text, #fff); font-size: .92rem; }
+        .lg-pb-text span { color: var(--text2, #b9c0cc); font-size: .82rem; }
+        .lg-pb-yes { background: linear-gradient(135deg, var(--lg-green), #10b981); color: #04130d; font-weight: 800; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; letter-spacing: .04em; }
+        .lg-pb-no { background: transparent; color: var(--text2, #b9c0cc); border: 1px solid var(--border, rgba(255,255,255,.18)); padding: 8px 14px; border-radius: 10px; cursor: pointer; }
+        .lg-pb-yes:hover { filter: brightness(1.08); } .lg-pb-no:hover { color: var(--text, #fff); }
+        /* Task-assignment tree */
+        .lg-tree { border-radius: 16px; padding: 18px 20px; background: var(--bg2, rgba(255,255,255,.035)); border: 1px solid var(--border, rgba(255,255,255,.09)); }
+        .lg-tree-empty { color: var(--text2, #9aa0aa); font-size: .88rem; text-align: center; padding: 10px; }
+        .lg-tree-root { font-size: .92rem; color: var(--text, #fff); margin-bottom: 12px; }
+        .lg-tree-root i { color: var(--text2, #aab); }
+        .lg-tree-mgr { margin: 0 0 10px 8px; padding-left: 18px; border-left: 2px solid color-mix(in srgb, var(--lg-magenta) 50%, transparent); }
+        .lg-tree-workers { margin-left: 8px; padding-left: 18px; border-left: 2px solid color-mix(in srgb, var(--lg-cyan) 35%, transparent); display: flex; flex-direction: column; gap: 7px; }
+        .lg-tnode { display: inline-flex; align-items: center; gap: 8px; font-size: .82rem; color: var(--text, #e8e8ea); }
+        .lg-tnode.manager { background: color-mix(in srgb, var(--lg-magenta) 14%, transparent); border: 1px solid color-mix(in srgb, var(--lg-magenta) 35%, transparent); padding: 6px 12px; border-radius: 10px; font-weight: 600; }
+        .lg-tree-workers .lg-tnode { display: flex; background: color-mix(in srgb, var(--lg-cyan) 8%, transparent); border: 1px solid var(--border, rgba(255,255,255,.08)); padding: 7px 12px; border-radius: 10px; justify-content: space-between; }
+        .lg-tid { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--lg-cyan); }
+        .lg-tnode.manager .lg-tid { color: var(--lg-magenta); }
+        .lg-ttask { flex: 1; color: var(--text2, #aab); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .lg-tstatus { font-weight: 800; }
+        .lg-tstatus.done { color: var(--lg-green); } .lg-tstatus.running { color: var(--lg-cyan); } .lg-tstatus.queued { color: var(--text2, #9aa0aa); }
+        .lg-deploy { cursor: pointer; border: 0; border-radius: 12px; padding: 12px 26px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; font-size: .8rem; color: #04060b;
+            background: linear-gradient(135deg, var(--lg-cyan), var(--lg-magenta)); box-shadow: 0 10px 30px color-mix(in srgb, var(--lg-cyan) 30%, transparent); transition: transform .18s ease, box-shadow .18s ease; }
+        .lg-deploy:hover { transform: translateY(-2px); box-shadow: 0 16px 40px color-mix(in srgb, var(--lg-magenta) 35%, transparent); }
+        .lg-deploy:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+        .lg-stop { cursor: pointer; border: 1px solid color-mix(in srgb, var(--lg-red) 50%, transparent); background: color-mix(in srgb, var(--lg-red) 12%, transparent); color: var(--lg-red); border-radius: 12px; padding: 11px 18px; font-weight: 700; }
+        .lg-phase { margin-left: auto; font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--text2, #9aa0aa); display: flex; align-items: center; gap: 8px; }
+        .lg-phase .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--lg-cyan); box-shadow: 0 0 10px var(--lg-cyan); animation: lgpulse 1.3s ease-in-out infinite; }
+        @keyframes lgpulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+        /* Stats strip */
+        .lg-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 22px; }
+        .lg-stat { border-radius: 16px; padding: 14px 16px; background: var(--bg2, rgba(255,255,255,.04)); border: 1px solid var(--border, rgba(255,255,255,.08)); }
+        .lg-stat .n { font-size: 1.7rem; font-weight: 800; color: var(--text, #fff); font-variant-numeric: tabular-nums; }
+        .lg-stat .l { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--text2, #9aa0aa); margin-top: 2px; }
+        /* Agent grid */
+        .lg-section-h { display: flex; align-items: center; gap: 10px; margin: 6px 0 14px; }
+        .lg-section-h h2 { font-size: 1.05rem; margin: 0; color: var(--text, #fff); letter-spacing: -.2px; }
+        .lg-section-h .count { font-size: .75rem; color: var(--lg-cyan); border: 1px solid color-mix(in srgb, var(--lg-cyan) 35%, transparent); padding: 2px 9px; border-radius: 999px; }
+        .lg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: 14px; }
+        .lg-card { position: relative; border-radius: 16px; padding: 14px; background: var(--bg2, rgba(255,255,255,.035)); border: 1px solid var(--border, rgba(255,255,255,.09)); transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; overflow: hidden; }
+        .lg-card.manager { border-color: color-mix(in srgb, var(--lg-magenta) 50%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--lg-magenta) 18%, transparent), 0 10px 28px rgba(0,0,0,.3); }
+        .lg-card.working { border-color: color-mix(in srgb, var(--lg-cyan) 55%, transparent); }
+        .lg-card.error { border-color: color-mix(in srgb, var(--lg-red) 55%, transparent); }
+        .lg-card.killed { opacity: .42; filter: grayscale(.6); }
+        .lg-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .lg-id { font-family: 'JetBrains Mono', ui-monospace, monospace; font-weight: 700; font-size: .92rem; color: var(--text, #fff); letter-spacing: .04em; }
+        .lg-role { font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; padding: 3px 8px; border-radius: 999px; }
+        .lg-role.manager { background: color-mix(in srgb, var(--lg-magenta) 20%, transparent); color: var(--lg-magenta); }
+        .lg-role.worker { background: color-mix(in srgb, var(--lg-cyan) 16%, transparent); color: var(--lg-cyan); }
+        .lg-status { display: flex; align-items: center; gap: 7px; margin: 10px 0 8px; font-size: .74rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+        .lg-status .sd { width: 8px; height: 8px; border-radius: 50%; }
+        .sd.idle { background: #6b7280; } .sd.working { background: var(--lg-cyan); box-shadow: 0 0 8px var(--lg-cyan); animation: lgpulse 1s ease-in-out infinite; }
+        .sd.error { background: var(--lg-red); } .sd.killed { background: #4b5563; } .sd.done { background: var(--lg-green); }
+        .lg-task { font-size: .78rem; color: var(--text2, #aab); min-height: 18px; margin-bottom: 6px; }
+        .lg-log { font-size: .74rem; line-height: 1.45; color: var(--text, #d6dae3); background: color-mix(in srgb, var(--text, #000) 8%, transparent); border-radius: 10px; padding: 8px 10px; max-height: 70px; overflow: auto; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+        .lg-metrics { display: flex; gap: 12px; margin: 10px 0 8px; font-size: .68rem; color: var(--text2, #9aa0aa); }
+        .lg-metrics b { color: var(--text, #fff); font-variant-numeric: tabular-nums; }
+        .lg-acts { display: flex; gap: 6px; }
+        .lg-act { flex: 1; cursor: pointer; border: 1px solid var(--border, rgba(255,255,255,.12)); background: transparent; color: var(--text2, #aab); border-radius: 9px; padding: 6px 4px; font-size: .64rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; transition: all .15s ease; }
+        .lg-act:hover { color: var(--text, #fff); border-color: var(--lg-cyan); }
+        .lg-act.kill:hover { color: var(--lg-red); border-color: var(--lg-red); }
+        /* Leaderboard */
+        .lg-board { margin-top: 26px; border-radius: 16px; overflow: hidden; border: 1px solid var(--border, rgba(255,255,255,.09)); }
+        .lg-board table { width: 100%; border-collapse: collapse; }
+        .lg-board th, .lg-board td { padding: 10px 14px; text-align: left; font-size: .82rem; }
+        .lg-board th { background: var(--bg2, rgba(255,255,255,.05)); color: var(--text2, #9aa0aa); text-transform: uppercase; font-size: .68rem; letter-spacing: .1em; }
+        .lg-board td { border-top: 1px solid var(--border, rgba(255,255,255,.06)); color: var(--text, #e8e8ea); font-variant-numeric: tabular-nums; }
+        .lg-board tr:hover td { background: color-mix(in srgb, var(--lg-cyan) 6%, transparent); }
+        .lg-empty { text-align: center; color: var(--text2, #9aa0aa); padding: 50px 20px; }
+        .lg-bar { height: 6px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; min-width: 70px; }
+        .lg-bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--lg-cyan), var(--lg-green)); }
+        @media (max-width: 720px) { .lg-stats { grid-template-columns: repeat(2,1fr); } .lg-main { padding: 18px 14px 50px; } }
+        /* Narrow phones: single-column stats, compact command center, full-width actions,
+           wrapping tree rows + promote banner so nothing overflows on a real phone. */
+        @media (max-width: 480px) {
+            .lg-stats { grid-template-columns: 1fr; }
+            .lg-command { padding: 18px 16px; }
+            .lg-title { font-size: 1.45rem; }
+            .lg-controls { gap: 9px; }
+            .lg-slider-wrap { flex: 1 1 100%; justify-content: space-between; }
+            .lg-deploy, .lg-stop { flex: 1 1 auto; }
+            .lg-tree-workers .lg-tnode { flex-wrap: wrap; gap: 4px; }
+            .lg-ttask { white-space: normal; flex-basis: 100%; order: 3; }
+            .lg-promote-banner { flex-wrap: wrap; }
+            .lg-pb-text { flex-basis: 100%; }
+        }
+        /* ===== Light-theme WCAG AA: the cyberpunk neon (cyan/magenta/red/green) reads
+           fine on dark cards but fails as TEXT on the light page. Darken every text use
+           to a deep AA-passing variant. Backgrounds, gradients, slider track and the
+           Deploy button keep their bright neon (they sit on dark fills / have dark text). */
+        /* Triggers on the preset light theme OR a light CUSTOM bg (data-skemi-bg set by Preferences.js). */
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-kicker,
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-slider-val,
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-tid,
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-tstatus.running,
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-section-h .count,
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-role.worker,
+        :is(body.light-mode, [data-skemi-bg="light"]) #lgChartNow { color: #155e75 !important; }   /* cyan-700  ≈4.7:1 */
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-tnode.manager .lg-tid,
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-role.manager { color: #be185d !important; }  /* pink-700 */
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-tstatus.done { color: #047857 !important; }  /* emerald-700 */
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-stop { color: #be123c !important; border-color: rgba(190,18,60,.5); }  /* rose-700 */
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-title b { background: linear-gradient(90deg, #155e75, #be185d); -webkit-background-clip: text; background-clip: text; }
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-bar { background: rgba(15,23,42,.12); }
+        html[data-skemi-bg="light"] button.lg-stop, body.light-mode button.lg-stop { color: #be123c !important; }
+
+        /* ================================================================
+           LEGION OBSERVATORY — 2026-07 production rebuild
+           Avatar roster (editable), connect cards, big editor modal.
+        ================================================================ */
+        .lg-hero-card { display: flex; align-items: flex-start; gap: 20px; flex-wrap: wrap;
+            border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 20px;
+            background: var(--bg2, rgba(255,255,255,.03)); padding: 24px 26px; margin-bottom: 22px; }
+        .lg-hero-main { flex: 1; min-width: 280px; }
+        .lg-hero-sub { font-size: .92rem; color: var(--text2, #9aa0aa); line-height: 1.6; max-width: 760px; margin-top: 4px; }
+        .lg-hero-live { flex: none; }
+
+        .lg-section-note { font-size: .84rem; color: var(--text2, #9aa0aa); margin: 2px 0 12px; line-height: 1.5; }
+
+        /* Roster grid + avatar agent cards */
+        .lg-roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+        .lg-agent { display: block; text-align: left; width: 100%; cursor: pointer; font-family: inherit;
+            border: 1px solid var(--border, rgba(255,255,255,.09)); border-radius: 16px;
+            background: var(--bg2, rgba(255,255,255,.03)); padding: 15px 15px 13px; gap: 0;
+            transition: transform .16s cubic-bezier(.2,.7,.2,1), border-color .16s ease, box-shadow .16s ease; }
+        .lg-agent:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--av, var(--lg-cyan)) 55%, transparent); box-shadow: 0 12px 30px -14px rgba(0,0,0,.5); }
+        .lg-agent.is-locked { opacity: .5; }
+        .lg-agent-head { display: flex; align-items: center; gap: 12px; }
+        .lg-avatar { --av: #6E62FF; width: 44px; height: 44px; flex: none; border-radius: 13px;
+            display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem;
+            color: #fff; letter-spacing: .02em; background: var(--av);
+            background-image: linear-gradient(140deg, color-mix(in srgb, var(--av) 100%, #fff 14%), color-mix(in srgb, var(--av) 78%, #000 12%));
+            box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--av) 70%, transparent); }
+        .lg-avatar-lg { width: 58px; height: 58px; border-radius: 17px; font-size: 1.3rem; }
+        .lg-agent-id { min-width: 0; flex: 1; }
+        .lg-agent-name { display: block; font-weight: 700; font-size: .95rem; line-height: 1.25;
+            word-break: break-word; color: var(--text, #f2f3f7); }
+        .lg-agent-role { display: inline-block; margin-top: 3px; font-size: .7rem; font-weight: 600;
+            padding: 2px 8px; border-radius: 999px; color: var(--lg-cyan); background: rgba(34,211,238,.12); }
+        .lg-agent-role.boss { color: var(--lg-magenta); background: rgba(244,114,182,.14); }
+        .lg-agent-state { flex: none; }
+        .lg-dot-live { width: 9px; height: 9px; border-radius: 50%; display: inline-block;
+            background: var(--lg-green, #4ade80); box-shadow: 0 0 8px var(--lg-green, #4ade80); }
+        .lg-agent-note { margin-top: 11px; font-size: .8rem; line-height: 1.5; color: var(--text2, #9aa0aa);
+            min-height: 2.4em; word-break: break-word; }
+        .lg-muted { opacity: .55; }
+        .lg-agent-foot { margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--border, rgba(255,255,255,.08));
+            display: flex; align-items: center; gap: 10px; font-size: .68rem; color: var(--text2, #9aa0aa); }
+        .lg-agent-edit { margin-left: auto; font-weight: 700; color: var(--av, var(--lg-cyan)); }
+
+        /* Connect cards */
+        .lg-conn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(272px, 1fr)); gap: 14px; margin-bottom: 24px; }
+        .lg-conn { border: 1px solid var(--border, rgba(255,255,255,.09)); border-radius: 16px;
+            background: var(--bg2, rgba(255,255,255,.03)); padding: 14px 15px; transition: border-color .18s ease, background .18s ease; }
+        .lg-conn.on { border-color: color-mix(in srgb, var(--lg-cyan) 42%, transparent); background: color-mix(in srgb, var(--lg-cyan) 7%, transparent); }
+        .lg-conn.live { border-color: color-mix(in srgb, var(--lg-cyan) 60%, transparent); }
+        .lg-conn-top { display: flex; align-items: center; gap: 12px; }
+        .lg-conn-ic { width: 40px; height: 40px; flex: none; display: inline-flex; align-items: center;
+            justify-content: center; border-radius: 12px; font-size: 1.05rem; background: rgba(34,211,238,.12); }
+        .lg-conn-id { flex: 1; min-width: 0; }
+        .lg-conn-name { display: block; font-weight: 700; font-size: .9rem; }
+        .lg-conn-sub { display: block; font-size: .74rem; color: var(--text2, #9aa0aa); margin-top: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lg-conn-toggle { flex: none; width: 46px; height: 26px; border-radius: 999px; border: none; cursor: pointer;
+            background: rgba(148,163,184,.35); position: relative; transition: background .2s ease; padding: 0; }
+        .lg-conn-toggle.on { background: linear-gradient(90deg, var(--lg-cyan), var(--lg-magenta)); }
+        .lg-conn-knob { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+            background: #fff; transition: transform .2s cubic-bezier(.2,.7,.2,1); box-shadow: 0 2px 5px rgba(0,0,0,.3); }
+        .lg-conn-toggle.on .lg-conn-knob { transform: translateX(20px); }
+        .lg-conn-bar { margin-top: 11px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.1); overflow: hidden; }
+        .lg-conn-bar > div { height: 100%; background: linear-gradient(90deg, var(--lg-cyan), var(--lg-magenta)); transition: width .4s; }
+        .lg-conn-foot { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .lg-conn-state { font-size: .74rem; font-weight: 700; color: var(--text2, #9aa0aa); }
+        .lg-conn-state.on { color: var(--lg-cyan); }
+        .lg-conn-state.live { color: var(--lg-magenta); }
+        .lg-conn-open { font-size: .74rem; font-weight: 700; color: var(--lg-cyan); text-decoration: none; }
+        .lg-conn-open:hover { text-decoration: underline; }
+
+        /* Editor modal */
+        .lg-modal { position: fixed; inset: 0; z-index: 4000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .lg-modal[hidden] { display: none; }
+        .lg-modal-backdrop { position: absolute; inset: 0; background: rgba(4,6,11,.66); backdrop-filter: blur(4px); }
+        .lg-modal-card { position: relative; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto;
+            background: var(--bg-primary, #12131c); border: 1px solid var(--border, rgba(255,255,255,.12));
+            border-radius: 20px; padding: 22px 24px; box-shadow: 0 30px 80px -20px rgba(0,0,0,.7);
+            animation: lgModalIn .24s cubic-bezier(.2,.9,.3,1); }
+        @keyframes lgModalIn { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+        .lg-modal-head { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+        .lg-modal-head h3 { margin: 0; font-size: 1.15rem; font-weight: 700; }
+        .lg-modal-head p { margin: 2px 0 0; font-size: .8rem; }
+        .lg-modal-x { margin-left: auto; flex: none; width: 34px; height: 34px; border-radius: 10px; border: none;
+            background: rgba(255,255,255,.06); color: var(--text2, #9aa0aa); cursor: pointer; font-size: 1rem; }
+        .lg-modal-x:hover { background: rgba(255,255,255,.12); color: var(--text, #fff); }
+        .lg-field { display: block; margin-bottom: 15px; }
+        .lg-field-label { display: flex; justify-content: space-between; font-size: .8rem; font-weight: 600;
+            color: var(--text, #e6e8ee); margin-bottom: 7px; }
+        .lg-field-label em { font-style: normal; font-weight: 500; color: var(--text2, #9aa0aa); font-variant-numeric: tabular-nums; }
+        .lg-input { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px;
+            border: 1px solid var(--border, rgba(255,255,255,.14)); background: var(--bg2, rgba(255,255,255,.04));
+            color: var(--text, #fff); font-size: .9rem; font-family: inherit; resize: vertical; }
+        .lg-input:focus { outline: none; border-color: var(--lg-cyan); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lg-cyan) 22%, transparent); }
+        .lg-ta-sm { min-height: 58px; line-height: 1.5; }
+        .lg-ta-lg { min-height: 150px; line-height: 1.55; }
+        .lg-swatches { display: flex; flex-wrap: wrap; gap: 9px; }
+        .lg-sw { width: 30px; height: 30px; border-radius: 9px; border: 2px solid transparent; cursor: pointer; padding: 0;
+            transition: transform .14s ease; }
+        .lg-sw:hover { transform: scale(1.12); }
+        .lg-sw.sel { border-color: #fff; box-shadow: 0 0 0 2px rgba(0,0,0,.4), 0 0 0 4px currentColor; }
+        .lg-sw-custom { width: 30px; height: 30px; border-radius: 9px; cursor: pointer; display: inline-flex;
+            align-items: center; justify-content: center; border: 1px dashed var(--border, rgba(255,255,255,.3));
+            color: var(--text2, #9aa0aa); position: relative; overflow: hidden; }
+        .lg-sw-custom input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .lg-modal-actions { display: flex; align-items: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .lg-btn-primary { margin-left: auto; padding: 11px 22px; border: none; border-radius: 12px; font-weight: 700;
+            font-size: .9rem; color: #fff; background: linear-gradient(90deg, var(--lg-cyan), var(--lg-magenta)); cursor: pointer; }
+        .lg-btn-primary:hover { filter: brightness(1.08); }
+        .lg-btn-ghost, .lg-btn-reset { padding: 11px 18px; border-radius: 12px; font-weight: 600; font-size: .86rem; cursor: pointer;
+            background: transparent; border: 1px solid var(--border, rgba(255,255,255,.16)); color: var(--text2, #9aa0aa); }
+        .lg-btn-ghost:hover, .lg-btn-reset:hover { color: var(--text, #fff); border-color: var(--text2, #9aa0aa); }
+
+        /* Light-theme legibility for the new components */
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-agent-name,
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-conn-name { color: #1e293b; }
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-modal-card { background: #fff; }
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-input { color: #1e293b; background: #f5f7fb; }
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-field-label { color: #1e293b; }
+
+        /* Clean performance cards (replaces icon-heavy .lg-card) */
+        .lg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(248px, 1fr)); gap: 14px; }
+        .lg-scard { border: 1px solid var(--border, rgba(255,255,255,.09)); border-radius: 15px;
+            background: var(--bg2, rgba(255,255,255,.03)); padding: 15px 16px; }
+        .lg-scard-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .lg-scard-name { font-weight: 700; font-size: .92rem; color: var(--text, #eef0f6); }
+        .lg-scard-role { flex: none; font-size: .64rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+            padding: 3px 9px; border-radius: 999px; color: var(--lg-cyan); background: rgba(34,211,238,.12); }
+        .lg-scard-role.manager { color: var(--lg-magenta); background: rgba(244,114,182,.14); }
+        .lg-scard-status { display: flex; align-items: center; gap: 7px; margin-top: 10px; font-size: .78rem; color: var(--text2, #9aa0aa); }
+        .lg-scard-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text2, #9aa0aa); flex: none; }
+        .lg-scard-dot.working { background: var(--lg-cyan); box-shadow: 0 0 8px var(--lg-cyan); animation: lgPulseDot 1.4s ease-in-out infinite; }
+        .lg-scard-dot.done { background: var(--lg-green, #4ade80); }
+        @keyframes lgPulseDot { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+        .lg-scard-cur { margin-top: 8px; font-size: .8rem; line-height: 1.45; color: var(--text2, #9aa0aa);
+            min-height: 2.3em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .lg-scard-metrics { display: flex; margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--border, rgba(255,255,255,.08)); }
+        .lg-scard-metrics > div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+        .lg-scard-metrics b { font-size: .95rem; font-weight: 700; color: var(--text, #eef0f6); font-variant-numeric: tabular-nums; }
+        .lg-scard-metrics span { font-size: .64rem; color: var(--text2, #9aa0aa); text-transform: uppercase; letter-spacing: .05em; }
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-scard-name,
+        :is(body.light-mode, [data-skemi-bg="light"]) .lg-scard-metrics b { color: #1e293b; }
+    </style>
+</head>
+<body class="galaxy-mode">
+    <nav class="navbar">
+        <a href="Home.html" class="logo"><span class="logo-mark">★</span><span class="logo-text">Skemi</span></a>
+        <div class="navbar-shortcuts" aria-label="Điều hướng chính">
+            <a href="Home.html" class="nav-shortcut"><span>🎓</span><span data-i18n="nav_studio">Studio</span></a>
+            <a href="Search.html" class="nav-shortcut"><span>🔍</span><span data-i18n="nav_search">Tra cứu</span></a>
+            <a href="Quiz.html" class="nav-shortcut"><span>📝</span><span data-i18n="nav_quiz">Quiz</span></a>
+            <a href="Chat.html" class="nav-shortcut"><span>💬</span><span data-i18n="nav_chat">Chat</span></a>
+        </div>
+        <div class="navbar-actions"><div id="auth-buttons"></div></div>
+    </nav>
+
+    <div class="app-layout">
+        <aside class="app-sidebar" id="appSidebar">
+            <ul class="sidebar-links">
+                <li><a href="Home.html" id="mindmap-link"><span class="icon">🎓</span><span data-i18n="nav_studio">Studio</span></a></li>
+                <li><a href="Search.html" id="search-link"><span class="icon">🔍</span><span data-i18n="nav_search">Tra cứu</span></a></li>
+                <li><a href="Quiz.html" id="quiz-link"><span class="icon">📝</span><span data-i18n="nav_quiz">Quiz</span></a></li>
+                <li><a href="Chat.html" id="chat-link"><span class="icon">💬</span><span data-i18n="nav_chat">Chat</span></a></li>
+                <li><a href="PromptAgent.html" id="prompt-agent-link"><span class="icon">⚡</span><span data-i18n="nav_prompt_agent">Prompt Agent</span></a></li>
+                <li><a href="Computer.html" id="computer-link"><span class="icon">🖥️</span><span data-i18n="nav_computer">Skemi Control</span></a></li>
+                <li><a href="Remote.html" id="remote-link"><span class="icon">📡</span><span data-i18n="nav_remote">Điều khiển từ xa</span></a></li>
+                <li><a href="Settings.html" id="settings-link"><span class="icon">⚙️</span><span data-i18n="nav_settings">Cài đặt</span></a></li>
+            </ul>
+        </aside>
+
+        <div class="main-content-wrapper">
+            <main class="lg-main">
+                <div class="lg-wrap">
+                    <section class="lg-hero-card">
+                        <div class="lg-hero-main">
+                            <p class="lg-kicker">Legion</p>
+                            <h1 class="lg-title">Trung tâm điều phối Agent</h1>
+                            <div class="lg-hero-sub">
+                                Theo dõi 8 AI agent theo thời gian thực. Đặt tên, phân vai và kết nối đội ngũ vào từng mục để phục vụ công việc.
+                            </div>
+                        </div>
+                        <div class="lg-hero-live">
+                            <span class="lg-phase" id="phaseTag"><span class="dot"></span><span id="phaseText">Đang chờ việc</span></span>
+                        </div>
+                    </section>
+
+                    <!-- Roster / config: edit name, avatar colour, note & system prompt per agent. -->
+                    <div class="lg-section-h">
+                        <h2>Đội ngũ Agent</h2>
+                        <span class="count" id="agentCountTag">8/8 agent hoạt động</span>
+                    </div>
+                    <div class="lg-section-note">Chọn một agent để chỉnh tên, màu, vai trò và system prompt.</div>
+                    <div id="agentRows" class="lg-roster-grid"></div>
+
+                    <!-- Connections: link the squad into a section (adds agent-config UI there). -->
+                    <div class="lg-section-h" style="margin-top:26px"><h2>Kết nối theo mục</h2><span class="count" id="connLiveCount">Sẵn sàng</span></div>
+                    <div class="lg-section-note">Kết nối đội ngũ vào một mục để phục vụ công việc ở đó.</div>
+                    <div id="lgConnections" class="lg-conn-grid"></div>
+
+                    <div class="lg-stats">
+                        <div class="lg-stat"><div class="n" id="stAgents">0</div><div class="l">Agents hoạt động</div></div>
+                        <div class="lg-stat"><div class="n" id="stWorking">0</div><div class="l">Đang xử lý</div></div>
+                        <div class="lg-stat"><div class="n" id="stTasks">0/0</div><div class="l">Lượt chạy</div></div>
+                        <div class="lg-stat"><div class="n" id="stTokens">0</div><div class="l">Tổng token</div></div>
+                    </div>
+
+                    <div class="lg-chart-wrap" id="lgChartWrap" style="border-radius:16px;padding:14px 16px;margin-bottom:22px;background:var(--bg2,rgba(255,255,255,.04));border:1px solid var(--border,rgba(255,255,255,.08));">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text2,#9aa0aa);">
+                            <span>◈ Token theo thời gian</span><span id="lgChartNow" style="color:var(--lg-cyan);font-weight:700;">0/s</span>
+                        </div>
+                        <svg id="lgChart" viewBox="0 0 600 70" preserveAspectRatio="none" style="width:100%;height:64px;display:block;">
+                            <defs><linearGradient id="lgGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#f472b6"/></linearGradient>
+                            <linearGradient id="lgFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22d3ee" stop-opacity=".28"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></linearGradient></defs>
+                            <polygon id="lgChartArea" fill="url(#lgFill)" points=""/>
+                            <polyline id="lgChartLine" fill="none" stroke="url(#lgGrad)" stroke-width="2.5" points="" stroke-linejoin="round" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+
+                    <div class="lg-promote-banner" id="lgPromoteBanner" hidden>
+                        <span class="lg-pb-ic">⭐</span>
+                        <div class="lg-pb-text">
+                            <b id="lgPbTitle">Đề xuất thăng cấp</b>
+                            <span id="lgPbDetail"></span>
+                        </div>
+                        <button class="lg-pb-yes" id="lgPbYes">✓ Đồng ý</button>
+                        <button class="lg-pb-no" id="lgPbNo">Bỏ qua</button>
+                    </div>
+
+                    <div class="lg-section-h"><h2>Hoạt động trực tiếp</h2></div>
+                    <div class="lg-tree" id="lgTree"><div class="lg-tree-empty">Chưa có hoạt động — giao việc ở bất kỳ mục nào, đội hình sẽ hiện ở đây.</div></div>
+
+                    <div class="lg-section-h" style="margin-top:24px;"><h2>Hiệu suất Agent</h2><span class="count" id="gridCount">0</span></div>
+                    <div class="lg-grid" id="agentGrid">
+                        <div class="lg-empty">Chưa có agent. Thêm agent ở <b>Đội hình AI Agent của bạn</b> phía trên — thông số (token, số việc, hiệu quả) sẽ tự cộng dồn theo từng tên khi đội làm việc ở các mục.</div>
+                    </div>
+
+                    <div class="lg-section-h" style="margin-top:28px;"><h2>Bảng xếp hạng hiệu suất</h2></div>
+                    <div class="lg-board">
+                        <table>
+                            <thead><tr><th>Agent</th><th>Vai trò</th><th>Tác vụ</th><th>Tỉ lệ thành công</th><th>Tốc độ TB</th><th>Token</th></tr></thead>
+                            <tbody id="boardBody"><tr><td colspan="6" class="lg-empty" style="padding:24px;">Chưa có dữ liệu hiệu suất.</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const $ = (id) => document.getElementById(id);
+            // Bilingual strings for JS-rendered UI — the 1.5s poll re-writes these, so the
+            // web-translate sweep can't keep them localized; pick by current language instead.
+            const LG_STR = {
+                vi: { manager: 'Manager', worker: 'Worker', idle: 'Chờ', working: 'Đang chạy', error: 'Lỗi', killed: 'Đã dừng', done: 'Xong',
+                    phReady: 'Sẵn sàng', phPlanning: 'Manager đang bẻ task…', phWorking: 'Đội quân đang chạy…', phDone: 'Hoàn tất',
+                    deploy: '⚡ Deploy Legion', deploying: '⏳ Đang triển khai...', free: '— rảnh —', tasksU: 'tác vụ', promote: '▲ Thăng', demote: '▼ Hạ',
+                    emptyGrid: 'Chưa triển khai. Nhập Master ROM và bấm <b>Deploy Legion</b>.', noData: 'Chưa có dữ liệu hiệu suất.',
+                    treeEmpty: 'Chưa triển khai — sơ đồ phân công Manager → Workers sẽ hiện sau khi Deploy.', mgrCoord: 'Manager · bẻ task & điều phối', masterRom: 'Master ROM',
+                    pbHeading: 'Đề xuất thăng cấp', pbTitle: '⭐ Đề xuất thăng cấp ', pbReach: ' đạt ', pbThru: '% thành công qua ', pbTasksMs: ' tác vụ (⌀ ', pbBeat: 'ms) — vượt Manager ', pbCur: 'hiện tại', pbAsk: '. Thăng làm Manager?' },
+                en: { manager: 'Manager', worker: 'Worker', idle: 'Idle', working: 'Working', error: 'Error', killed: 'Stopped', done: 'Done',
+                    phReady: 'Ready', phPlanning: 'Manager is splitting tasks…', phWorking: 'Legion is running…', phDone: 'Completed',
+                    deploy: '⚡ Deploy Legion', deploying: '⏳ Deploying...', free: '— idle —', tasksU: 'tasks', promote: '▲ Promote', demote: '▼ Demote',
+                    emptyGrid: 'Not deployed yet. Enter a Master ROM and click <b>Deploy Legion</b>.', noData: 'No performance data yet.',
+                    treeEmpty: 'Not deployed — the Manager → Workers assignment tree shows up after Deploy.', mgrCoord: 'Manager · splits & coordinates', masterRom: 'Master ROM',
+                    pbHeading: 'Promote suggestion', pbTitle: '⭐ Promote suggestion ', pbReach: ' reached ', pbThru: '% success over ', pbTasksMs: ' tasks (avg ', pbBeat: 'ms) — beats Manager ', pbCur: 'current', pbAsk: '. Promote to Manager?' }
+            };
+            const PHASE_KEY = { idle: 'phReady', planning: 'phPlanning', working: 'phWorking', done: 'phDone' };
+            function lgLang() { try { var l = (window.languageManager && window.languageManager.currentLanguage) || localStorage.getItem('skemi_language') || 'vi'; return String(l).toLowerCase().startsWith('vi') ? 'vi' : 'en'; } catch (e) { return 'vi'; } }
+            function S(k) { var d = LG_STR[lgLang()] || LG_STR.vi; return (k in d) ? d[k] : (LG_STR.vi[k] || k); }
+            let polling = null;
+
+            async function api(path, opts) {
+                try { const r = await fetch('/api/legion' + path, opts); return await r.json(); }
+                catch (e) { return { success: false, error: String(e) }; }
+            }
+
+            function esc(s) { return String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+
+            function renderAgents(agents) {
+                const grid = $('agentGrid');
+                if (!agents || !agents.length) {
+                    grid.innerHTML = '<div class="lg-empty">' + S('emptyGrid') + '</div>';
+                    return;
+                }
+                grid.innerHTML = agents.map((a) => {
+                    const m = a.metrics || {};
+                    const total = (m.success || 0) + (m.error || 0);
+                    const rate = total ? Math.round((m.success || 0) / total * 100) : 0;
+                    const killed = a.status === 'killed';
+                    return `<div class="lg-card ${a.role} ${a.status}">
+                        <div class="lg-card-top">
+                            <span class="lg-id">${esc(a.id)}</span>
+                            <span class="lg-role ${a.role}">${S(a.role)}</span>
+                        </div>
+                        <div class="lg-status"><span class="sd ${a.status}"></span>${S(a.status)}</div>
+                        <div class="lg-task">${a.current_task ? '▸ ' + esc(a.current_task) : '<span style="opacity:.5">' + S('free') + '</span>'}</div>
+                        <div class="lg-log">${esc(a.log || '...')}</div>
+                        <div class="lg-metrics"><span>✓ <b>${m.tasks_done || 0}</b> ${S('tasksU')}</span><span>⌀ <b>${m.avg_ms || 0}</b>ms</span><span>◈ <b>${m.tokens || 0}</b></span></div>
+                        <div class="lg-acts">
+                            ${a.role === 'worker'
+                                ? `<button class="lg-act" data-act="promote" data-id="${a.id}" ${killed ? 'disabled' : ''}>${S('promote')}</button>`
+                                : `<button class="lg-act" data-act="demote" data-id="${a.id}" ${killed ? 'disabled' : ''}>${S('demote')}</button>`}
+                            <button class="lg-act kill" data-act="kill" data-id="${a.id}" ${killed ? 'disabled' : ''}>✕ Kill</button>
+                        </div>
+                    </div>`;
+                }).join('');
+                grid.querySelectorAll('.lg-act').forEach((b) => b.addEventListener('click', async () => {
+                    const act = b.dataset.act, id = b.dataset.id;
+                    b.disabled = true;
+                    await api('/' + act + '/' + id, { method: 'POST' });
+                    refresh();
+                }));
+            }
+
+            function renderBoard(agents) {
+                const rows = (agents || []).slice().sort((a, b) => (b.metrics.success || 0) - (a.metrics.success || 0) || (a.metrics.avg_ms || 1e9) - (b.metrics.avg_ms || 1e9));
+                const body = $('boardBody');
+                if (!rows.length) { body.innerHTML = '<tr><td colspan="6" class="lg-empty" style="padding:24px;">' + S('noData') + '</td></tr>'; return; }
+                body.innerHTML = rows.map((a) => {
+                    const m = a.metrics || {}; const total = (m.success || 0) + (m.error || 0);
+                    const rate = total ? Math.round((m.success || 0) / total * 100) : 0;
+                    return `<tr>
+                        <td style="font-family:monospace;font-weight:700">${esc(a.id)}</td>
+                        <td><span class="lg-role ${a.role}">${S(a.role)}</span></td>
+                        <td>${m.tasks_done || 0}</td>
+                        <td><div style="display:flex;align-items:center;gap:8px">${rate}% <span class="lg-bar"><i style="width:${rate}%"></i></span></div></td>
+                        <td>${m.avg_ms || 0} ms</td>
+                        <td>${m.tokens || 0}</td>
+                    </tr>`;
+                }).join('');
+            }
+
+            function renderStats(d) {
+                const agents = d.agents || [];
+                const live = agents.filter(a => a.status !== 'killed');
+                $('stAgents').textContent = live.length;
+                $('stWorking').textContent = agents.filter(a => a.status === 'working').length;
+                const tasks = d.tasks || []; const done = tasks.filter(t => t.status === 'done').length;
+                $('stTasks').textContent = done + '/' + tasks.length;
+                const totalTok = agents.reduce((s, a) => s + (a.metrics.tokens || 0), 0);
+                $('stTokens').textContent = totalTok.toLocaleString();
+                $('gridCount').textContent = agents.length;
+                $('phaseText').textContent = S(PHASE_KEY[d.phase] || 'phReady');
+                drawTokenChart(totalTok);
+            }
+
+            // Live token throughput sparkline (cumulative tokens sampled each poll).
+            const _tokHist = [];
+            function drawTokenChart(total) {
+                _tokHist.push(total);
+                if (_tokHist.length > 60) _tokHist.shift();
+                const line = $('lgChartLine'), area = $('lgChartArea'), nowEl = $('lgChartNow');
+                if (!line) return;
+                const n = _tokHist.length, W = 600, H = 70, max = Math.max(1, ..._tokHist);
+                const pts = _tokHist.map((v, i) => {
+                    const x = n === 1 ? W : (i / (n - 1)) * W;
+                    const y = H - 4 - (v / max) * (H - 10);
+                    return x.toFixed(1) + ',' + y.toFixed(1);
+                });
+                line.setAttribute('points', pts.join(' '));
+                if (area) area.setAttribute('points', (pts.length ? '0,' + H + ' ' : '') + pts.join(' ') + (pts.length ? ' ' + W + ',' + H : ''));
+                if (nowEl) { const rate = n >= 2 ? Math.max(0, _tokHist[n - 1] - _tokHist[n - 2]) : 0; nowEl.textContent = '+' + rate + '/lần'; }
+            }
+
+            function renderTree(d) {
+                const box = $('lgTree'); if (!box) return;
+                const tasks = d.tasks || [];
+                if (!d.deployed || !tasks.length) {
+                    box.innerHTML = '<div class="lg-tree-empty">' + S('treeEmpty') + '</div>';
+                    return;
+                }
+                const mgr = (d.agents || []).find(a => a.role === 'manager');
+                const rom = (d.rom || '');
+                const leaves = tasks.map((t) => {
+                    const st = t.status === 'done' ? 'done' : (t.status === 'running' ? 'running' : 'queued');
+                    const ic = st === 'done' ? '✓' : (st === 'running' ? '⟳' : '…');
+                    return `<div class="lg-tnode"><span class="lg-tid">${esc(t.agent || '—')}</span><span class="lg-ttask">${esc(t.task)}</span><span class="lg-tstatus ${st}">${ic}</span></div>`;
+                }).join('');
+                box.innerHTML =
+                    `<div class="lg-tree-root">🧠 ${S('masterRom')}: <i>${esc(rom.slice(0, 90))}${rom.length > 90 ? '…' : ''}</i></div>` +
+                    `<div class="lg-tree-mgr"><span class="lg-tnode manager"><span class="lg-tid">${esc(mgr ? mgr.id : 'AG-00')}</span> ${S('mgrCoord')}</span></div>` +
+                    `<div class="lg-tree-workers">${leaves}</div>`;
+            }
+
+            // System-driven promotion suggestion: spot the worker out-scoring the Manager.
+            const _pbDismissed = new Set();
+            let _pbCandidate = null;
+            function scoreOf(a) {
+                const m = a.metrics || {}; const total = (m.success || 0) + (m.error || 0);
+                const rate = total ? (m.success || 0) / total : 0;
+                return { rate: Math.round(rate * 100), done: m.tasks_done || 0, speed: m.avg_ms || 0 };
+            }
+            function renderPromoteSuggestion(d) {
+                const banner = $('lgPromoteBanner'); if (!banner) return;
+                const agents = (d.agents || []).filter(a => a.status !== 'killed');
+                const mgr = agents.find(a => a.role === 'manager');
+                const workers = agents.filter(a => a.role === 'worker');
+                let best = null, bestS = null;
+                for (const w of workers) {
+                    const s = scoreOf(w);
+                    if (s.done < 1 || s.rate < 80) continue;           // need a real track record
+                    if (!bestS || s.rate > bestS.rate || (s.rate === bestS.rate && s.speed < bestS.speed)) { best = w; bestS = s; }
+                }
+                const mgrS = mgr ? scoreOf(mgr) : { rate: 0 };
+                // Suggest only when the top worker clearly beats the Manager and isn't dismissed.
+                if (best && bestS.rate > mgrS.rate && !_pbDismissed.has(best.id)) {
+                    _pbCandidate = best.id;
+                    $('lgPbTitle').textContent = S('pbTitle') + best.id;
+                    $('lgPbDetail').textContent = best.id + S('pbReach') + bestS.rate + S('pbThru') + bestS.done +
+                        S('pbTasksMs') + bestS.speed + S('pbBeat') + (mgr ? mgr.id + ' (' + mgrS.rate + '%)' : S('pbCur')) + S('pbAsk');
+                    banner.hidden = false;
+                } else {
+                    _pbCandidate = null;
+                    banner.hidden = true;
+                }
+            }
+            (function () {
+                const yes = $('lgPbYes'), no = $('lgPbNo');
+                if (yes) yes.addEventListener('click', async () => {
+                    if (!_pbCandidate) return;
+                    yes.disabled = true;
+                    await api('/promote/' + _pbCandidate, { method: 'POST' });
+                    $('lgPromoteBanner').hidden = true; yes.disabled = false; _pbCandidate = null;
+                    refresh();
+                });
+                if (no) no.addEventListener('click', () => {
+                    if (_pbCandidate) _pbDismissed.add(_pbCandidate);
+                    $('lgPromoteBanner').hidden = true; _pbCandidate = null;
+                });
+            })();
+
+            // Live activity board: poll what EVERY section's squad is doing right now.
+            async function refresh() {
+                const d = await api('/activity');
+                if (!d || !d.success) return;
+                const s = d.summary || {};
+                const set = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+                set('stAgents', s.active_agents || 0);
+                set('stWorking', s.active_runs || 0);
+                set('stTasks', (d.runs || []).length);
+                const totalTok = (d.runs || []).reduce((a, r) => a + (r.tokens || 0), 0);
+                set('stTokens', totalTok.toLocaleString());
+                const pt = $('phaseText');
+                if (pt) pt.textContent = (s.active_runs ? ((s.active_agents || 0) + ' agent đang làm • ' + (s.sections_active || []).join(', ')) : 'Đang chờ việc');
+                drawTokenChart(totalTok);
+                renderConnections(d.runs || []);
+                renderActivityBoard(d.runs || []);
+                renderAgentStats(d.runs || []);
+            }
+            // Persistent overview of every section the squad can serve, with live
+            // agent count + progress when a run is active (else "Sẵn sàng").
+            const CONN_SECTIONS = [
+                { key: 'search', icon: '🔍', label: 'Tra cứu', href: 'Search.html', match: ['tra cứu', 'search', 'research', 'nghiên cứu'] },
+                { key: 'studio', icon: '📓', label: 'Studio', href: 'Home.html', match: ['studio', 'sổ ghi', 'notebook'] },
+                { key: 'chat', icon: '💬', label: 'Chat', href: '/Chat.html', match: ['chat'] },
+                { key: 'lab', icon: '🧪', label: 'Phòng Lab', href: 'Lab.html', match: ['lab', 'thí nghiệm', 'ý tưởng'] },
+                { key: 'quiz', icon: '🎮', label: 'Quiz', href: 'Quiz.html', match: ['quiz', 'đấu'] },
+                { key: 'prompt', icon: '⚡', label: 'Prompt Agent', href: 'PromptAgent.html', match: ['prompt'] }
+            ];
+            const LS_CONN = 'skemi_legion_connections_v1';
+            function loadConn() { try { return JSON.parse(localStorage.getItem(LS_CONN) || '{}') || {}; } catch (e) { return {}; } }
+            function saveConn(c) { try { localStorage.setItem(LS_CONN, JSON.stringify(c)); } catch (e) {} try { window.dispatchEvent(new CustomEvent('skemiLegionConnChanged', { detail: c })); } catch (e) {} }
+            function toggleConn(key) {
+                const c = loadConn(); c[key] = !c[key]; saveConn(c); renderConnections(window.__lastRuns || []);
+            }
+            function renderConnections(runs) {
+                window.__lastRuns = runs;
+                const box = $('lgConnections'); if (!box) return;
+                const conn = loadConn();
+                let live = 0, connectedN = 0;
+                box.innerHTML = CONN_SECTIONS.map(sec => {
+                    const run = (runs || []).find(r => { const l = (r.section_label || '').toLowerCase(); return sec.match.some(m => l.indexOf(m) >= 0); });
+                    const active = run && run.status === 'working';
+                    if (active) live++;
+                    const isOn = !!conn[sec.key]; if (isOn) connectedN++;
+                    const agentN = run ? (run.agents || []).length : 0;
+                    const doneN = run ? (run.agents || []).filter(a => a.status === 'done').length : 0;
+                    const pct = agentN ? Math.round(doneN / agentN * 100) : 0;
+                    const statusTxt = active ? (agentN + ' agent · ' + pct + '%') : (run ? '✓ hoàn tất' : (isOn ? 'Đã kết nối' : 'Chưa kết nối'));
+                    return `<div class="lg-conn${isOn ? ' on' : ''}${active ? ' live' : ''}">
+                        <div class="lg-conn-top">
+                            <span class="lg-conn-ic">${sec.icon}</span>
+                            <div class="lg-conn-id">
+                                <span class="lg-conn-name">${esc(sec.label)}</span>
+                                <span class="lg-conn-sub">${run ? esc((run.goal || '').slice(0, 46)) : (isOn ? 'Đội hình đã sẵn sàng phục vụ' : 'Bật để đội hình phục vụ mục này')}</span>
+                            </div>
+                            <button type="button" class="lg-conn-toggle${isOn ? ' on' : ''}" data-conn="${sec.key}" role="switch" aria-checked="${isOn}"><span class="lg-conn-knob"></span></button>
+                        </div>
+                        ${active ? `<div class="lg-conn-bar"><div style="width:${pct}%"></div></div>` : ''}
+                        <div class="lg-conn-foot"><span class="lg-conn-state${active ? ' live' : (isOn ? ' on' : '')}">${statusTxt}</span>${isOn ? `<a class="lg-conn-open" href="${sec.href}">Mở mục →</a>` : ''}</div>
+                    </div>`;
+                }).join('');
+                box.querySelectorAll('[data-conn]').forEach(b => b.addEventListener('click', () => toggleConn(b.getAttribute('data-conn'))));
+                const lc = $('connLiveCount'); if (lc) lc.textContent = live ? (live + ' đang chạy') : (connectedN ? (connectedN + ' đã kết nối') : 'Sẵn sàng');
+            }
+            // Per-agent stats aggregated BY NAME across every section's activity,
+            // merged with the saved org-chart roster so idle named agents still show.
+            function renderAgentStats(runs) {
+                const grid = $('agentGrid'); if (!grid) return;
+                const agg = {};
+                (runs || []).forEach(r => (r.agents || []).forEach(a => {
+                    const key = (a.name || '').trim() || a.id || '?';
+                    const g = agg[key] || (agg[key] = { name: key, role: a.role || 'worker', position: a.function || '', tokens: 0, tasks: 0, done: 0, working: 0, last: '' });
+                    g.tokens += (a.tokens || 0); g.tasks += 1;
+                    if (a.status === 'done') g.done += 1;
+                    if (a.status === 'working') { g.working += 1; g.last = a.subtask || g.last; }
+                    else if (a.subtask) g.last = a.subtask;
+                    if (a.role === 'manager') g.role = 'manager';
+                }));
+                let roster = [];
+                try { roster = (typeof window.__legionAgents === 'function') ? window.__legionAgents() : []; } catch (e) {}
+                (roster || []).forEach(a => {
+                    const key = (a.name || '').trim(); if (!key) return;
+                    const boss = a.position === 'Sếp' || a.position === 'Quản lý';
+                    if (!agg[key]) agg[key] = { name: key, role: boss ? 'manager' : 'worker', position: a.position || '', tokens: (a.stats && a.stats.tokens) || 0, tasks: (a.stats && a.stats.tasks) || 0, done: (a.stats && a.stats.ok) || 0, working: 0, last: '' };
+                    else if (a.position) agg[key].position = a.position;
+                });
+                const list = Object.values(agg).sort((x, y) => y.tokens - x.tokens);
+                const gc = $('gridCount'); if (gc) gc.textContent = list.length;
+                if (!list.length) {
+                    grid.innerHTML = '<div class="lg-empty">Chưa có dữ liệu. Thông số cập nhật khi đội ngũ nhận việc từ các mục.</div>';
+                    return;
+                }
+                grid.innerHTML = list.map(g => {
+                    const eff = g.tasks ? Math.round(g.done / g.tasks * 100) : 0;
+                    const status = g.working ? 'working' : (g.tasks ? 'done' : 'idle');
+                    const statusLabel = g.working ? 'Đang làm' : (g.tasks ? 'Rảnh' : 'Chờ việc');
+                    return `<div class="lg-scard ${status}">
+                        <div class="lg-scard-head">
+                            <span class="lg-scard-name">${esc(g.name)}</span>
+                            <span class="lg-scard-role ${g.role}">${esc(g.position || (g.role === 'manager' ? 'Chỉ huy' : 'Nhân viên'))}</span>
+                        </div>
+                        <div class="lg-scard-status"><span class="lg-scard-dot ${status}"></span>${statusLabel}</div>
+                        <div class="lg-scard-cur">${g.last ? esc(g.last.slice(0, 84)) : '<span class="lg-muted">Chưa có việc</span>'}</div>
+                        <div class="lg-scard-metrics">
+                            <div><b>${g.done}/${g.tasks}</b><span>việc</span></div>
+                            <div><b>${eff}%</b><span>hiệu quả</span></div>
+                            <div><b>${(g.tokens || 0).toLocaleString()}</b><span>token</span></div>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+            function renderActivityBoard(runs) {
+                const box = $('lgTree'); if (!box) return;
+                if (!runs.length) {
+                    box.innerHTML = '<div class="lg-tree-empty">Chưa có hoạt động. Đội ngũ sẽ hiển thị tại đây khi nhận việc từ một mục.</div>';
+                    return;
+                }
+                box.innerHTML = runs.map(r => {
+                    const badge = r.status === 'working'
+                        ? '<span class="lg-tstatus running">⟳ đang chạy</span>'
+                        : '<span class="lg-tstatus done">✓ hoàn tất</span>';
+                    const agents = (r.agents || []).map(a => {
+                        const st = a.status === 'done' ? 'done' : (a.status === 'working' ? 'running' : 'queued');
+                        const ic = st === 'done' ? '✓' : (st === 'running' ? '⟳' : '…');
+                        return `<div class="lg-tnode ${a.role === 'manager' ? 'manager' : ''}"><span class="lg-tid">${esc(a.name)}</span><span class="lg-ttask">${esc(a.function)} · ${esc(a.subtask || '')}</span><span class="lg-tstatus ${st}">${ic} ${(a.tokens || 0)}🪙</span></div>`;
+                    }).join('');
+                    return `<div style="margin-bottom:14px"><div class="lg-tree-root">📍 <b>${esc(r.section_label)}</b> ${badge} — <i>${esc((r.goal || '').slice(0, 90))}</i></div><div class="lg-tree-workers">${agents}</div></div>`;
+                }).join('');
+            }
+
+            (function () {
+                var ac = $('agentCount'); if (!ac) return;
+                // Connect Legion's squad size to the cross-section "multi-agent" skill
+                // (Settings → Kỹ năng & Kết nối). The skill's saved agent_count becomes
+                // the default here, and changing the slider writes it back so every
+                // other section that parallelises work uses the same squad size.
+                try {
+                    if (window.SkemiSkills && window.SkemiSkills.enabled('multi_agent')) {
+                        var n = window.SkemiSkills.agentCount();
+                        if (n >= 2) { ac.value = Math.min(8, n); }
+                    }
+                } catch (e) {}
+                $('agentCountVal').textContent = ac.value;
+                ac.addEventListener('input', function () {
+                    $('agentCountVal').textContent = ac.value;
+                    try { window.SkemiSkills && window.SkemiSkills.set('agent_count', +ac.value); } catch (e) {}
+                });
+                // React live if the skill changes elsewhere.
+                window.addEventListener('skemiSkillsChanged', function () {
+                    try {
+                        if (window.SkemiSkills && window.SkemiSkills.enabled('multi_agent')) {
+                            var m = window.SkemiSkills.agentCount();
+                            if (m >= 2 && +ac.value !== m) { ac.value = Math.min(8, m); $('agentCountVal').textContent = ac.value; }
+                        }
+                    } catch (e) {}
+                });
+            })();
+
+            // ── Editable 8-agent roster. Names, avatar colour, note & system prompt
+            //    are user-editable and persisted; the subscription tier caps how many
+            //    of the 8 are ACTIVE (free 0 · pro 3 · advanced/skemi 8). The roster is
+            //    shared by every connected section.
+            (function () {
+                const LS_AGENTS = 'skemi_legion_agents_v1';
+                const NAME_MAX = 24, NOTE_MAX = 140, SYS_MAX = 2000;
+                const PALETTE = ['#6E62FF', '#3B82F6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#14B8A6', '#F97316'];
+                const DEFAULTS = [
+                    { id: 'AG-ceo', name: 'Giám đốc', position: 'Sếp', color: '#6E62FF', note: 'Phân rã mục tiêu & tổng hợp kết quả cả đội.', system_prompt: 'Chỉ huy: phân rã mục tiêu lớn thành nhiệm vụ con và tổng hợp kết quả của cả đội thành phương án cuối cùng.' },
+                    { id: 'AG-pm', name: 'Quản lý dự án', position: 'Quản lý', color: '#3B82F6', note: 'Điều phối tiến độ & kiểm soát chất lượng.', system_prompt: 'Điều phối tiến độ, phân việc cho nhân viên và kiểm soát chất lượng đầu ra.' },
+                    { id: 'AG-rsc', name: 'Nhà nghiên cứu', position: 'Chuyên viên', color: '#06B6D4', note: 'Thu thập & đối chiếu dữ liệu.', system_prompt: 'Khảo sát, thu thập và đối chiếu dữ liệu cho nhiệm vụ được giao.' },
+                    { id: 'AG-ana', name: 'Phân tích viên', position: 'Chuyên viên', color: '#10B981', note: 'Phân tích chuyên sâu, chỉ ra rủi ro.', system_prompt: 'Phân tích chuyên sâu, chỉ ra điểm mấu chốt và rủi ro.' },
+                    { id: 'AG-sol', name: 'Kỹ sư giải pháp', position: 'Chuyên viên', color: '#F59E0B', note: 'Đề xuất giải pháp làm được ngay.', system_prompt: 'Đề xuất giải pháp khả thi, cụ thể, làm được ngay.' },
+                    { id: 'AG-qa', name: 'Chuyên gia kiểm chứng', position: 'Chuyên viên', color: '#EF4444', note: 'Phản biện & tìm lỗ hổng.', system_prompt: 'Phản biện, kiểm chứng tính đúng đắn và tìm lỗ hổng trong kết quả của đội.' },
+                    { id: 'AG-cre', name: 'Chuyên viên sáng tạo', position: 'Chuyên viên', color: '#EC4899', note: 'Ý tưởng mới & cách trình bày hấp dẫn.', system_prompt: 'Đưa góc nhìn sáng tạo, ý tưởng mới và cách trình bày hấp dẫn.' },
+                    { id: 'AG-eng', name: 'Kỹ sư kỹ thuật', position: 'Chuyên viên', color: '#8B5CF6', note: 'Xử lý code & tự động hoá.', system_prompt: 'Xử lý phần kỹ thuật, code và tự động hoá cho nhiệm vụ.' }
+                ];
+                const escA = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                function initials(name) {
+                    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+                    if (!parts.length) return '?';
+                    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+                    // First letter of the first TWO words — reads cleaner than first+last
+                    // ("Quản lý dự án" -> "QL", not "QÁ").
+                    return (parts[0][0] + parts[1][0]).toUpperCase();
+                }
+                function loadCfg() {
+                    try { const raw = localStorage.getItem(LS_AGENTS); return raw ? JSON.parse(raw) : {}; } catch (e) { return {}; }
+                }
+                function saveCfg() {
+                    const out = {};
+                    agents.forEach(a => { out[a.id] = { name: a.name, color: a.color, note: a.note, system_prompt: a.system_prompt }; });
+                    try { localStorage.setItem(LS_AGENTS, JSON.stringify(out)); } catch (e) {}
+                }
+                const cfg = loadCfg();
+                let agents = DEFAULTS.map(d => {
+                    const c = cfg[d.id] || {};
+                    return { ...d, name: c.name || d.name, color: c.color || d.color, note: (c.note != null ? c.note : d.note), system_prompt: c.system_prompt || d.system_prompt, stats: { tokens: 0, tasks: 0, ok: 0 } };
+                });
+                // Carry over accumulated per-agent stats from earlier runs (by name).
+                try {
+                    const saved = window.SkemiSkills ? window.SkemiSkills.get('legion_agents', null) : null;
+                    if (Array.isArray(saved)) {
+                        const byName = {}; saved.forEach(s => { if (s && s.name && s.stats) byName[s.name] = s.stats; });
+                        agents.forEach(a => { if (byName[a.name]) a.stats = byName[a.name]; });
+                    }
+                } catch (e) {}
+                function cap() { try { return (window.SkemiEntitlements && SkemiEntitlements.agentCap) ? SkemiEntitlements.agentCap() : 8; } catch (e) { return 8; } }
+                function render() {
+                    const box = $('agentRows'); if (!box) return;
+                    const c = cap();
+                    agents.forEach((a, i) => { a._active = i < c; });
+                    const tag = $('agentCountTag'); if (tag) tag.textContent = (c >= 8 ? 8 : c) + '/8 agent hoạt động';
+                    box.innerHTML = agents.map((a) => {
+                        const st = a.stats || {}; const eff = st.tasks ? Math.round((st.ok || 0) / st.tasks * 100) : 0;
+                        const boss = a.position === 'Sếp' || a.position === 'Quản lý';
+                        const locked = a._active === false;
+                        return `<button type="button" class="lg-agent${locked ? ' is-locked' : ''}" data-edit="${a.id}" aria-label="Chỉnh ${escA(a.name)}">
+                            <div class="lg-agent-head">
+                                <span class="lg-avatar" style="--av:${a.color}">${escA(initials(a.name))}</span>
+                                <div class="lg-agent-id">
+                                    <span class="lg-agent-name">${escA(a.name)}</span>
+                                    <span class="lg-agent-role${boss ? ' boss' : ''}">${escA(a.position)}</span>
+                                </div>
+                                <span class="lg-agent-state">${locked ? '<span class="lg-lock" title="Nâng cấp để kích hoạt">🔒</span>' : '<span class="lg-dot-live"></span>'}</span>
+                            </div>
+                            <div class="lg-agent-note">${a.note ? escA(a.note) : '<span class="lg-muted">Chưa có ghi chú</span>'}</div>
+                            <div class="lg-agent-foot">
+                                <span>🪙 ${(st.tokens || 0).toLocaleString()}</span>
+                                <span>${st.tasks || 0} việc</span>
+                                <span>${eff}%</span>
+                                <span class="lg-agent-edit">Chỉnh ✎</span>
+                            </div>
+                        </button>`;
+                    }).join('');
+                    box.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openEditor(b.getAttribute('data-edit'))));
+                }
+
+                // ── Editor modal (built once, reused) ──────────────────────────────
+                let modal = null, editingId = null;
+                function buildModal() {
+                    modal = document.createElement('div');
+                    modal.className = 'lg-modal';
+                    modal.hidden = true;
+                    modal.innerHTML = `
+                        <div class="lg-modal-backdrop" data-close></div>
+                        <div class="lg-modal-card" role="dialog" aria-modal="true">
+                            <div class="lg-modal-head">
+                                <span class="lg-avatar lg-avatar-lg" id="lgmAvatar">?</span>
+                                <div><h3 id="lgmTitle">Chỉnh AI Agent</h3><p id="lgmRole" class="lg-muted"></p></div>
+                                <button type="button" class="lg-modal-x" data-close aria-label="Đóng">✕</button>
+                            </div>
+                            <label class="lg-field">
+                                <span class="lg-field-label">Tên agent <em id="lgmNameCount"></em></span>
+                                <input type="text" id="lgmName" maxlength="${NAME_MAX}" class="lg-input" placeholder="Tên ngắn gọn, dễ nhận diện">
+                            </label>
+                            <div class="lg-field">
+                                <span class="lg-field-label">Màu nền avatar</span>
+                                <div class="lg-swatches" id="lgmSwatches"></div>
+                            </div>
+                            <label class="lg-field">
+                                <span class="lg-field-label">Ghi chú — đang làm gì <em id="lgmNoteCount"></em></span>
+                                <textarea id="lgmNote" maxlength="${NOTE_MAX}" class="lg-input lg-ta-sm" placeholder="Vai trò / việc con agent này phụ trách"></textarea>
+                            </label>
+                            <label class="lg-field">
+                                <span class="lg-field-label">System prompt <em id="lgmSysCount"></em></span>
+                                <textarea id="lgmSys" maxlength="${SYS_MAX}" class="lg-input lg-ta-lg" placeholder="Hướng dẫn chi tiết cho AI agent này..."></textarea>
+                            </label>
+                            <div class="lg-modal-actions">
+                                <button type="button" class="lg-btn-ghost" data-close>Huỷ</button>
+                                <button type="button" class="lg-btn-reset" id="lgmReset">Khôi phục mặc định</button>
+                                <button type="button" class="lg-btn-primary" id="lgmSave">Lưu thay đổi</button>
+                            </div>
+                        </div>`;
+                    document.body.appendChild(modal);
+                    modal.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', closeEditor));
+                    const nameEl = modal.querySelector('#lgmName'), noteEl = modal.querySelector('#lgmNote'), sysEl = modal.querySelector('#lgmSys');
+                    const av = modal.querySelector('#lgmAvatar');
+                    function counts() {
+                        modal.querySelector('#lgmNameCount').textContent = nameEl.value.length + '/' + NAME_MAX;
+                        modal.querySelector('#lgmNoteCount').textContent = noteEl.value.length + '/' + NOTE_MAX;
+                        modal.querySelector('#lgmSysCount').textContent = sysEl.value.length + '/' + SYS_MAX;
+                    }
+                    nameEl.addEventListener('input', () => { av.textContent = initials(nameEl.value) || '?'; counts(); });
+                    noteEl.addEventListener('input', counts);
+                    sysEl.addEventListener('input', counts);
+                    // Swatches
+                    const sw = modal.querySelector('#lgmSwatches');
+                    PALETTE.forEach(col => {
+                        const b = document.createElement('button');
+                        b.type = 'button'; b.className = 'lg-sw'; b.style.background = col; b.dataset.col = col;
+                        b.addEventListener('click', () => setColor(col));
+                        sw.appendChild(b);
+                    });
+                    const custom = document.createElement('label');
+                    custom.className = 'lg-sw-custom'; custom.title = 'Màu tuỳ chọn';
+                    custom.innerHTML = '<span>+</span><input type="color" id="lgmColor">';
+                    custom.querySelector('input').addEventListener('input', e => setColor(e.target.value));
+                    sw.appendChild(custom);
+                    modal.querySelector('#lgmSave').addEventListener('click', saveEditor);
+                    modal.querySelector('#lgmReset').addEventListener('click', resetEditor);
+                    modal._counts = counts;
+                }
+                let curColor = '#6E62FF';
+                function setColor(col) {
+                    curColor = col;
+                    modal.querySelector('#lgmAvatar').style.setProperty('--av', col);
+                    modal.querySelectorAll('.lg-sw').forEach(b => b.classList.toggle('sel', b.dataset.col && b.dataset.col.toLowerCase() === col.toLowerCase()));
+                }
+                function openEditor(id) {
+                    const a = agents.find(x => x.id === id); if (!a) return;
+                    if (!modal) buildModal();
+                    editingId = id;
+                    modal.querySelector('#lgmTitle').textContent = 'Chỉnh: ' + a.name;
+                    modal.querySelector('#lgmRole').textContent = a.position;
+                    modal.querySelector('#lgmName').value = a.name;
+                    modal.querySelector('#lgmNote').value = a.note || '';
+                    modal.querySelector('#lgmSys').value = a.system_prompt || '';
+                    modal.querySelector('#lgmAvatar').textContent = initials(a.name) || '?';
+                    setColor(a.color);
+                    modal._counts();
+                    modal.hidden = false;
+                    document.body.style.overflow = 'hidden';
+                    setTimeout(() => modal.querySelector('#lgmName').focus(), 30);
+                }
+                function closeEditor() { if (modal) { modal.hidden = true; document.body.style.overflow = ''; } editingId = null; }
+                function saveEditor() {
+                    const a = agents.find(x => x.id === editingId); if (!a) return closeEditor();
+                    a.name = (modal.querySelector('#lgmName').value || '').trim().slice(0, NAME_MAX) || a.name;
+                    a.note = (modal.querySelector('#lgmNote').value || '').trim().slice(0, NOTE_MAX);
+                    a.system_prompt = (modal.querySelector('#lgmSys').value || '').trim().slice(0, SYS_MAX);
+                    a.color = curColor;
+                    saveCfg(); render(); closeEditor();
+                    try { window.dispatchEvent(new CustomEvent('skemiLegionAgentsChanged')); } catch (e) {}
+                }
+                function resetEditor() {
+                    const d = DEFAULTS.find(x => x.id === editingId); if (!d) return;
+                    modal.querySelector('#lgmName').value = d.name;
+                    modal.querySelector('#lgmNote').value = d.note;
+                    modal.querySelector('#lgmSys').value = d.system_prompt;
+                    modal.querySelector('#lgmAvatar').textContent = initials(d.name);
+                    setColor(d.color); modal._counts();
+                }
+
+                if ($('agentRows')) {
+                    render();
+                    window.__legionAgents = () => agents.filter(a => a._active !== false).map(a => ({ id: a.id, name: a.name, position: a.position, system_prompt: a.system_prompt, stats: a.stats }));
+                    window.SkemiLegion = window.SkemiLegion || {};
+                    window.SkemiLegion.agents = () => agents.map(a => ({ id: a.id, name: a.name, position: a.position, color: a.color, note: a.note, system_prompt: a.system_prompt, active: a._active !== false }));
+                    window.addEventListener('skemiSkillsChanged', render);
+                    document.addEventListener('skemi:entitlements', render);
+                    window.addEventListener('languageChanged', render);
+                    document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal && !modal.hidden) closeEditor(); });
+                }
+            })();
+
+            // (Deploy/Stop/slider removed — Legion no longer needs a manual deploy. The
+            // squad auto-runs from every section; this page just shows it live.)
+
+            // Re-render every JS-painted string when the user switches language.
+            window.addEventListener('languageChanged', () => { refresh(); });
+
+            refresh();
+            polling = setInterval(refresh, 1500);
+        })();
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script type="module" src="./Js/Galaxy.js"></script>
+    <script src="./Js/i18n-packs.js?v=20260601b"></script>
+    <script src="./Js/entitlements.js?v=20260701d"></script>
+    <script type="module" src="./Js/User_navbar.js?v=20260702b"></script>
+    <script type="module" src="./Js/LanguageManager.js?v=20260701e"></script>
+    <script src="./Js/GlobalStatus.js?v=20260704a"></script>
+</body>
+</html>
